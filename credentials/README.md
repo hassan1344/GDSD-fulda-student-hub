@@ -8,13 +8,14 @@ To access the server, you will need the following information:
 
 - **Server IP Address:** `13.60.184.80`
 - **SSH Port:** `22`
+- **Available Users:** `ubuntu, root`
 
 ### Connecting to the Server
 
 1. Open your terminal or SSH client.
 2. Use the following command to connect to the server:
 
-ssh -i <key pair> username@13.60.184.80   (available users : ubuntu, root)
+`ssh -i <key pair> username@13.60.184.80`
 
 ### Connecting to the Database
 
