@@ -15,7 +15,11 @@ To access the server, you will need the following information:
 1. Open your terminal or SSH client.
 2. Use the following command to connect to the server:
 
-`ssh -i <key pair> username@13.60.184.80`
+`ssh -i <key pair> ubuntu@13.60.184.80`
+
+To switch to a root user, use the following:
+
+`sudo su -l`
 
 ### Connecting to the Database
 
