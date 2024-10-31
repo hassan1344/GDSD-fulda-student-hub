@@ -7,7 +7,7 @@ This document contains all the necessary information for logging into the team's
 To access the server, you will need the following information:
 
 - **Server IP Address:** `13.60.184.80`
-- **SSH Port:** `22`
+- **Key Pair:** `gdsd-team2.pem`
 - **Available Users:** `ubuntu, root`
 
 ### Connecting to the Server
