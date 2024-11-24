@@ -29,6 +29,7 @@ const Home = () => {
         location,
         roomType,
         priceRange,
+        advancedFilters,
       },
     });
   };
