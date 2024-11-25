@@ -5,37 +5,34 @@ const PropertyDetails = ({ property, onBack }) => {
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
 
   const images = property.images ?? [];
+  const { address, rent, amenities } = property.property;
+  const { name, phone_number, trust_score } = property.landlord;
 
   const renderContent = () => {
     switch (activeTab) {
       case "about":
-        return <p>{property.description}</p>;
+        return (
+          <div>
+            <p>{property.description}</p>
+            <p className="mt-4 font-semibold">Amenities:</p>
+            <ul className="list-disc ml-5">
+              {amenities?.map((amenity, index) => (
+                <li key={index}>{amenity}</li>
+              )) || <li>No amenities listed</li>}
+            </ul>
+          </div>
+        );
       case "reviews":
         return (
           <div>
-            {property.reviews.map((review, index) => (
-              <div key={index} className="border-b p-2">
-                <p className="font-semibold">{review.author} posted...</p>
-                <p>{review.text}</p>
-                <p className="text-yellow-500">{"⭐".repeat(review.rating)}</p>
-              </div>
-            ))}
+            <p className="text-yellow-500">Trust Score: {trust_score} ⭐</p>
           </div>
-        );
-      case "documents":
-        return (
-          <ul className="list-disc ml-5">
-            {property.documents.map((doc, index) => (
-              <li key={index}>{doc}</li>
-            ))}
-          </ul>
         );
       case "contact":
         return (
           <div>
-            <p className="font-semibold">Contact Name: {property.contact.name}</p>
-            <p>Email: {property.contact.email}</p>
-            <p>Phone: {property.contact.phone}</p>
+            <p className="font-semibold">Landlord Name: {name}</p>
+            <p>Phone: {phone_number}</p>
           </div>
         );
       default:
@@ -82,21 +79,8 @@ const PropertyDetails = ({ property, onBack }) => {
       {/* Property Details */}
       <div className="grid grid-cols-3 gap-4 mb-6">
         <div>
-          <p><strong>Size:</strong> {property.size}</p>
-          <p><strong>Total Rent:</strong> {property.totalRent} €</p>
-        </div>
-        <div>
-          <p><strong>Cost:</strong></p>
-          <ul>
-            <li>Rent: {property.cost.rent} €</li>
-            <li>Extra Charges: {property.cost.extraCharges} €</li>
-            <li>Warm Rent: {property.cost.warmRent} €</li>
-            <li>Transfer Agreement: {property.cost.transferAgreement || "N.A."}</li>
-          </ul>
-        </div>
-        <div>
-          <p><strong>Address:</strong> {property.address}</p>
-          <p><strong>Available from:</strong> {property.availableFrom}</p>
+          <p><strong>Address:</strong> {address}</p>
+          <p><strong>Total Rent:</strong> €{rent}</p>
         </div>
       </div>
 
@@ -104,7 +88,6 @@ const PropertyDetails = ({ property, onBack }) => {
       <div className="flex space-x-4 mb-6 border-b">
         <button onClick={() => setActiveTab("about")} className={`py-2 px-4 ${activeTab === "about" ? "border-b-2 border-blue-600 font-bold" : ""}`}>About</button>
         <button onClick={() => setActiveTab("reviews")} className={`py-2 px-4 ${activeTab === "reviews" ? "border-b-2 border-blue-600 font-bold" : ""}`}>Reviews</button>
-        <button onClick={() => setActiveTab("documents")} className={`py-2 px-4 ${activeTab === "documents" ? "border-b-2 border-blue-600 font-bold" : ""}`}>Documents</button>
         <button onClick={() => setActiveTab("contact")} className={`py-2 px-4 ${activeTab === "contact" ? "border-b-2 border-blue-600 font-bold" : ""}`}>Contact</button>
       </div>
 

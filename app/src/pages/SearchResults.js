@@ -1,10 +1,11 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useLocation } from "react-router-dom";
 import Navbar from "../components/NavBar";
 import SearchCard from "../components/SearchCard";
 import Pagination from "../components/Pagination";
 import PropertyDetails from "../components/PropertyDetails";
-import { sampleProperty } from "../utils/sampleProperty"; // Import sampleProperty
+import mockListings from "../utils/mockListings.json";
+
 
 const SearchResults = () => {
   const { state } = useLocation();
@@ -20,16 +21,32 @@ const SearchResults = () => {
     },
   } = state || {};
 
+
+  //  const [listings, setListings] = useState([]);
+  const [listings, setListings] = useState(mockListings); // Use mock data
+
   const [currentPage, setCurrentPage] = useState(1);
   const [selectedProperty, setSelectedProperty] = useState(null); // To handle detailed view
   const itemsPerPage = 10;
+
+  // Fetch listings (mocked for now, replace with actual API call)
+  // useEffect(() => {
+  //   const fetchListings = async () => {
+  //     // Replace this with an actual API call
+  //     const response = await fetch("/api/listings"); // Update with your API endpoint
+  //     const data = await response.json();
+  //     setListings(data);
+  //   };
+
+  //   fetchListings();
+  // }, []);
 
   // Calculate the indices for slicing the data
   const startIndex = (currentPage - 1) * itemsPerPage;
   const endIndex = startIndex + itemsPerPage;
 
-  // Assuming sampleProperty is just a single property to display
-  const paginatedData = sampleProperty.slice(startIndex, endIndex);
+  // Paginate data
+  const paginatedListings = listings.slice(startIndex, endIndex);
 
   // Handler to select a property
   const handleSelectProperty = (property) => {
@@ -55,7 +72,7 @@ const SearchResults = () => {
             {location && <p className="text-gray-600">Location: {location}</p>}
             {roomType && <p className="text-gray-600">Room Type: {roomType}</p>}
             <p className="text-gray-600">Price Range: €{priceRange[0]} - €{priceRange[1]}</p>
-            {/* Handle advanced filters if any */}
+            {/* Display active advanced filters */}
             <div className="text-gray-600">
               {Object.keys(advancedFilters)
                 .filter((key) => advancedFilters[key])
@@ -66,15 +83,16 @@ const SearchResults = () => {
           </div>
 
           <div className="grid grid-cols-1 gap-6">
-            {paginatedData.length > 0 ? (
-              paginatedData.map((item, index) => (
+            {paginatedListings.length > 0 ? (
+              paginatedListings.map((listing) => (
                 <SearchCard
-                  key={index}
-                  image={item.images[0]} // Use first image for search card
-                  description={item.description}
-                  price={item.totalRent}
-                  poster={item.contact.name}
-                  onClick={() => handleSelectProperty(item)} // Pass property data
+                  key={listing.listing_id}
+                  image={listing.images[0] || "/default.jpg"} // Use the first image or a default image
+                  title={listing.title}
+                  description={listing.description}
+                  price={`€${listing.property.rent}`}
+                  landlord={listing.landlord.name}
+                  onClick={() => handleSelectProperty(listing)} // Pass listing data
                 />
               ))
             ) : (
@@ -87,7 +105,7 @@ const SearchResults = () => {
           <Pagination
             currentPage={currentPage}
             setCurrentPage={setCurrentPage}
-            totalPages={Math.ceil(sampleProperty.length/ itemsPerPage)}
+            totalPages={Math.ceil(listings.length / itemsPerPage)}
           />
         </div>
       )}
