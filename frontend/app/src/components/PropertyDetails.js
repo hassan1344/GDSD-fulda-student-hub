@@ -26,13 +26,11 @@ const PropertyDetails = ({ property, onBack }) => {
             <p>{property.description}</p>
             <p className="mt-4 font-semibold">Amenities:</p>
             <ul className="list-disc ml-5">
-              {Array.isArray(property.amenities) && property.amenities.length > 0 ? (
-                property.amenities.map((amenity, index) => (
-                  <li key={index}>{amenity}</li>
+              {
+                property.amenities && property.amenities.split(',').map((amenity, index) => (
+                <li key={index}>{amenity.trim()}</li>
                 ))
-              ) : (
-                <li>No amenities listed</li>
-              )}
+              }
             </ul>
           </div>
         );
@@ -55,33 +53,61 @@ const PropertyDetails = ({ property, onBack }) => {
   };
 
   return (
-    <div className="p-8">
+    <div className="p-8 max-w-6xl mx-auto">
       <button onClick={onBack} className="text-blue-600 mb-4">Back to Results</button>
       <h1 className="text-2xl font-bold mb-4">{property.title}</h1>
 
       {/* Image Gallery */}
-      <div className="flex justify-center items-center mb-6">
-        <div className="w-full max-w-2xl h-64 relative">
-          {/* Show the current image from the Media array */}
-          <img
-            src={images[currentImageIndex]?.mediaUrl ?? "/assets/images/room1.jpg"} // Default image if no media found
-            alt="Property"
-            className="w-full h-full object-cover rounded-md shadow-md"
-          />
-          {/* Previous button */}
-          <button
-            className="absolute left-2 top-1/2 transform -translate-y-1/2 bg-white rounded-full p-2 shadow-md"
-            onClick={handlePreviousImage}
-          >
-            ◀
-          </button>
-          {/* Next button */}
-          <button
-            className="absolute right-2 top-1/2 transform -translate-y-1/2 bg-white rounded-full p-2 shadow-md"
-            onClick={handleNextImage}
-          >
-            ▶
-          </button>
+      <div className="mb-6 flex">
+        {/* Main Image */}
+        <div className="w-3/4 pr-4">
+          <div className="relative h-96">
+            <img
+              src={images[currentImageIndex]?.mediaUrl ?? "/assets/images/room1.jpg"}
+              alt="Property"
+              className="w-full h-full object-cover rounded-md shadow-md"
+            />
+            <button
+              className="absolute left-2 top-1/2 transform -translate-y-1/2 bg-white rounded-full p-2 shadow-md"
+              onClick={handlePreviousImage}
+            >
+              ◀
+            </button>
+            <button
+              className="absolute right-2 top-1/2 transform -translate-y-1/2 bg-white rounded-full p-2 shadow-md"
+              onClick={handleNextImage}
+            >
+              ▶
+            </button>
+          </div>
+          
+          {/* Image Preview Indicators */}
+          <div className="flex justify-center space-x-2 mt-4">
+            {images.map((_, index) => (
+              <button
+                key={index}
+                className={`w-3 h-3 rounded-full ${
+                  index === currentImageIndex ? 'bg-blue-500' : 'bg-gray-300'
+                }`}
+                onClick={() => setCurrentImageIndex(index)}
+              />
+            ))}
+          </div>
+        </div>
+
+        {/* Thumbnail Sidebar */}
+        <div className="w-1/4 space-y-2 overflow-y-auto max-h-96">
+          {images.map((image, index) => (
+            <img
+              key={index}
+              src={image.mediaUrl}
+              alt={`Thumbnail ${index + 1}`}
+              className={`w-full h-24 object-cover rounded-md cursor-pointer ${
+                index === currentImageIndex ? 'border-2 border-blue-500' : ''
+              }`}
+              onClick={() => setCurrentImageIndex(index)}
+            />
+          ))}
         </div>
       </div>
 
