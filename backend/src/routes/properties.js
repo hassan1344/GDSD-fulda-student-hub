@@ -30,7 +30,23 @@ router.get('/', async (req, res) => {
 
     const properties = await prisma.property.findMany(filters);
 
-    res.status(200).json(properties)
+    const propertiesWithMedia = await Promise.all(
+      properties.map(async (property) => {
+        const media = await prisma.media.findMany({
+          where: {
+            model_id: property.property_id,
+            model_name: 'property', // Ensure it is related to a property
+          },
+        });
+
+        return {
+          ...property,
+          Media: media.map(media => ({mediaUrl: media.media_url, mediaType: media.media_type})),
+        };
+      })
+    );
+
+    res.status(200).json(propertiesWithMedia)
   } catch (error) {
     console.error('Error fetching properties:', error);
     res.status(500).json({ error: 'An error occurred while fetching properties' });
@@ -47,7 +63,7 @@ router.get('/:id', async (req, res) => {
       },
       include: {
         landlord: true, // Include landlord details for the property
-        Listing: true,  // Include associated listings for the property
+        // Listing: true,  // Include associated listings for the property
       },
     });
 
@@ -55,7 +71,19 @@ router.get('/:id', async (req, res) => {
       return res.status(404).json({ error: 'Property not found' });
     }
 
-    res.status(200).json(property);
+    const media = await prisma.media.findMany({
+      where: {
+        model_id: property.property_id,
+        model_name: 'property', // Ensure it is related to a property
+      },
+    });
+
+     const propertyWithMedia = {
+        ...property,
+        Media: media.map(media => ({mediaUrl: media.media_url, mediaType: media.media_type})),
+      };
+
+    res.status(200).json(propertyWithMedia);
   } catch (error) {
     console.error('Error fetching property:', error);
     res.status(500).json({ error: 'An error occurred while fetching the property' });
