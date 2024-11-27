@@ -29,17 +29,19 @@ const SearchResults = () => {
   useEffect(() => {
     const fetchListings = async () => {
       try {
-        const address = location;  // Get location from search state
+        const address = location; // Get location from search state
         const minRent = priceRange[0];
         const maxRent = priceRange[1];
 
         const response = await fetch(
-          `http://localhost:8000/api/v1/properties?address=${encodeURIComponent(address)}&minRent=${minRent}&maxRent=${maxRent}`
+          `http://backend:8000/api/v1/properties?address=${encodeURIComponent(
+            address
+          )}&minRent=${minRent}&maxRent=${maxRent}`
         );
 
         const data = await response.json();
         console.log("Fetched data:", data); // Log the response to check the structure
-        setListings(data);  // Set the data fetched from API
+        setListings(data); // Set the data fetched from API
       } catch (error) {
         console.error("Error fetching properties:", error);
       }
@@ -70,21 +72,32 @@ const SearchResults = () => {
       <Navbar />
       {selectedProperty ? (
         // Render PropertyDetails if a property is selected
-        <PropertyDetails property={selectedProperty} onBack={handleBackToResults} />
+        <PropertyDetails
+          property={selectedProperty}
+          onBack={handleBackToResults}
+        />
       ) : (
         <div className="p-8">
-          <h2 className="text-2xl font-semibold text-gray-800 mb-4">Search Results</h2>
+          <h2 className="text-2xl font-semibold text-gray-800 mb-4">
+            Search Results
+          </h2>
           <div className="bg-white shadow-md rounded-lg p-6 mb-6">
-            <h3 className="text-lg font-semibold text-gray-700 mb-2">Applied Filters:</h3>
+            <h3 className="text-lg font-semibold text-gray-700 mb-2">
+              Applied Filters:
+            </h3>
             {location && <p className="text-gray-600">Location: {location}</p>}
             {roomType && <p className="text-gray-600">Room Type: {roomType}</p>}
-            <p className="text-gray-600">Price Range: €{priceRange[0]} - €{priceRange[1]}</p>
+            <p className="text-gray-600">
+              Price Range: €{priceRange[0]} - €{priceRange[1]}
+            </p>
             {/* Display active advanced filters */}
             <div className="text-gray-600">
               {Object.keys(advancedFilters)
                 .filter((key) => advancedFilters[key])
                 .map((key, index) => (
-                  <p key={index}>{key.charAt(0).toUpperCase() + key.slice(1)}</p>
+                  <p key={index}>
+                    {key.charAt(0).toUpperCase() + key.slice(1)}
+                  </p>
                 ))}
             </div>
           </div>
