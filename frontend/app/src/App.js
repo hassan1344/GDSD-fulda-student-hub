@@ -5,7 +5,7 @@ import SearchResults from "./pages/SearchResults";
 
 const App = () => {
   return (
-    <Router>
+    <Router basename="/app">
       <Routes>
         <Route path="/" element={<Home />} />
         <Route path="/searchresults" element={<SearchResults />} />
