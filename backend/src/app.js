@@ -24,7 +24,7 @@ const v1Router = express.Router();
 
 v1Router.use("/properties", propertyRoutes);
 
-// app.use('/api/v1', v1Router);  can be used for local environment, already set in nginx conf
+app.use("/v1", v1Router); //api already appended in nginx conf for deployment
 
 app.use(ResHandler);
 
