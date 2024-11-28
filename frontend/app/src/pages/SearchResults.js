@@ -34,7 +34,7 @@ const SearchResults = () => {
         const maxRent = priceRange[1];
 
         const response = await fetch(
-          `http://16.171.43.203:8000/api/v1/properties?address=${encodeURIComponent(
+          `https://fulda-student-hub.publicvm.com/api/v1/properties?address=${encodeURIComponent(
             address
           )}&minRent=${minRent}&maxRent=${maxRent}`
         );

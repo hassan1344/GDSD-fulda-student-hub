@@ -4,7 +4,7 @@ import helmet from "helmet";
 import cors from "cors";
 
 import { ResHandler } from "./utils/custom-response/response-handler.js";
-import {propertyRoutes} from './routes/properties.js';
+import { propertyRoutes } from "./routes/properties.js";
 
 const app = express();
 
@@ -22,9 +22,9 @@ app.get("/", (req, res) => {
 
 const v1Router = express.Router();
 
-v1Router.use('/properties', propertyRoutes);
+v1Router.use("/properties", propertyRoutes);
 
-app.use('/api/v1', v1Router);
+// app.use('/api/v1', v1Router);  can be used for local environment, already set in nginx conf
 
 app.use(ResHandler);
 
