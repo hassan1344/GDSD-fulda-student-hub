@@ -9,6 +9,10 @@ services:
     restart: unless-stopped
     networks:
       - app_network
+    env_file:
+      - ./backend/.env
+    depends_on:
+      - sql
 
   frontend:
     build:
@@ -18,7 +22,24 @@ services:
     restart: unless-stopped
     networks:
       - app_network
+    env_file:
+      - ./frontend/.env
+
+  sql:
+    image: mysql:8
+    ports:
+      - "3306:3306"
+    restart: unless-stopped
+    networks:
+      - app_network
+    env_file:
+      - ./backend/.env
+    volumes:
+      - sql_data:/var/lib/mysql
 
 networks:
   app_network:
     driver: bridge
+
+volumes:
+  sql_data:
