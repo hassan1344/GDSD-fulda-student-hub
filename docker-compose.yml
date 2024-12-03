@@ -22,8 +22,8 @@ services:
     restart: unless-stopped
     networks:
       - app_network
-    env_file:
-      - ./frontend/.env
+    # env_file:
+    #   - ./frontend/.env
 
   sql:
     image: mysql:8
