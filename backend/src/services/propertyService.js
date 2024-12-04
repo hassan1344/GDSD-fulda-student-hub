@@ -4,8 +4,8 @@ const prisma = new PrismaClient();
 
 export const getAllProperties = async (req, res) => {
   try {
-    console.log(req);
-    const { address, minRent, maxRent } = req.query;
+    // console.log(req.query);
+    const { address, minRent, maxRent, amenities } = req.query;
     const filters = {
       where: {},
       include: {
@@ -23,6 +23,14 @@ export const getAllProperties = async (req, res) => {
       filters.where.rent = {};
       if (minRent) filters.where.rent.gte = parseFloat(minRent); // Greater than or equal to minRent
       if (maxRent) filters.where.rent.lte = parseFloat(maxRent); // Less than or equal to maxRent
+    }
+
+    if (amenities) {
+      let amenitiesArray = JSON.parse(amenities);
+
+      filters.where.amenities = {
+        array_contains: amenitiesArray,
+      };
     }
 
     const properties = await prisma.property.findMany(filters);
