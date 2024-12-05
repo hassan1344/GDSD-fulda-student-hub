@@ -9,30 +9,46 @@ datasource db {
 
 model Landlord {
   landlord_id     String     @id @default(uuid())
-  name            String
-  phone_number    String     @unique
-  address         String
   trust_score     Int        @default(0)
-  profile_picture String?
   created_at      DateTime   @default(now())
   updated_at      DateTime   @updatedAt
+  user_id         String
+  address         String
+  first_name      String
+  last_name       String
+  phone_number    String     @unique
+  profile_picture String?
+  user            User       @relation(fields: [user_id], references: [user_name])
   Property        Property[]
 
+  @@index([user_id], map: "landlord_user_id_fkey")
   @@map("landlord")
 }
 
+model User {
+  created_at DateTime   @default(now())
+  updated_at DateTime   @updatedAt
+  email      String
+  password   String
+  user_name  String     @id
+  user_type  UserType   @default(STUDENT)
+  Landlord   Landlord[]
+
+  @@map("user")
+}
+
 model Property {
-  property_id String   @id @default(uuid())
+  property_id String    @id @default(uuid())
   landlord_id String
   address     String
   rent        Float
-  amenities   String
-  created_at  DateTime @default(now())
-  updated_at  DateTime @updatedAt
+  amenities   Json
+  created_at  DateTime  @default(now())
+  updated_at  DateTime  @updatedAt
+  Listing     Listing[]
+  landlord    Landlord  @relation(fields: [landlord_id], references: [landlord_id])
 
-  landlord Landlord  @relation(fields: [landlord_id], references: [landlord_id])
-  Listing  Listing[]
-
+  @@index([landlord_id], map: "property_landlord_id_fkey")
   @@map("property")
 }
 
@@ -41,23 +57,29 @@ model Listing {
   property_id String
   title       String
   description String
-  status      String   //available,sold etc.
+  status      String
   created_at  DateTime @default(now())
   updated_at  DateTime @updatedAt
+  property    Property @relation(fields: [property_id], references: [property_id])
 
-  property Property @relation(fields: [property_id], references: [property_id])
-
+  @@index([property_id], map: "listing_property_id_fkey")
   @@map("listing")
 }
 
 model Media {
   media_id   String   @id @default(uuid())
-  model_name String // tables names
-  model_id   String // record ids
+  model_name String
+  model_id   String
   media_url  String
-  media_type String //can be image,video etc.
+  media_type String
   created_at DateTime @default(now())
   updated_at DateTime @updatedAt
 
   @@map("media")
+}
+
+enum UserType {
+  STUDENT
+  LANDLORD
+  ADMIN
 }

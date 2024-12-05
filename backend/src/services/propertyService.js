@@ -1,14 +1,11 @@
-import express from 'express';
-import { PrismaClient } from '@prisma/client';
+import { PrismaClient } from "@prisma/client";
 
 const prisma = new PrismaClient();
-const router = express.Router();
 
-// Route to get all properties
-router.get('/', async (req, res) => {
+export const getAllProperties = async (req, res) => {
   try {
-    console.log(req)
-    const { address, minRent, maxRent } = req.query;
+    // // console.log(req.query);
+    const { address, minRent, maxRent, amenities } = req.query;
     const filters = {
       where: {},
       include: {
@@ -28,6 +25,14 @@ router.get('/', async (req, res) => {
       if (maxRent) filters.where.rent.lte = parseFloat(maxRent); // Less than or equal to maxRent
     }
 
+    if (amenities) {
+      let amenitiesArray = JSON.parse(amenities);
+
+      filters.where.amenities = {
+        array_contains: amenitiesArray,
+      };
+    }
+
     const properties = await prisma.property.findMany(filters);
 
     const propertiesWithMedia = await Promise.all(
@@ -35,26 +40,30 @@ router.get('/', async (req, res) => {
         const media = await prisma.media.findMany({
           where: {
             model_id: property.property_id,
-            model_name: 'property', // Ensure it is related to a property
+            model_name: "property", // Ensure it is related to a property
           },
         });
 
         return {
           ...property,
-          Media: media.map(media => ({mediaUrl: media.media_url, mediaType: media.media_type})),
+          Media: media.map((media) => ({
+            mediaUrl: media.media_url,
+            mediaType: media.media_type,
+          })),
         };
       })
     );
 
-    res.status(200).json(propertiesWithMedia)
+    res.status(200).json(propertiesWithMedia);
   } catch (error) {
-    console.error('Error fetching properties:', error);
-    res.status(500).json({ error: 'An error occurred while fetching properties' });
+    console.error("Error fetching properties:", error);
+    res
+      .status(500)
+      .json({ error: "An error occurred while fetching properties" });
   }
-});
+};
 
-// Route to get a property by ID
-router.get('/:id', async (req, res) => {
+export const getPropertyById = async (req, res) => {
   const { id } = req.params;
   try {
     const property = await prisma.property.findUnique({
@@ -68,26 +77,29 @@ router.get('/:id', async (req, res) => {
     });
 
     if (!property) {
-      return res.status(404).json({ error: 'Property not found' });
+      return res.status(404).json({ error: "Property not found" });
     }
 
     const media = await prisma.media.findMany({
       where: {
         model_id: property.property_id,
-        model_name: 'property', // Ensure it is related to a property
+        model_name: "property", // Ensure it is related to a property
       },
     });
 
-     const propertyWithMedia = {
-        ...property,
-        Media: media.map(media => ({mediaUrl: media.media_url, mediaType: media.media_type})),
-      };
+    const propertyWithMedia = {
+      ...property,
+      Media: media.map((media) => ({
+        mediaUrl: media.media_url,
+        mediaType: media.media_type,
+      })),
+    };
 
     res.status(200).json(propertyWithMedia);
   } catch (error) {
-    console.error('Error fetching property:', error);
-    res.status(500).json({ error: 'An error occurred while fetching the property' });
+    console.error("Error fetching property:", error);
+    res
+      .status(500)
+      .json({ error: "An error occurred while fetching the property" });
   }
-});
-
-export const propertyRoutes = router;
+};
