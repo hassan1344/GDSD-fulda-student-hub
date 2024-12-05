@@ -11,65 +11,66 @@ const SearchResults = () => {
     location = "",
     roomType = "",
     priceRange = [0, 1000],
-    advancedFilters = {
-      shower: false,
-      heater: false,
-      kitchen: false,
-      balcony: false,
-    },
+    advancedFilters = {},
   } = state || {};
 
-  // State to hold listings fetched from API
   const [listings, setListings] = useState([]);
   const [currentPage, setCurrentPage] = useState(1);
-  const [selectedProperty, setSelectedProperty] = useState(null); // To handle detailed view
+  const [selectedProperty, setSelectedProperty] = useState(null);
   const itemsPerPage = 10;
 
-  // Fetch listings from the API
   useEffect(() => {
     const fetchListings = async () => {
       try {
-        const address = location;  // Get location from search state
+        const address = encodeURIComponent(location);
         const minRent = priceRange[0];
         const maxRent = priceRange[1];
-
-        const response = await fetch(
-          `http://localhost:8000/api/v1/properties?address=${encodeURIComponent(address)}&minRent=${minRent}&maxRent=${maxRent}`
-        );
-
-        const data = await response.json();
-        console.log("Fetched data:", data); // Log the response to check the structure
-        setListings(data);  // Set the data fetched from API
+  
+        const amenities = Object.keys(advancedFilters)
+          .filter((key) => advancedFilters[key])
+          .map((key) => `"${key}"`)
+          .join(",");
+  
+        const apiUrl = `http://localhost:8000/api/v1/properties?address=${address}&minRent=${minRent}&maxRent=${maxRent}${
+          amenities ? `&amenities=${encodeURIComponent(amenities)}` : ""
+        }`;
+  
+        const response = await fetch(apiUrl);
+  
+        if (!response.ok) {
+          throw new Error(`Failed to fetch properties: ${response.statusText}`);
+        }
+  
+        // Log the raw response before parsing
+        const rawData = await response.text();
+        console.log("Raw response data:", rawData);  // Log raw response
+  
+        // Try parsing JSON
+        const data = JSON.parse(rawData);
+        console.log("Parsed data:", data);
+  
+        setListings(Array.isArray(data) ? data : []);
       } catch (error) {
         console.error("Error fetching properties:", error);
+        setListings([]);
       }
     };
-
+  
     fetchListings();
-  }, [location, priceRange]);
+  }, [location, priceRange, advancedFilters]);
+  
 
-  // Calculate the indices for slicing the data
   const startIndex = (currentPage - 1) * itemsPerPage;
   const endIndex = startIndex + itemsPerPage;
-
-  // Paginate data
   const paginatedListings = listings.slice(startIndex, endIndex);
 
-  // Handler to select a property
-  const handleSelectProperty = (property) => {
-    setSelectedProperty(property); // Select a property to view in detail
-  };
-
-  // Handler to return to the search results
-  const handleBackToResults = () => {
-    setSelectedProperty(null); // Reset selected property
-  };
+  const handleSelectProperty = (property) => setSelectedProperty(property);
+  const handleBackToResults = () => setSelectedProperty(null);
 
   return (
     <div className="min-h-screen bg-gray-100">
       <Navbar />
       {selectedProperty ? (
-        // Render PropertyDetails if a property is selected
         <PropertyDetails property={selectedProperty} onBack={handleBackToResults} />
       ) : (
         <div className="p-8">
@@ -79,7 +80,6 @@ const SearchResults = () => {
             {location && <p className="text-gray-600">Location: {location}</p>}
             {roomType && <p className="text-gray-600">Room Type: {roomType}</p>}
             <p className="text-gray-600">Price Range: €{priceRange[0]} - €{priceRange[1]}</p>
-            {/* Display active advanced filters */}
             <div className="text-gray-600">
               {Object.keys(advancedFilters)
                 .filter((key) => advancedFilters[key])
@@ -93,19 +93,16 @@ const SearchResults = () => {
             {paginatedListings.length > 0 ? (
               paginatedListings.map((listing) => (
                 <SearchCard
-                  key={listing.property_id} // Use the property_id as the unique key
-                  image={listing.Media[0]?.mediaUrl || "/default.jpg"} // Use the first image or a default image
-                  title={listing.address}
-                  description={listing.amenities}
+                  key={listing.property_id}
+                  image={listing.Media[0]?.mediaUrl || "/default.jpg"}
+                  description={listing.amenities.join(", ")}
                   price={`€${listing.rent}`}
-                  landlord={listing.landlord.name}
-                  onClick={() => handleSelectProperty(listing)} // Pass listing data
+                  poster={`${listing.landlord.first_name} ${listing.landlord.last_name}`}
+                  onClick={() => handleSelectProperty(listing)}
                 />
               ))
             ) : (
-              <p className="text-center text-gray-500">
-                No results found. Try a different search.
-              </p>
+              <p className="text-center text-gray-500">No results found. Try a different search.</p>
             )}
           </div>
 

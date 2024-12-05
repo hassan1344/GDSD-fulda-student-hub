@@ -1,5 +1,4 @@
 import React, { useState } from "react";
-import ApplicationForm from "./ApplicationForm";
 
 const PropertyDetails = ({ property, onBack }) => {
   const [activeTab, setActiveTab] = useState("about");
@@ -31,10 +30,11 @@ const PropertyDetails = ({ property, onBack }) => {
             <p>{property.description}</p>
             <p className="mt-4 font-semibold">Amenities:</p>
             <ul className="list-disc ml-5">
-              {property.amenities &&
-                property.amenities
-                  .split(",")
-                  .map((amenity, index) => (
+              {Array.isArray(property.amenities)
+                ? property.amenities.map((amenity, index) => (
+                    <li key={index}>{amenity}</li>
+                  ))
+                : property.amenities.split(',').map((amenity, index) => (
                     <li key={index}>{amenity.trim()}</li>
                   ))}
             </ul>
@@ -147,46 +147,15 @@ const PropertyDetails = ({ property, onBack }) => {
 
       {/* Tabs */}
       <div className="flex space-x-4 mb-6 border-b">
-        <button
-          onClick={() => setActiveTab("about")}
-          className={`py-2 px-4 transition-all duration-200 ${
-            activeTab === "about"
-              ? "border-b-2 border-blue-600 font-bold text-blue-600"
-              : "text-gray-600 hover:text-blue-600 hover:font-medium"
-          }`}
-        >
-          About
-        </button>
-        <button
-          onClick={() => setActiveTab("reviews")}
-          className={`py-2 px-4 transition-all duration-200 ${
-            activeTab === "reviews"
-              ? "border-b-2 border-blue-600 font-bold text-blue-600"
-              : "text-gray-600 hover:text-blue-600 hover:font-medium"
-          }`}
-        >
-          Reviews
-        </button>
-        <button
-          onClick={() => setActiveTab("contact")}
-          className={`py-2 px-4 transition-all duration-200 ${
-            activeTab === "contact"
-              ? "border-b-2 border-blue-600 font-bold text-blue-600"
-              : "text-gray-600 hover:text-blue-600 hover:font-medium"
-          }`}
-        >
-          Contact
-        </button>
-        <button
-          onClick={() => setActiveTab("apply")}
-          className={`py-2 px-4 transition-all duration-200 ${
-            activeTab === "apply"
-              ? "border-b-2 border-blue-600 font-bold text-blue-600"
-              : "text-gray-600 hover:text-blue-600 hover:font-medium"
-          }`}
-        >
-          Apply Now
-        </button>
+        {["about", "reviews", "contact"].map((tab) => (
+          <button 
+            key={tab} 
+            onClick={() => setActiveTab(tab)} 
+            className={`py-2 px-4 ${activeTab === tab ? "border-b-2 border-blue-600 font-bold" : ""}`}
+          >
+            {tab.charAt(0).toUpperCase() + tab.slice(1)}
+          </button>
+        ))}
       </div>
 
       {/* Tab Content */}
