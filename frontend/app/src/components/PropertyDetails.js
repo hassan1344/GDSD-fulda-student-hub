@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState } from "react";
 
 const PropertyDetails = ({ property, onBack }) => {
   const [activeTab, setActiveTab] = useState("about");
@@ -26,11 +26,13 @@ const PropertyDetails = ({ property, onBack }) => {
             <p>{property.description}</p>
             <p className="mt-4 font-semibold">Amenities:</p>
             <ul className="list-disc ml-5">
-              {
-                property.amenities && property.amenities.split(',').map((amenity, index) => (
-                <li key={index}>{amenity.trim()}</li>
-                ))
-              }
+              {Array.isArray(property.amenities)
+                ? property.amenities.map((amenity, index) => (
+                    <li key={index}>{amenity}</li>
+                  ))
+                : property.amenities.split(',').map((amenity, index) => (
+                    <li key={index}>{amenity.trim()}</li>
+                  ))}
             </ul>
           </div>
         );
@@ -80,7 +82,7 @@ const PropertyDetails = ({ property, onBack }) => {
               ▶
             </button>
           </div>
-          
+
           {/* Image Preview Indicators */}
           <div className="flex justify-center space-x-2 mt-4">
             {images.map((_, index) => (
@@ -121,9 +123,15 @@ const PropertyDetails = ({ property, onBack }) => {
 
       {/* Tabs */}
       <div className="flex space-x-4 mb-6 border-b">
-        <button onClick={() => setActiveTab("about")} className={`py-2 px-4 ${activeTab === "about" ? "border-b-2 border-blue-600 font-bold" : ""}`}>About</button>
-        <button onClick={() => setActiveTab("reviews")} className={`py-2 px-4 ${activeTab === "reviews" ? "border-b-2 border-blue-600 font-bold" : ""}`}>Reviews</button>
-        <button onClick={() => setActiveTab("contact")} className={`py-2 px-4 ${activeTab === "contact" ? "border-b-2 border-blue-600 font-bold" : ""}`}>Contact</button>
+        {["about", "reviews", "contact"].map((tab) => (
+          <button 
+            key={tab} 
+            onClick={() => setActiveTab(tab)} 
+            className={`py-2 px-4 ${activeTab === tab ? "border-b-2 border-blue-600 font-bold" : ""}`}
+          >
+            {tab.charAt(0).toUpperCase() + tab.slice(1)}
+          </button>
+        ))}
       </div>
 
       {/* Tab Content */}

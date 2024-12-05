@@ -36,10 +36,7 @@ const Home = () => {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-100 to-gray-200">
-      {/* Navigation Bar */}
       <Navbar />
-
-      {/* Main Search Section */}
       <div className="flex justify-center mt-12">
         <div className="bg-white shadow-lg rounded-lg p-8 w-full max-w-4xl">
           <h2 className="text-2xl font-semibold text-gray-800 text-center mb-6">
@@ -62,27 +59,19 @@ const Home = () => {
             {showAdvanced ? "Hide Advanced Search" : "Advanced Search"}
           </button>
 
-          {/* Advanced Search Section */}
           {showAdvanced && (
             <div className="mt-6 bg-gray-50 p-6 rounded-lg shadow-inner">
-              <h3 className="text-lg font-semibold text-gray-800 mb-4">
-                Advanced Filters
-              </h3>
+              <h3 className="text-lg font-semibold text-gray-800 mb-4">Advanced Filters</h3>
               <div className="grid grid-cols-2 gap-4">
                 {["shower", "heater", "kitchen", "balcony"].map((filter) => (
-                  <label
-                    key={filter}
-                    className="flex items-center space-x-3 text-gray-700"
-                  >
+                  <label key={filter} className="flex items-center space-x-3 text-gray-700">
                     <input
                       type="checkbox"
                       checked={advancedFilters[filter]}
                       onChange={() => handleToggleFilter(filter)}
                       className="w-5 h-5 text-blue-500 focus:ring-blue-400 rounded"
                     />
-                    <span>
-                      {filter.charAt(0).toUpperCase() + filter.slice(1)}
-                    </span>
+                    <span>{filter.charAt(0).toUpperCase() + filter.slice(1)}</span>
                   </label>
                 ))}
               </div>
