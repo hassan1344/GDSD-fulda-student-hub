@@ -1,4 +1,5 @@
 import React, { useState } from "react";
+import ApplicationForm from './ApplicationForm';
 
 const PropertyDetails = ({ property, onBack }) => {
   const [activeTab, setActiveTab] = useState("about");
