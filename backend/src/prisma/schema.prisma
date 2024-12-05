@@ -8,17 +8,39 @@ datasource db {
 }
 
 model Landlord {
-  landlord_id     String     @id @default(uuid())
-  name            String
+  landlord_id String     @id @default(uuid())
+  trust_score Int        @default(0)
+  first_name      String
+  last_name       String
   phone_number    String     @unique
   address         String
-  trust_score     Int        @default(0)
   profile_picture String?
-  created_at      DateTime   @default(now())
-  updated_at      DateTime   @updatedAt
-  Property        Property[]
+  created_at  DateTime   @default(now())
+  updated_at  DateTime   @updatedAt
+  Property    Property[]
+  user_id     String
+
+  user User @relation(fields: [user_id], references: [user_name])
 
   @@map("landlord")
+}
+
+enum UserType {
+  STUDENT
+  LANDLORD
+  ADMIN
+}
+
+model User {
+  user_name         String     @id
+  created_at      DateTime   @default(now())
+  updated_at      DateTime   @updatedAt
+  Landlord        Landlord[]
+  email           String
+  password        String
+  user_type       UserType  @default(STUDENT)
+
+  @@map("user")
 }
 
 model Property {
@@ -30,8 +52,8 @@ model Property {
   created_at  DateTime @default(now())
   updated_at  DateTime @updatedAt
 
-  landlord Landlord  @relation(fields: [landlord_id], references: [landlord_id])
-  Listing  Listing[]
+  landlord    Landlord  @relation(fields: [landlord_id], references: [landlord_id])
+  Listing     Listing[]
 
   @@map("property")
 }
@@ -41,7 +63,7 @@ model Listing {
   property_id String
   title       String
   description String
-  status      String   //available,sold etc.
+  status      String //available,sold etc.
   created_at  DateTime @default(now())
   updated_at  DateTime @updatedAt
 
