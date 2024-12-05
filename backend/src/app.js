@@ -21,9 +21,9 @@ app.get("/", (req, res) => {
   return res.send("Service is available...");
 });
 
-app.use("/api/v1/properties", propertyRouter);
+app.use("v1/properties", propertyRouter);
 
-app.use("/api/v1/auth", authRoutes);
+app.use("v1/auth", authRoutes);
 
 app.use(ResHandler);
 
