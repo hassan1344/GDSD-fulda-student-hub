@@ -4,7 +4,8 @@ import helmet from "helmet";
 import cors from "cors";
 
 import { ResHandler } from "./utils/custom-response/response-handler.js";
-import { propertyRoutes } from "./routes/properties.js";
+import propertyRouter from "./routes/propertyRoutes.js";
+import { authRoutes } from "./routes/authRoutes.js";
 
 const app = express();
 
@@ -20,11 +21,9 @@ app.get("/", (req, res) => {
   return res.send("Service is available...");
 });
 
-const v1Router = express.Router();
+app.use("/api/v1/properties", propertyRouter);
 
-v1Router.use("/properties", propertyRoutes);
-
-app.use("/v1", v1Router); //api already appended in nginx conf for deployment
+app.use("/api/v1/auth", authRoutes);
 
 app.use(ResHandler);
 
