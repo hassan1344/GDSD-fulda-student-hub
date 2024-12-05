@@ -1,0 +1,71 @@
+/* LandlordHomepage.css */
+
+body {
+    margin: 0; /* Reset default margin */
+    padding: 0; /* Reset default padding */
+    font-family: Arial, sans-serif; /* Set a default font */
+}
+
+/* Welcome message styles */
+.welcome-message {
+    font-size: 28px; /* Larger font size for the welcome message */
+    color: #333; /* Dark color for text */
+    margin: 20px 0; /* Space above and below */
+    font-weight: bold; /* Bold text */
+    text-align: center; /* Center align the welcome message */
+}
+
+/* Align container to left and center stats */
+.homepage-container {
+    background-color: #f9f9f9;
+    padding: 20px;
+    border-radius: 8px;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+    max-width: 800px; /* Limit width */
+    width: 100%; /* Allow full width up to max-width */
+    margin: auto; /* Center the container horizontally */
+}
+
+/* Use flexbox for vertical stacking of stat items */
+.stats-container {
+    display: flex; /* Use flexbox for layout */
+    border-radius: 5px;
+    flex-direction: column; /* Stack items vertically */
+    align-items: center; /* Center items horizontally within the container */
+    background-color: #f8f8f8;
+}
+
+.action-button {
+   
+    background-color: #4CAF50; /* Green background */
+    color: white; /* White text color */
+    padding: 15px ; /* Increased padding for larger boxes */
+    border-radius: 5px;
+    border:none;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1); /* Slightly larger shadow for depth */
+    cursor: pointer; /* Pointer cursor on hover */
+    min-width: 300px;
+    margin-bottom: 20px; /* Space between each stat item */
+   /*width: 100%; /* Full width of its parent container */
+    max-width: 400px; /* Limit max width of each stat box */
+    text-align: center; /* Center text in each box */
+    font-weight: bolder;
+    font-size: large;
+
+
+
+
+    
+}
+.action-button:hover {
+    background-color: #45a049; /* Darker green on hover */
+}
+.stat-item h2 {
+    font-size: 22px; /* Larger font size for stat titles */
+    color: #555; /* Medium gray color for titles */
+}
+
+.stat-item p {
+    font-size: 26px; /* Larger font size for stat values */
+    color: #333; /* Dark color for values */
+}
