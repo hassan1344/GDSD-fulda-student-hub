@@ -6,6 +6,11 @@ import LandlordRequests from "./pages/LandlordRequests";
 import LandlordSelectRequests from "./pages/LandlordSelectRequests";
 import LandlordViewTenants from "./pages/LandlordViewTenants";
 import LandlordViewProperties from "./pages/LandlordViewProperties";
+import LandlordHomepage from "./pages/landlord/LandlordHomepage";
+import CreateNewListing from "./pages/landlord/CreateNewListing";
+import MyListing from "./pages/landlord/MyListing";
+import EditDeleteListing from "./pages/landlord/EditDeleteListing";
+
 
 const App = () => {
   console.log("App rendered");
@@ -18,6 +23,10 @@ const App = () => {
         <Route path="/landlord/select-requests" element={<LandlordSelectRequests />} />
         <Route path="/landlord/tenants" element={<LandlordViewTenants />} />
         <Route path="/landlord/properties" element={<LandlordViewProperties />} />
+        <Route path="/landlord" element={<LandlordHomepage />} />
+        <Route path="/landlord/create-listing" element={<CreateNewListing />} />
+        <Route path="/landlord/my-listings" element={<MyListing />} />
+        <Route path="/landlord/edit-listing/:id" element={<EditDeleteListing />} />
       </Routes>
     </Router>
   );
