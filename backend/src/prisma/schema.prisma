@@ -48,7 +48,7 @@ model Property {
   landlord_id String
   address     String
   rent        Float
-  amenities   String
+  amenities   Json
   created_at  DateTime @default(now())
   updated_at  DateTime @updatedAt
 
@@ -63,6 +63,7 @@ model Listing {
   property_id String
   title       String
   description String
+  room_type   String
   status      String //available,sold etc.
   created_at  DateTime @default(now())
   updated_at  DateTime @updatedAt
