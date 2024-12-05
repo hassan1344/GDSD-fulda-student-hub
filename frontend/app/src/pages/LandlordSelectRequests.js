@@ -43,9 +43,12 @@ const LandlordSelectRequests = () => {
         <div className="grid grid-cols-1 gap-6">
           {requests.map((request) => (
             <div key={request.id} className="bg-white shadow-md rounded-lg p-6">
-              <h3 className="text-xl font-semibold mb-2">{request.propertyTitle}</h3>
-              <p className="text-gray-600">Tenant: {request.tenantName}</p>
-              <p className="text-gray-600">Date: {new Date(request.date).toLocaleDateString()}</p>
+              {/* Highlight tenant name */}
+              <h3 className="text-2xl font-bold text-gray-800 mb-2">{request.tenantName}</h3>
+              {/* Property title as secondary information */}
+              <p className="text-gray-600 font-semibold">{request.propertyTitle}</p>
+              {/* Display the request date */}
+              <p className="text-gray-600">Request Date: {new Date(request.date).toLocaleDateString()}</p>
               <div className="mt-4 flex space-x-4">
                 <button 
                   onClick={() => handleRequestAction(request.id, 'approve')}
