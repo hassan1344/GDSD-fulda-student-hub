@@ -3,7 +3,7 @@
     "listing_id": 1,
     "title": "Modern Apartment",
     "description": "A cozy one-bedroom apartment.",
-    "images": [
+    "Media": [
       "https://picsum.photos/200/300",
       "https://picsum.photos/200/301"
     ],
@@ -23,7 +23,7 @@
     "listing_id": 2,
     "title": "Spacious Studio",
     "description": "A modern studio apartment.",
-    "images": [
+    "Media": [
       "https://picsum.photos/200/300",
       "https://picsum.photos/200/301"
     ],
