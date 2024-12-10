@@ -7,9 +7,8 @@ export const authenticateStudent = (req, res, next) => {
   }
 
   try {
-    const user = verifyToken(token);
+    const user = verifyToken(token, process.env.ACCESS_TOKEN_SECRET);
     req.user = user;
-    console.log(user);
 
     if (user.userType !== "STUDENT") {
       return res
@@ -30,7 +29,7 @@ export const authenticateLandlord = (req, res, next) => {
   }
 
   try {
-    const user = verifyToken(token);
+    const user = verifyToken(token, process.env.ACCESS_TOKEN_SECRET);
     req.user = user;
 
     if (user.user_type !== "LANDLORD") {
