@@ -1,13 +1,13 @@
 import React, { useState } from 'react';
 import { mockLandlordData } from '../../mockData'; // Import mock data
-import NavBar from '../../components/NavBar'; // Adjusted path to Navbar component
+import LandlordNavbar from '../../components/LandlordNavbar'; // Adjusted path to Navbar component
 
 const MyListings = () => {
   const [listings] = useState(mockLandlordData.listings);
 
   return (
     <div className="min-h-screen bg-green-50">
-      <NavBar />
+      <LandlordNavbar />
       <div className="container mx-auto px-4 py-8">
         <h1 className="text-4xl font-bold text-center text-green-700 mb-6">My Listings</h1>
         {listings.length === 0 ? (

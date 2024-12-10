@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { mockLandlordData } from '../../mockData'; // Import mock data for initial state
-import NavBar from '../../components/NavBar'; // Adjusted path to Navbar component
+import LandlordNavbar from '../../components/LandlordNavbar'; // Adjusted path to Navbar component
 
 const amenitiesList = [
   { name: 'Washing Machine', value: 'washing_machine' },
@@ -68,7 +68,7 @@ const CreateNewListing = () => {
 
   return (
     <div className="min-h-screen bg-green-50">
-      <NavBar />
+      <LandlordNavbar />
       <div className="container mx-auto px-4 py-8">
         <h1 className="text-4xl font-bold text-center text-black-700 mb-6">Create New Listing</h1>
         <form onSubmit={handleSubmit} className="bg-white shadow-lg rounded-lg p-8 max-w-lg mx-auto border border-green-200">

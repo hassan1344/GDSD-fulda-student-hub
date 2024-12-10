@@ -4,6 +4,8 @@ import Navbar from "../components/NavBar";
 import SearchCard from "../components/SearchCard";
 import Pagination from "../components/Pagination";
 import PropertyDetails from "../components/PropertyDetails";
+import { fetchProperties } from "../services/propertyServices";
+import Disclaimer from "../components/Disclaimer";
 
 const SearchResults = () => {
   const { state } = useLocation();
@@ -17,46 +19,31 @@ const SearchResults = () => {
   const [listings, setListings] = useState([]);
   const [currentPage, setCurrentPage] = useState(1);
   const [selectedProperty, setSelectedProperty] = useState(null);
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState(null);
+
   const itemsPerPage = 10;
 
   useEffect(() => {
-    const fetchListings = async () => {
+    const loadProperties = async () => {
+      setIsLoading(true);
+      setError(null);
       try {
-        const address = encodeURIComponent(location);
-        const minRent = priceRange[0];
-        const maxRent = priceRange[1];
-
-        const amenities = Object.keys(advancedFilters)
-          .filter((key) => advancedFilters[key])
-          .map((key) => `"${key}"`)
-          .join(",");
-//
-        const apiUrl = `https://fulda-student-hub.publicvm.com/api/v1/properties?address=${address}&minRent=${minRent}&maxRent=${maxRent}${
-          amenities ? `&amenities=${encodeURIComponent(amenities)}` : ""
-        }`;
-
-        const response = await fetch(apiUrl);
-
-        if (!response.ok) {
-          throw new Error(`Failed to fetch properties: ${response.statusText}`);
-        }
-
-        // Log the raw response before parsing
-        const rawData = await response.text();
-        console.log("Raw response data:", rawData); // Log raw response
-
-        // Try parsing JSON
-        const data = JSON.parse(rawData);
-        console.log("Parsed data:", data);
-
-        setListings(Array.isArray(data) ? data : []);
-      } catch (error) {
-        console.error("Error fetching properties:", error);
-        setListings([]);
+        const data = await fetchProperties(
+          location,
+          priceRange,
+          advancedFilters
+        );
+        setListings(data);
+      } catch (err) {
+        console.error("Error fetching properties:", err);
+        setError("Failed to load properties. Please try again later.");
+      } finally {
+        setIsLoading(false);
       }
     };
 
-    fetchListings();
+    loadProperties();
   }, [location, priceRange, advancedFilters]);
 
   const startIndex = (currentPage - 1) * itemsPerPage;
@@ -70,6 +57,7 @@ const SearchResults = () => {
     <div className="min-h-screen bg-gray-100">
       <Navbar />
       {selectedProperty ? (
+        // Render PropertyDetails if a property is selected
         <PropertyDetails
           property={selectedProperty}
           onBack={handleBackToResults}
@@ -88,6 +76,7 @@ const SearchResults = () => {
             <p className="text-gray-600">
               Price Range: €{priceRange[0]} - €{priceRange[1]}
             </p>
+            {/* Display active advanced filters */}
             <div className="text-gray-600">
               {Object.keys(advancedFilters)
                 .filter((key) => advancedFilters[key])
@@ -99,32 +88,41 @@ const SearchResults = () => {
             </div>
           </div>
 
-          <div className="grid grid-cols-1 gap-6">
-            {paginatedListings.length > 0 ? (
-              paginatedListings.map((listing) => (
-                <SearchCard
-                  key={listing.property_id}
-                  image={listing.Media[0]?.mediaUrl || "/default.jpg"}
-                  description={listing.amenities.join(", ")}
-                  price={`€${listing.rent}`}
-                  poster={`${listing.landlord.first_name} ${listing.landlord.last_name}`}
-                  onClick={() => handleSelectProperty(listing)}
-                />
-              ))
-            ) : (
-              <p className="text-center text-gray-500">
-                No results found. Try a different search.
-              </p>
-            )}
-          </div>
-
-          <Pagination
-            currentPage={currentPage}
-            setCurrentPage={setCurrentPage}
-            totalPages={Math.ceil(listings.length / itemsPerPage)}
-          />
+          {isLoading ? (
+            <p className="text-center text-gray-500">Loading...</p>
+          ) : error ? (
+            <p className="text-center text-red-500">{error}</p>
+          ) : paginatedListings.length > 0 ? (
+            <>
+              <div className="grid grid-cols-1 gap-6">
+                {paginatedListings.map((listing) => (
+                  <SearchCard
+                    key={listing.property_id}
+                    image={listing.Media[0]?.mediaUrl || "/default.jpg"}
+                    description={listing.amenities.join(", ")}
+                    price={`€${listing.rent}`}
+                    poster={`${listing.landlord.first_name} ${listing.landlord.last_name}`}
+                    onClick={() => handleSelectProperty(listing)}
+                  />
+                ))}
+              </div>
+              <Pagination
+                currentPage={currentPage}
+                setCurrentPage={setCurrentPage}
+                totalPages={Math.ceil(listings.length / itemsPerPage)}
+              />
+            </>
+          ) : (
+            <p className="text-center text-gray-500">
+              No results found. Try a different search.
+            </p>
+          )}
         </div>
       )}
+
+      <div className="pb-16"></div>
+
+      <Disclaimer />
     </div>
   );
 };

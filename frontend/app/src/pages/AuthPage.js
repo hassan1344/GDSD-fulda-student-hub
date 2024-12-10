@@ -1,6 +1,9 @@
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import logoFHB from "../assets/images/logoFHB.png";
+import { registerUser, loginUser } from "../services/authServices";
+import Disclaimer from "../components/Disclaimer";
+import { jwtDecode } from "jwt-decode"; // Import the library
 
 const AuthPage = () => {
   const navigate = useNavigate();
@@ -9,7 +12,15 @@ const AuthPage = () => {
     email: "",
     password: "",
     confirmPassword: "",
-    userType: "Student", // Default to Student
+    userType: "STUDENT",
+    userName: "",
+  });
+
+  const [fieldErrors, setFieldErrors] = useState({});
+  const [loading, setLoading] = useState(false);
+  const [notification, setNotification] = useState({
+    message: "",
+    visible: false,
   });
 
   const toggleForm = () => setIsRegister((prev) => !prev);
@@ -19,73 +30,113 @@ const AuthPage = () => {
     setFormData({ ...formData, [name]: value });
   };
 
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-
-    // Determine the endpoint and action based on whether it's registration or login
-    const isRegister =
-      formData.userType === "Student" || formData.userType === "Landlord"; // check if registration form
-
-    if (!isRegister) {
-      // Simulating Registration Success
-      console.log("Registration Successful", formData);
-      alert("Registration successful! Please log in.");
-      toggleForm(); // Toggle form between login and register
-    } else {
-      // Simulating Login Success
-      const mockCredentials = {
-        email: "student@informatik.hs-fulda.de", // Mock student email
-        password: "password123", // Mock password
-      };
-
-      if (
-        formData.email === mockCredentials.email &&
-        formData.password === mockCredentials.password
-      ) {
-        alert("Login successful!");
-        localStorage.setItem("isLoggedIn", "true"); // Simulate login success (this can be used to check if the user is logged in)
-        navigate("/home"); // Redirect to Home (adjust the path as needed)
-      } else {
-        alert("Invalid email or password. Please try again.");
-      }
-    }
+  const showNotification = (msg) => {
+    setNotification({ message: msg, visible: true });
+    setTimeout(() => setNotification({ message: "", visible: false }), 3000); // 3-second timer
   };
 
-  //   const handleSubmit = async (e) => {
-  //     e.preventDefault();
-  //     const endpoint = isRegister
-  //       ? `/api/v1/auth/register?user=${formData.userType}`
-  //       : `/api/v1/auth/login`;
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    setLoading(true);
+    setFieldErrors({}); // Reset field errors
 
-  //     try {
-  //       const response = await fetch(endpoint, {
-  //         method: "POST",
-  //         headers: {
-  //           "Content-Type": "application/json",
-  //         },
-  //         body: JSON.stringify({
-  //           email: formData.email,
-  //           password: formData.password,
-  //         }),
-  //       });
+    try {
+      if (isRegister) {
+        const { email, password, confirmPassword, userType, userName } =
+          formData;
 
-  //       const data = await response.json();
-  //       if (response.ok) {
-  //         if (!isRegister) {
-  //           localStorage.setItem("jwtToken", data.token); // Store JWT
-  //           navigate("/home"); // Redirect to Home for students
-  //         } else {
-  //           alert("Registration successful! Please log in.");
-  //           toggleForm();
-  //         }
-  //       } else {
-  //         alert(data.message || "An error occurred. Please try again.");
-  //       }
-  //     } catch (error) {
-  //       console.error("Error:", error);
-  //       alert("Server error. Please try again later.");
-  //     }
-  //   };
+        const errors = {};
+
+        if (!userName) errors.userName = "Username is required.";
+        if (password !== confirmPassword)
+          errors.confirmPassword = "Passwords do not match.";
+        if (
+          userType === "STUDENT" &&
+          !email.includes("@informatik.hs-fulda.de")
+        )
+          errors.email = "Student email must include @informatik.hs-fulda.de.";
+
+        const passwordRegex =
+          /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[!@#$%^&*]).{8,}$/;
+
+        if (!passwordRegex.test(password))
+          errors.password =
+            "Password must have at least one number, one special character, one uppercase letter, and one lowercase letter.";
+
+        if (Object.keys(errors).length > 0) {
+          setFieldErrors(errors);
+          setLoading(false);
+          return;
+        }
+
+        const response = await registerUser(userType, {
+          email,
+          password,
+          userName,
+        });
+
+        if (response.message === "User registered successfully") {
+          showNotification("Registration successful! Please log in.");
+          setTimeout(() => {
+            toggleForm();
+          }, 2000);
+        } else {
+          showNotification(
+            response.message || "Registration failed. Try again."
+          );
+        }
+      } else {
+        const { userName, password } = formData;
+
+        const errors = {};
+        if (!userName) errors.userName = "Username is required.";
+        if (!password) errors.password = "Password is required.";
+
+        if (Object.keys(errors).length > 0) {
+          setFieldErrors(errors);
+          setLoading(false);
+          return;
+        }
+
+        const response = await loginUser({ userName, password });
+
+        if (response.token) {
+          const { accessToken, refreshToken } = response.token;
+
+          localStorage.setItem("accessToken", accessToken);
+          localStorage.setItem("refreshToken", refreshToken);
+
+          const decodedToken = jwtDecode(accessToken);
+          const { userName, userType } = decodedToken;
+
+          showNotification("Login successful...");
+          if (userType === "STUDENT") {
+            setTimeout(() => {
+              navigate("/home");
+            }, 2000);
+          } else if (userType === "LANDLORD") {
+            //showNotification("Add Navigation to Landlord Homepage.");
+            setTimeout(() => {
+             navigate("/landlord");//Add landlord landing page
+            }, 2000);
+          } else {
+            showNotification("An error occurred. Please try again.");
+          }
+        } else {
+          showNotification("Invalid login credentials!");
+          setFieldErrors({
+            userName: "Invalid username or password.",
+            password: "Invalid username or password.",
+          });
+        }
+      }
+    } catch (error) {
+      console.error("Error:", error);
+      showNotification("An error occurred. Please try again.");
+    }
+
+    setLoading(false);
+  };
 
   return (
     <div className="min-h-screen flex flex-col justify-center items-center bg-gradient-to-br from-green-100 via-green-50 to-white">
@@ -104,43 +155,71 @@ const AuthPage = () => {
             : "Welcome back! Please log in to continue."}
         </p>
       </div>
-      <div className="bg-white shadow-lg rounded-lg w-96 p-6">
+
+      {/* Notification Banner */}
+      {notification.visible && (
+        <div className="fixed top-4 bg-green-500 text-white py-2 px-4 rounded-md shadow-md transition-all duration-300">
+          {notification.message}
+        </div>
+      )}
+
+      <div className="bg-white shadow-lg rounded-lg w-96 p-6 relative">
+        {/* Loading Spinner */}
+        {loading && (
+          <div className="absolute inset-0 flex items-center justify-center bg-white bg-opacity-60 z-50">
+            <div className="animate-spin rounded-full h-8 w-8 border-t-4 border-green-500"></div>
+          </div>
+        )}
+
         <form onSubmit={handleSubmit} className="space-y-4">
-          {isRegister && (
-            <div>
-              <label className="block text-gray-700 font-semibold mb-1">
-                Username
-              </label>
-              <input
-                type="text"
-                name="username"
-                placeholder="Enter your username"
-                value={formData.username}
-                onChange={handleInputChange}
-                required
-                className="w-full border border-gray-300 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-green-400"
-              />
-            </div>
-          )}
           <div>
             <label className="block text-gray-700 font-semibold mb-1">
-              Email Address
+              Username
             </label>
             <input
-              type="email"
-              name="email"
-              placeholder="Enter your email"
-              value={formData.email}
+              type="text"
+              name="userName"
+              placeholder="Enter your username"
+              value={formData.userName}
               onChange={handleInputChange}
               required
-              className="w-full border border-gray-300 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-green-400"
+              className={`w-full border rounded-lg px-4 py-2 focus:outline-none focus:ring-2 ${
+                fieldErrors.userName
+                  ? "border-red-500 ring-red-400"
+                  : "border-gray-300 focus:ring-green-400"
+              }`}
             />
-            {isRegister && formData.userType === "Student" && (
-              <p className="text-xs text-gray-500 mt-1">
-                Students must use their @informatik.hs-fulda.de email.
+            {fieldErrors.userName && (
+              <p className="text-sm text-red-500 mt-1">
+                {fieldErrors.userName}
               </p>
             )}
           </div>
+
+          {isRegister && (
+            <div>
+              <label className="block text-gray-700 font-semibold mb-1">
+                Email Address
+              </label>
+              <input
+                type="email"
+                name="email"
+                placeholder="Enter your email"
+                value={formData.email}
+                onChange={handleInputChange}
+                required
+                className={`w-full border rounded-lg px-4 py-2 focus:outline-none focus:ring-2 ${
+                  fieldErrors.email
+                    ? "border-red-500 ring-red-400"
+                    : "border-gray-300 focus:ring-green-400"
+                }`}
+              />
+              {fieldErrors.email && (
+                <p className="text-sm text-red-500 mt-1">{fieldErrors.email}</p>
+              )}
+            </div>
+          )}
+
           <div>
             <label className="block text-gray-700 font-semibold mb-1">
               Password
@@ -152,9 +231,19 @@ const AuthPage = () => {
               value={formData.password}
               onChange={handleInputChange}
               required
-              className="w-full border border-gray-300 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-green-400"
+              className={`w-full border rounded-lg px-4 py-2 focus:outline-none focus:ring-2 ${
+                fieldErrors.password
+                  ? "border-red-500 ring-red-400"
+                  : "border-gray-300 focus:ring-green-400"
+              }`}
             />
+            {fieldErrors.password && (
+              <p className="text-sm text-red-500 mt-1">
+                {fieldErrors.password}
+              </p>
+            )}
           </div>
+
           {isRegister && (
             <div>
               <label className="block text-gray-700 font-semibold mb-1">
@@ -167,14 +256,24 @@ const AuthPage = () => {
                 value={formData.confirmPassword}
                 onChange={handleInputChange}
                 required
-                className="w-full border border-gray-300 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-green-400"
+                className={`w-full border rounded-lg px-4 py-2 focus:outline-none focus:ring-2 ${
+                  fieldErrors.confirmPassword
+                    ? "border-red-500 ring-red-400"
+                    : "border-gray-300 focus:ring-green-400"
+                }`}
               />
+              {fieldErrors.confirmPassword && (
+                <p className="text-sm text-red-500 mt-1">
+                  {fieldErrors.confirmPassword}
+                </p>
+              )}
             </div>
           )}
+
           {isRegister && (
             <div>
               <label className="block text-gray-700 font-semibold mb-1">
-                Registering As
+                User Type
               </label>
               <select
                 name="userType"
@@ -182,11 +281,12 @@ const AuthPage = () => {
                 onChange={handleInputChange}
                 className="w-full border border-gray-300 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-green-400"
               >
-                <option value="Student">Student</option>
-                <option value="Landlord">Landlord</option>
+                <option value="STUDENT">Student</option>
+                <option value="LANDLORD">Landlord</option>
               </select>
             </div>
           )}
+
           <div className="flex items-center justify-between">
             <button
               type="submit"
@@ -206,6 +306,10 @@ const AuthPage = () => {
           </div>
         </form>
       </div>
+
+      <div className="pb-16"></div>
+
+      <Disclaimer />
     </div>
   );
 };

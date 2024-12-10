@@ -11,11 +11,13 @@ import LandlordHomepage from "./pages/landlord/LandlordHomepage";
 import CreateNewListing from "./pages/landlord/CreateNewListing";
 import MyListing from "./pages/landlord/MyListing";
 import EditDeleteListing from "./pages/landlord/EditDeleteListing";
+import Disclaimer from './components/Disclaimer'; // Import the Disclaimer component
 
 const App = () => {
   console.log("App rendered");
   return (
-    <Router basename="/app">
+    <Router >
+       <Disclaimer /> {/* Show disclaimer on every page */}
       <Routes>
       <Route path="/" element={<AuthPage />} />
         <Route path="/Home" element={<Home />} />
@@ -25,17 +27,16 @@ const App = () => {
         <Route path="/landlord/create-listing" element={<CreateNewListing />} />
         <Route path="/landlord/my-listings" element={<MyListing />} />
         <Route path="/landlord/edit-listing/:id" element={<EditDeleteListing />} />
+
         <Route path="/landlord/requests" element={<LandlordRequests />} />
         <Route path="/landlord/select-requests" element={<LandlordSelectRequests />} />
         <Route path="/landlord/tenants" element={<LandlordViewTenants />} />
         <Route path="/landlord/properties" element={<LandlordViewProperties />} />
-        <Route path="/landlord" element={<LandlordHomepage />} />
-        <Route path="/landlord/create-listing" element={<CreateNewListing />} />
-        <Route path="/landlord/my-listings" element={<MyListing />} />
-        <Route path="/landlord/edit-listing/:id" element={<EditDeleteListing />} />
+       
       </Routes>
     </Router>
   );
 };
 
 export default App;
+

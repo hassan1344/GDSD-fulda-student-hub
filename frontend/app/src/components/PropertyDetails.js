@@ -31,13 +31,10 @@ const PropertyDetails = ({ property, onBack }) => {
             <p>{property.description}</p>
             <p className="mt-4 font-semibold">Amenities:</p>
             <ul className="list-disc ml-5">
-              {Array.isArray(property.amenities)
-                ? property.amenities.map((amenity, index) => (
-                    <li key={index}>{amenity}</li>
-                  ))
-                : property.amenities.split(',').map((amenity, index) => (
-                    <li key={index}>{amenity.trim()}</li>
-                  ))}
+              {property.amenities &&
+                property.amenities.map((amenity, index) => (
+                  <li key={index}>{amenity}</li>
+                ))}
             </ul>
           </div>
         );

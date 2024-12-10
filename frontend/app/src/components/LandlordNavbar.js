@@ -1,18 +1,11 @@
-import React, { useState } from "react";
+import React from "react";
 import { NavLink, useLocation, useNavigate } from "react-router-dom";
 import logoFHB from "./assets/images/logoFHB.png";
 import { logoutUser } from "../services/authServices";
-const Navbar = () => {
+const LandlordNavbar = () => {
   const location = useLocation();
+const navigate = useNavigate();
 
-  const navigate = useNavigate();
-
-  const navLinks = [
-    { path: "/home", name: "Home" },
-    { path: "/favorites", name: "Favorites" },
-    { path: "/profile", name: "Profile" },
- 
-  ];
   const logoutHandler = async () => {
     try {
       const refreshToken = localStorage.getItem("refreshToken");
@@ -38,6 +31,14 @@ const Navbar = () => {
     }
   };
 
+
+
+  const navLinks = [
+    { path: "/", name: "Home" },
+    { path: "/message", name: "Message" },
+    { path: "/profile", name: "Profile" },
+  ];
+
   return (
     <nav className="bg-white shadow-md">
       <div className="flex justify-between items-center px-8 py-5">
@@ -60,9 +61,8 @@ const Navbar = () => {
             >
               {link.name}
             </NavLink>
+        
           ))}
-
-          {/* Logout Button */}
           <button
             onClick={logoutHandler}
             className="text-gray-600 hover:text-red-600 transition duration-200 px-2 py-1 rounded font-semibold"
@@ -75,4 +75,4 @@ const Navbar = () => {
   );
 };
 
-export default Navbar;
+export default LandlordNavbar;

@@ -1,23 +1,25 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
-import NavBar from '../../components/NavBar';
+import LandlordNavbar from '../../components/LandlordNavbar';
 
 const LandlordHomepage = () => {
   const menuItems = [
     
-    { title: 'Create New Listing', path: '/create-listing', icon: '📝' },
-    { title: 'My Listings', path: '/my-listings', icon: '📊' },
-    { title: 'New Requests', path: '/new-requests', icon: '🔔' },
-    { title: 'View Tenants', path: '/view-tenants', icon: '👁️' },
+    { title: 'Create New Listing', path: '/landlord/create-listing', icon: '📝' },
+    { title: 'My Listings', path: '/landlord/my-listings', icon: '📊' },
+    { title: 'New Requests', path: '/landlord/requests', icon: '🔔' },
+    { title: 'View Tenants', path: '/landlord/tenants', icon: '👁️' },
     { title: 'Register for Bidding', path: '/register-bidding', icon: '🏷️' },
     { title: 'View Past Tenants', path: '/past-tenants', icon: '👥' },
     { title: 'Documents', path: '/documents', icon: '📁' },
     { title: 'Raise an Issue', path: '/raise-issue', icon: '⚠️' },
+    { title: 'View Properties', path: '/landlord/properties', icon: '⚠️' },
+    { title: ' Select Requests', path: '/landlord/select-requests', icon: '⚠️' },
   ];
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-green-100 to-green-100">
-      <NavBar />
+      <LandlordNavbar />
       <div className="container mx-auto px-4 py-8">
         <h1 className="text-4xl font-bold text-center text-gray-800 mb-8">Welcome, Mr Schmidt</h1>
         <div className="bg-white shadow-2xl rounded-lg p-6 max-w-6xl mx-auto">

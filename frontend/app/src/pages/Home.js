@@ -2,6 +2,7 @@ import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import Navbar from "../components/NavBar";
 import SearchBar from "../components/SearchBar";
+import Disclaimer from "../components/Disclaimer";
 
 const Home = () => {
   const [location, setLocation] = useState("");
@@ -86,6 +87,10 @@ const Home = () => {
           </button>
         </div>
       </div>
+
+      <div className="pb-16"></div>
+
+      <Disclaimer />
     </div>
   );
 };
