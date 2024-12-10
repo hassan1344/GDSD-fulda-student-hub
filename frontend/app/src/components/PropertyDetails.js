@@ -32,11 +32,9 @@ const PropertyDetails = ({ property, onBack }) => {
             <p className="mt-4 font-semibold">Amenities:</p>
             <ul className="list-disc ml-5">
               {property.amenities &&
-                property.amenities
-                  .split(",")
-                  .map((amenity, index) => (
-                    <li key={index}>{amenity.trim()}</li>
-                  ))}
+                property.amenities.map((amenity, index) => (
+                  <li key={index}>{amenity}</li>
+                ))}
             </ul>
           </div>
         );
