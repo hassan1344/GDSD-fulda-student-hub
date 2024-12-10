@@ -6,6 +6,7 @@ import cors from "cors";
 import { ResHandler } from "./utils/custom-response/response-handler.js";
 import propertyRouter from "./routes/propertyRoutes.js";
 import { authRoutes } from "./routes/authRoutes.js";
+import { applicationRoutes } from "./routes/applicationRoutes.js";
 
 const app = express();
 
@@ -25,6 +26,8 @@ app.use("/v1/properties", propertyRouter);
 
 app.use("/v1/auth", authRoutes);
 
-app.use(ResHandler);
+app.use("/api/v1/application", applicationRoutes);
+
+// app.use(ResHandler);
 
 export { app };

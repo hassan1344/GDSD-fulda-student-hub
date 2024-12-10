@@ -1,21 +1,18 @@
-import bcrypt from 'bcrypt';
+import bcrypt from "bcrypt";
 import { PrismaClient } from "@prisma/client";
 const prismaClient = new PrismaClient();
-import {generateToken} from '../utils/jwtUtils.js';
+import { generateToken } from "../utils/jwtUtils.js";
 
-export const createLandlordUser = async ({ 
-  userName, 
-  email, 
+export const createLandlordUser = async ({
+  userName,
+  email,
   password,
-  userType
+  userType,
 }) => {
   // Check if the phone number or email is already registered
   const existingUser = await prismaClient.user.findFirst({
     where: {
-      OR: [
-        { email },
-        { user_name: userName },
-      ],
+      OR: [{ email }, { user_name: userName }],
     },
   });
 
@@ -32,7 +29,7 @@ export const createLandlordUser = async ({
       user_name: userName,
       email,
       password: hashedPassword,
-      user_type: userType
+      user_type: userType,
     },
   });
 
@@ -44,7 +41,7 @@ export const createLandlordUser = async ({
   //   },
   // });
 
-  return {user: newUser};
+  return { user: newUser };
 };
 
 export const loginLandlordUser = async (userName, password) => {
@@ -63,7 +60,7 @@ export const loginLandlordUser = async (userName, password) => {
   }
 
   const accessToken = generateToken(
-    { userName: user.user_name },
+    { userName: user.user_name, userType: user.user_type },
     "access", // Custom payload type
     "15m" // Short expiry
   );
@@ -79,4 +76,4 @@ export const loginLandlordUser = async (userName, password) => {
     accessToken,
     refreshToken,
   };
-}
+};

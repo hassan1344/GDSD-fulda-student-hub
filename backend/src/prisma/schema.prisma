@@ -8,31 +8,55 @@ datasource db {
 }
 
 model Landlord {
-  landlord_id     String     @id @default(uuid())
-  trust_score     Int        @default(0)
-  created_at      DateTime   @default(now())
-  updated_at      DateTime   @updatedAt
-  user_id         String
-  address         String
-  first_name      String
-  last_name       String
-  phone_number    String     @unique
-  profile_picture String?
-  user            User       @relation(fields: [user_id], references: [user_name])
-  Property        Property[]
+  landlord_id        String     @id @default(uuid())
+  trust_score        Int        @default(0)
+  created_at         DateTime   @default(now())
+  updated_at         DateTime   @updatedAt
+  user_id            String     @unique
+  address            String
+  first_name         String
+  last_name          String
+  phone_number       String     @unique
+  profile_picture_id String?
+  user               User       @relation(fields: [user_id], references: [user_name])
+  Property           Property[]
+
+  profile_picture Media? @relation(fields: [profile_picture_id], references: [media_id])
 
   @@index([user_id], map: "landlord_user_id_fkey")
   @@map("landlord")
 }
 
+model Student {
+  student_id         String   @id @default(uuid())
+  first_name         String
+  last_name          String
+  university         String
+  email_verified     Boolean  @default(false)
+  profile_picture_id String?
+  student_id_number  String
+  phone_number       String
+  created_at         DateTime @default(now())
+  updated_at         DateTime @updatedAt
+  user_id            String   @unique // Foreign key for User table
+
+  // Relationships
+  user            User          @relation(fields: [user_id], references: [user_name])
+  profile_picture Media?        @relation(fields: [profile_picture_id], references: [media_id]) // Foreign key for Media table
+  Application     Application[]
+
+  @@map("student")
+}
+
 model User {
-  created_at DateTime   @default(now())
-  updated_at DateTime   @updatedAt
+  created_at DateTime  @default(now())
+  updated_at DateTime  @updatedAt
   email      String
   password   String
-  user_name  String     @id
-  user_type  UserType   @default(STUDENT)
-  Landlord   Landlord[]
+  user_name  String    @id
+  user_type  UserType  @default(STUDENT)
+  Landlord   Landlord?
+  Student    Student?
 
   @@map("user")
 }
@@ -53,33 +77,60 @@ model Property {
 }
 
 model Listing {
-  listing_id  String   @id @default(uuid())
+  listing_id  String        @id @default(uuid())
   property_id String
   title       String
   description String
   status      String
-  created_at  DateTime @default(now())
-  updated_at  DateTime @updatedAt
-  property    Property @relation(fields: [property_id], references: [property_id])
+  created_at  DateTime      @default(now())
+  updated_at  DateTime      @updatedAt
+  property    Property      @relation(fields: [property_id], references: [property_id])
+  Application Application[]
 
   @@index([property_id], map: "listing_property_id_fkey")
   @@map("listing")
 }
 
 model Media {
-  media_id   String   @id @default(uuid())
+  media_id   String     @id @default(uuid())
   model_name String
   model_id   String
   media_url  String
   media_type String
-  created_at DateTime @default(now())
-  updated_at DateTime @updatedAt
+  created_at DateTime   @default(now())
+  updated_at DateTime   @updatedAt
+  Landlord   Landlord[]
+  Student    Student[]
 
   @@map("media")
+}
+
+model Application {
+  application_id     String            @id @default(uuid())
+  listing_id         String
+  student_id         String
+  application_status ApplicationStatus @default(PENDING)
+  applied_at         DateTime          @default(now())
+  reviewed_at        DateTime?
+  remarks            String?
+  created_at         DateTime          @default(now())
+  updated_at         DateTime          @updatedAt
+
+  listing Listing @relation(fields: [listing_id], references: [listing_id])
+  student Student @relation(fields: [student_id], references: [student_id])
+
+  @@map("application")
 }
 
 enum UserType {
   STUDENT
   LANDLORD
   ADMIN
+}
+
+enum ApplicationStatus {
+  PENDING
+  APPROVED
+  REJECTED
+  WITHDRAWN
 }
