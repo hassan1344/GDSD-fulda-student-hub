@@ -1,27 +1,41 @@
 import React, { useState } from "react";
-import { NavLink, useLocation } from "react-router-dom";
-import logoFHB from "./assets/images/logoFHB.png"
+import { NavLink, useLocation, useNavigate } from "react-router-dom";
+import logoFHB from "./assets/images/logoFHB.png";
+import { logoutUser } from "../services/authServices";
 
 const Navbar = () => {
   const location = useLocation();
-  const [showLandlordMenu, setShowLandlordMenu] = useState(false);
+  const navigate = useNavigate();
 
   const navLinks = [
-    { path: "/", name: "Home" },
+    { path: "/home", name: "Home" },
     { path: "/favorites", name: "Favorites" },
     { path: "/profile", name: "Profile" },
-    { path: "/logout", name: "Logout" },
   ];
 
-  const landlordLinks = [
-    { path: "/landlord/requests", name: "Requests" },
-    { path: "/landlord/select-requests", name: "Select Requests" },
-    { path: "/landlord/tenants", name: "Tenants" },
-    { path: "/landlord/properties", name: "Properties" },
-  ];
-
-  const toggleLandlordMenu = () => {
-    setShowLandlordMenu(!showLandlordMenu);
+  const logoutHandler = async () => {
+    try {
+      const refreshToken = localStorage.getItem("refreshToken");
+  
+      if (!refreshToken) {
+        console.error("No refresh token found.");
+        return;
+      }
+  
+      // Call the logout API
+      const response = await logoutUser();
+  
+      console.log(response.message); // Logs: "Logged out successfully"
+  
+      // Clear tokens from local storage
+      localStorage.removeItem("accessToken");
+      localStorage.removeItem("refreshToken");
+  
+      // Redirect the user to the login page
+      navigate("/");
+    } catch (error) {
+      console.error("Error during logout:", error.message);
+    }
   };
 
   return (
@@ -47,28 +61,14 @@ const Navbar = () => {
               {link.name}
             </NavLink>
           ))}
-          <div className="relative">
-            <button
-              onClick={toggleLandlordMenu}
-              className="transition duration-200 px-2 py-1 rounded text-gray-600 hover:text-blue-600 hover:border-b-2 hover:border-blue-600"
-            >
-              Landlord
-            </button>
-            {showLandlordMenu && (
-              <div className="absolute right-0 mt-2 py-2 w-48 bg-white rounded-md shadow-xl z-20">
-                {landlordLinks.map((link) => (
-                  <NavLink
-                    key={link.path}
-                    to={link.path}
-                    className="block px-4 py-2 text-sm capitalize text-gray-700 hover:bg-blue-500 hover:text-white"
-                    onClick={() => setShowLandlordMenu(false)}
-                  >
-                    {link.name}
-                  </NavLink>
-                ))}
-              </div>
-            )}
-          </div>
+
+          {/* Logout Button */}
+          <button
+            onClick={logoutHandler}
+            className="text-gray-600 hover:text-red-600 transition duration-200 px-2 py-1 rounded font-semibold"
+          >
+            Logout
+          </button>
         </div>
       </div>
     </nav>

@@ -1,4 +1,5 @@
-import React, { useState } from 'react';
+import React, { useState } from "react";
+import ApplicationForm from "./ApplicationForm";
 
 const PropertyDetails = ({ property, onBack }) => {
   const [activeTab, setActiveTab] = useState("about");
@@ -9,12 +10,16 @@ const PropertyDetails = ({ property, onBack }) => {
 
   // Handle showing the next image
   const handleNextImage = () => {
-    setCurrentImageIndex((prevIndex) => (prevIndex === images.length - 1 ? 0 : prevIndex + 1));
+    setCurrentImageIndex((prevIndex) =>
+      prevIndex === images.length - 1 ? 0 : prevIndex + 1
+    );
   };
 
   // Handle showing the previous image
   const handlePreviousImage = () => {
-    setCurrentImageIndex((prevIndex) => (prevIndex === 0 ? images.length - 1 : prevIndex - 1));
+    setCurrentImageIndex((prevIndex) =>
+      prevIndex === 0 ? images.length - 1 : prevIndex - 1
+    );
   };
 
   // Render content for each tab
@@ -26,25 +31,35 @@ const PropertyDetails = ({ property, onBack }) => {
             <p>{property.description}</p>
             <p className="mt-4 font-semibold">Amenities:</p>
             <ul className="list-disc ml-5">
-              {
-                property.amenities && property.amenities.split(',').map((amenity, index) => (
-                <li key={index}>{amenity.trim()}</li>
-                ))
-              }
+              {property.amenities &&
+                property.amenities.map((amenity, index) => (
+                  <li key={index}>{amenity}</li>
+                ))}
             </ul>
           </div>
         );
       case "reviews":
         return (
           <div>
-            <p className="text-yellow-500">Trust Score: {property.landlord.trust_score} ⭐</p>
+            <p className="text-yellow-500">
+              Trust Score: {property.landlord.trust_score} ⭐
+            </p>
           </div>
         );
       case "contact":
         return (
           <div>
-            <p className="font-semibold">Landlord Name: {property.landlord.name}</p>
+            <p className="font-semibold">
+              Landlord Name: {property.landlord.name}
+            </p>
             <p>Phone: {property.landlord.phone_number}</p>
+          </div>
+        );
+      case "apply":
+        return (
+          <div>
+            <h3 className="text-lg font-semibold mb-4">Application Form</h3>
+            <ApplicationForm />
           </div>
         );
       default:
@@ -54,7 +69,9 @@ const PropertyDetails = ({ property, onBack }) => {
 
   return (
     <div className="p-8 max-w-6xl mx-auto">
-      <button onClick={onBack} className="text-blue-600 mb-4">Back to Results</button>
+      <button onClick={onBack} className="text-blue-600 mb-4">
+        Back to Results
+      </button>
       <h1 className="text-2xl font-bold mb-4">{property.title}</h1>
 
       {/* Image Gallery */}
@@ -63,7 +80,10 @@ const PropertyDetails = ({ property, onBack }) => {
         <div className="w-3/4 pr-4">
           <div className="relative h-96">
             <img
-              src={images[currentImageIndex]?.mediaUrl ?? "/assets/images/room1.jpg"}
+              src={
+                images[currentImageIndex]?.mediaUrl ??
+                "/assets/images/room1.jpg"
+              }
               alt="Property"
               className="w-full h-full object-cover rounded-md shadow-md"
             />
@@ -80,14 +100,14 @@ const PropertyDetails = ({ property, onBack }) => {
               ▶
             </button>
           </div>
-          
+
           {/* Image Preview Indicators */}
           <div className="flex justify-center space-x-2 mt-4">
             {images.map((_, index) => (
               <button
                 key={index}
                 className={`w-3 h-3 rounded-full ${
-                  index === currentImageIndex ? 'bg-blue-500' : 'bg-gray-300'
+                  index === currentImageIndex ? "bg-blue-500" : "bg-gray-300"
                 }`}
                 onClick={() => setCurrentImageIndex(index)}
               />
@@ -103,7 +123,7 @@ const PropertyDetails = ({ property, onBack }) => {
               src={image.mediaUrl}
               alt={`Thumbnail ${index + 1}`}
               className={`w-full h-24 object-cover rounded-md cursor-pointer ${
-                index === currentImageIndex ? 'border-2 border-blue-500' : ''
+                index === currentImageIndex ? "border-2 border-blue-500" : ""
               }`}
               onClick={() => setCurrentImageIndex(index)}
             />
@@ -114,20 +134,63 @@ const PropertyDetails = ({ property, onBack }) => {
       {/* Property Details */}
       <div className="grid grid-cols-3 gap-4 mb-6">
         <div>
-          <p><strong>Address:</strong> {property.address}</p>
-          <p><strong>Total Rent:</strong> €{property.rent}</p>
+          <p>
+            <strong>Address:</strong> {property.address}
+          </p>
+          <p>
+            <strong>Total Rent:</strong> €{property.rent}
+          </p>
         </div>
       </div>
 
       {/* Tabs */}
       <div className="flex space-x-4 mb-6 border-b">
-        <button onClick={() => setActiveTab("about")} className={`py-2 px-4 ${activeTab === "about" ? "border-b-2 border-blue-600 font-bold" : ""}`}>About</button>
-        <button onClick={() => setActiveTab("reviews")} className={`py-2 px-4 ${activeTab === "reviews" ? "border-b-2 border-blue-600 font-bold" : ""}`}>Reviews</button>
-        <button onClick={() => setActiveTab("contact")} className={`py-2 px-4 ${activeTab === "contact" ? "border-b-2 border-blue-600 font-bold" : ""}`}>Contact</button>
+        <button
+          onClick={() => setActiveTab("about")}
+          className={`py-2 px-4 transition-all duration-200 ${
+            activeTab === "about"
+              ? "border-b-2 border-blue-600 font-bold text-blue-600"
+              : "text-gray-600 hover:text-blue-600 hover:font-medium"
+          }`}
+        >
+          About
+        </button>
+        <button
+          onClick={() => setActiveTab("reviews")}
+          className={`py-2 px-4 transition-all duration-200 ${
+            activeTab === "reviews"
+              ? "border-b-2 border-blue-600 font-bold text-blue-600"
+              : "text-gray-600 hover:text-blue-600 hover:font-medium"
+          }`}
+        >
+          Reviews
+        </button>
+        <button
+          onClick={() => setActiveTab("contact")}
+          className={`py-2 px-4 transition-all duration-200 ${
+            activeTab === "contact"
+              ? "border-b-2 border-blue-600 font-bold text-blue-600"
+              : "text-gray-600 hover:text-blue-600 hover:font-medium"
+          }`}
+        >
+          Contact
+        </button>
+        <button
+          onClick={() => setActiveTab("apply")}
+          className={`py-2 px-4 transition-all duration-200 ${
+            activeTab === "apply"
+              ? "border-b-2 border-blue-600 font-bold text-blue-600"
+              : "text-gray-600 hover:text-blue-600 hover:font-medium"
+          }`}
+        >
+          Apply Now
+        </button>
       </div>
 
       {/* Tab Content */}
-      <div className="bg-gray-100 p-4 rounded-md shadow-md">{renderContent()}</div>
+      <div className="bg-gray-100 p-4 rounded-md shadow-md">
+        {renderContent()}
+      </div>
     </div>
   );
 };

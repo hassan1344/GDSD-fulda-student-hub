@@ -6,13 +6,15 @@ import LandlordRequests from "./pages/LandlordRequests";
 import LandlordSelectRequests from "./pages/LandlordSelectRequests";
 import LandlordViewTenants from "./pages/LandlordViewTenants";
 import LandlordViewProperties from "./pages/LandlordViewProperties";
+import AuthPage from "./pages/AuthPage";
 
 const App = () => {
   console.log("App rendered");
   return (
     <Router>
       <Routes>
-        <Route path="/" element={<Home />} />
+      <Route path="/" element={<AuthPage />} />
+        <Route path="/Home" element={<Home />} />
         <Route path="/searchresults" element={<SearchResults />} />
         <Route path="/landlord/requests" element={<LandlordRequests />} />
         <Route path="/landlord/select-requests" element={<LandlordSelectRequests />} />
