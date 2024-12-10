@@ -30,7 +30,7 @@ const SearchResults = () => {
           .filter((key) => advancedFilters[key])
           .map((key) => `"${key}"`)
           .join(",");
-
+//
         const apiUrl = `https://fulda-student-hub.publicvm.com/api/v1/properties?address=${address}&minRent=${minRent}&maxRent=${maxRent}${
           amenities ? `&amenities=${encodeURIComponent(amenities)}` : ""
         }`;
