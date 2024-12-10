@@ -13,15 +13,9 @@ const SearchResults = () => {
     location = "",
     roomType = "",
     priceRange = [0, 1000],
-    advancedFilters = {
-      shower: false,
-      heater: false,
-      kitchen: false,
-      balcony: false,
-    },
+    advancedFilters = {},
   } = state || {};
 
-  // State to hold listings fetched from API
   const [listings, setListings] = useState([]);
   const [currentPage, setCurrentPage] = useState(1);
   const [selectedProperty, setSelectedProperty] = useState(null);
@@ -30,7 +24,6 @@ const SearchResults = () => {
 
   const itemsPerPage = 10;
 
-  // Fetch listings from the API
   useEffect(() => {
     const loadProperties = async () => {
       setIsLoading(true);
@@ -53,22 +46,12 @@ const SearchResults = () => {
     loadProperties();
   }, [location, priceRange, advancedFilters]);
 
-  // Calculate the indices for slicing the data
   const startIndex = (currentPage - 1) * itemsPerPage;
   const endIndex = startIndex + itemsPerPage;
-
-  // Paginate data
   const paginatedListings = listings.slice(startIndex, endIndex);
 
-  // Handler to select a property
-  const handleSelectProperty = (property) => {
-    setSelectedProperty(property); // Select a property to view in detail
-  };
-
-  // Handler to return to the search results
-  const handleBackToResults = () => {
-    setSelectedProperty(null); // Reset selected property
-  };
+  const handleSelectProperty = (property) => setSelectedProperty(property);
+  const handleBackToResults = () => setSelectedProperty(null);
 
   return (
     <div className="min-h-screen bg-gray-100">
@@ -84,7 +67,13 @@ const SearchResults = () => {
           <h2 className="text-2xl font-semibold text-gray-800 mb-4">
             Search Results
           </h2>
+          <h2 className="text-2xl font-semibold text-gray-800 mb-4">
+            Search Results
+          </h2>
           <div className="bg-white shadow-md rounded-lg p-6 mb-6">
+            <h3 className="text-lg font-semibold text-gray-700 mb-2">
+              Applied Filters:
+            </h3>
             <h3 className="text-lg font-semibold text-gray-700 mb-2">
               Applied Filters:
             </h3>
@@ -98,6 +87,9 @@ const SearchResults = () => {
               {Object.keys(advancedFilters)
                 .filter((key) => advancedFilters[key])
                 .map((key, index) => (
+                  <p key={index}>
+                    {key.charAt(0).toUpperCase() + key.slice(1)}
+                  </p>
                   <p key={index}>
                     {key.charAt(0).toUpperCase() + key.slice(1)}
                   </p>

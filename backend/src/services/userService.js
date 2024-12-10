@@ -1,0 +1,79 @@
+import bcrypt from "bcrypt";
+import { PrismaClient } from "@prisma/client";
+const prismaClient = new PrismaClient();
+import { generateToken } from "../utils/jwtUtils.js";
+
+export const createLandlordUser = async ({
+  userName,
+  email,
+  password,
+  userType,
+}) => {
+  // Check if the phone number or email is already registered
+  const existingUser = await prismaClient.user.findFirst({
+    where: {
+      OR: [{ email }, { user_name: userName }],
+    },
+  });
+
+  if (existingUser) {
+    throw new Error("A user with this email or username already exists.");
+  }
+
+  // Hash the password
+  const hashedPassword = await bcrypt.hash(password, 10);
+
+  // Create a new User record in the database
+  const newUser = await prismaClient.user.create({
+    data: {
+      user_name: userName,
+      email,
+      password: hashedPassword,
+      user_type: userType,
+    },
+  });
+
+  // // Create a new Landlord record associated with the newly created User
+  // const newLandlord = await prismaClient.landlord.create({
+  //   data: {
+  //     user_id: newUser.user_name,
+  //     trust_score: 0, // Default value
+  //   },
+  // });
+
+  return { user: newUser };
+};
+
+export const loginLandlordUser = async (userName, password) => {
+  const user = await prismaClient.user.findUnique({
+    where: { user_name: userName },
+  });
+
+  if (!user) {
+    throw new Error("Invalid credentials.");
+  }
+
+  // Compare the provided password with the hashed password in the database
+  const isPasswordValid = await bcrypt.compare(password, user.password);
+  if (!isPasswordValid) {
+    throw new Error("Invalid credentials.");
+  }
+
+  const accessToken = generateToken(
+    { userName: user.user_name, userType: user.user_type },
+    "access", // Custom payload type
+    "15m" // Short expiry
+  );
+
+  // Generate refresh token
+  const refreshToken = generateToken(
+    { userName: user.user_name },
+    "refresh", // Custom payload type
+    "7d" // Longer expiry
+  );
+
+  return {
+    accessToken,
+    refreshToken,
+  };
+};
