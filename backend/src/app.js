@@ -5,7 +5,8 @@ import cors from "cors";
 
 import { ResHandler } from "./utils/custom-response/response-handler.js";
 import propertyRouter from "./routes/propertyRoutes.js";
-import authRoutes from "./routes/authRoutes.js";
+import authRouter from "./routes/authRoutes.js";
+import profileRouter from './routes/profileRoutes.js';
 import { applicationRoutes } from "./routes/applicationRoutes.js";
 
 const app = express();
@@ -24,9 +25,11 @@ app.get("/", (req, res) => {
 
 app.use("/api/v1/properties", propertyRouter);
 
-app.use("/api/v1/auth", authRoutes);
+app.use("/api/v1/auth", authRouter);
 
 app.use("/api/v1/application", applicationRoutes);
+
+app.use("/api/v1/profile", profileRouter);
 
 // app.use(ResHandler);
 

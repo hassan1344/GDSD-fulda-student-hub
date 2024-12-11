@@ -9,9 +9,9 @@ export const registerUser = async (req, res) => {
     const { 
       userName,
       email, 
-      password
+      password,
+      userType
     } = req.body;
-    const { user: userType } = req.query;
     await createUser({userName, password, email, userType});
     res.status(201).json({ message: "User registered successfully" });
   } catch (error) {

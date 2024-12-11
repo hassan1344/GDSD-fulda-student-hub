@@ -4,7 +4,6 @@ const prisma = new PrismaClient();
 
 export const getAllProperties = async (req, res) => {
   try {
-    // // console.log(req.query);
     const { address, minRent, maxRent, amenities } = req.query;
     const filters = {
       where: {},

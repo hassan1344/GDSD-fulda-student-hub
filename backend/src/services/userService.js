@@ -48,7 +48,6 @@ export const loginUserHelper = async (userName, password) => {
   const user = await prismaClient.user.findUnique({
     where: { user_name: userName },
   });
-  console.log(process.env.ACCESS_TOKEN_SECRET)
 
   if (!user) {
     throw new Error("Invalid credentials.");
