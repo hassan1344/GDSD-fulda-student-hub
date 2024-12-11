@@ -3,7 +3,7 @@ import { PrismaClient } from "@prisma/client";
 const prismaClient = new PrismaClient();
 import { generateToken } from "../utils/jwtUtils.js";
 
-export const createLandlordUser = async ({
+export const createUser = async ({
   userName,
   email,
   password,
@@ -44,7 +44,7 @@ export const createLandlordUser = async ({
   return { user: newUser };
 };
 
-export const loginLandlordUser = async (userName, password) => {
+export const loginUserHelper = async (userName, password) => {
   const user = await prismaClient.user.findUnique({
     where: { user_name: userName },
   });
@@ -60,16 +60,16 @@ export const loginLandlordUser = async (userName, password) => {
   }
 
   const accessToken = generateToken(
-    { userName: user.user_name, userType: user.user_type },
-    "access", // Custom payload type
-    "15m" // Short expiry
+    { userName: user.user_name, email: user.email, userType: user.user_type },
+    process.env.ACCESS_TOKEN_SECRET,
+    {expiresIn: process.env.ACCESS_TOKEN_EXPIRY}
   );
 
   // Generate refresh token
   const refreshToken = generateToken(
-    { userName: user.user_name },
-    "refresh", // Custom payload type
-    "7d" // Longer expiry
+    { userName: user.user_name, email: user.email, userType: user.user_type },
+    process.env.REFRESH_TOKEN_SECRET,
+    {expiresIn: process.env.REFRESH_TOKEN_EXPIRY}
   );
 
   return {
