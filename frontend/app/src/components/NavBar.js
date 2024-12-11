@@ -5,7 +5,7 @@ import { logoutUser } from "../services/authServices";
 
 const Navbar = () => {
   const location = useLocation();
-  const [showLandlordMenu, setShowLandlordMenu] = useState(false);
+  const navigate = useNavigate();
 
   const navLinks = [
     { path: "/home", name: "Home" },
