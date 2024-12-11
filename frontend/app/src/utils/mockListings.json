@@ -1,0 +1,42 @@
+[
+  {
+    "listing_id": 1,
+    "title": "Modern Apartment",
+    "description": "A cozy one-bedroom apartment.",
+    "Media": [
+      "https://picsum.photos/200/300",
+      "https://picsum.photos/200/301"
+    ],
+    "status": "available",
+    "property": {
+      "address": "123 Main Street",
+      "rent": 1200,
+      "amenities": ["balcony", "heater"]
+    },
+    "landlord": {
+      "name": "Jane Doe",
+      "trust_score": 4.5,
+      "phone_number": "123-456-7890"
+    }
+  },
+  {
+    "listing_id": 2,
+    "title": "Spacious Studio",
+    "description": "A modern studio apartment.",
+    "Media": [
+      "https://picsum.photos/200/300",
+      "https://picsum.photos/200/301"
+    ],
+    "status": "available",
+    "property": {
+      "address": "456 Elm Street",
+      "rent": 900,
+      "amenities": ["kitchen", "heater"]
+    },
+    "landlord": {
+      "name": "John Smith",
+      "trust_score": 4.2,
+      "phone_number": "987-654-3210"
+    }
+  }
+]
