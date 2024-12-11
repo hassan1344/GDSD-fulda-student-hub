@@ -15,13 +15,16 @@ export const loginUser = async (userData) => {
 };
 
 // Logout User
-export const logoutUser = async () => {
-  const response = await apiClient.post(`/auth/logout`);
+export const logoutUser = async (userName) => {
+  const response = await apiClient.post(`/auth/logout`, userName);
   return response.data; // Assuming response includes { message: "Logged out successfully" }
 };
 
 // Refresh Token
-export const refreshToken = async (refreshToken) => {
-  const response = await apiClient.post(`/auth/refresh-token`, { refreshToken });
+export const refreshToken = async ({ userName, refreshToken }) => {
+  const response = await apiClient.post(`/auth/refresh-token`, {
+    userName,
+    refreshToken,
+  });
   return response.data;
 };

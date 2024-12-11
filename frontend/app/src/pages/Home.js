@@ -1,8 +1,10 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import Navbar from "../components/NavBar";
 import SearchBar from "../components/SearchBar";
 import Disclaimer from "../components/Disclaimer";
+import SearchCard from "../components/SearchCard";
+import { fetchProperties } from "../services/propertyServices";
 
 const Home = () => {
   const [location, setLocation] = useState("");
@@ -15,7 +17,24 @@ const Home = () => {
     kitchen: false,
     balcony: false,
   });
+
+  const [properties, setProperties] = useState([]);
+
   const navigate = useNavigate();
+
+  useEffect(() => {
+    // Fetch properties without filters on component mount
+    const fetchDefaultProperties = async () => {
+      try {
+        const data = await fetchProperties("", [0, 1000], {});
+        setProperties(data.slice(0, 5));
+      } catch (error) {
+        console.error("Error fetching properties:", error);
+      }
+    };
+
+    fetchDefaultProperties();
+  }, []);
 
   const handleToggleFilter = (filter) => {
     setAdvancedFilters((prev) => ({
@@ -96,6 +115,37 @@ const Home = () => {
           >
             Let’s Go
           </button>
+
+          <div className="mt-8">
+            <h2 className="text-lg font-semibold text-gray-800 mb-4">
+              Featured Listings
+            </h2>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+              {properties.length > 0 ? (
+                properties.map((property) => (
+                  <SearchCard
+                    key={property.property_id}
+                    image={property.Media[0]?.mediaUrl || "/default.jpg"}
+                    description={property.amenities.join(", ")}
+                    price={`€${property.rent}`}
+                    poster={`${property.landlord.first_name} ${property.landlord.last_name}`}
+                    onClick={() => console.log("Clicked")} // Placeholder action
+                  />
+                ))
+              ) : (
+                <p className="text-gray-600 text-center">
+                  Loading featured listings...
+                </p>
+              )}
+            </div>
+
+            {/* View More Placeholder */}
+            <div className="mt-4 text-center">
+              <button className="bg-blue-500 text-white px-4 py-2 rounded-lg hover:bg-blue-600 transition duration-200">
+                View More
+              </button>
+            </div>
+          </div>
         </div>
       </div>
 

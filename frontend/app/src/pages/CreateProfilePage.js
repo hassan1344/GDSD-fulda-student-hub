@@ -7,7 +7,7 @@ const CreateProfilePage = () => {
   const { state } = useLocation();
   const userType = state?.userType;
   const userName = state?.userName;
-  
+  const accessToken = localStorage.getItem("accessToken"); // Access token passed from registration or login
 
   const [formData, setFormData] = useState({
     firstName: "",
@@ -40,7 +40,6 @@ const CreateProfilePage = () => {
     setLoading(true);
 
     try {
-      // Construct payload dynamically based on userType
       const payload = {
         userName,
         firstName: formData.firstName,
@@ -50,14 +49,23 @@ const CreateProfilePage = () => {
           ? {
               university: formData.university,
               studentIdNumber: formData.studentIdNumber,
+              emailVerified: true,
             }
           : { address: formData.address, trustScore: 0 }), // Default trustScore for landlords
       };
 
-      await createProfile(payload);
+      console.log(payload, accessToken);
+
+      await createProfile(payload, accessToken); // Pass accessToken to the service
 
       showNotification("Profile created successfully!");
-      setTimeout(() => navigate("/login"), 2000); // Redirect to login page
+      setTimeout(() => {
+        if (userType === "STUDENT") {
+          navigate("/Home");
+        } else if (userType === "LANDLORD") {
+          navigate("/landlord");
+        }
+      }, 2000); // Redirect after success
     } catch (error) {
       console.error("Error creating profile:", error);
       showNotification("Failed to create profile. Please try again.");
@@ -75,7 +83,6 @@ const CreateProfilePage = () => {
         </p>
       </div>
 
-      {/* Notification Banner */}
       {notification.visible && (
         <div className="fixed top-4 bg-green-500 text-white py-2 px-4 rounded-md shadow-md">
           {notification.message}
@@ -83,7 +90,6 @@ const CreateProfilePage = () => {
       )}
 
       <div className="bg-white shadow-lg rounded-lg w-96 p-6 relative">
-        {/* Loading Spinner */}
         {loading && (
           <div className="absolute inset-0 flex items-center justify-center bg-white bg-opacity-60 z-50">
             <div className="animate-spin rounded-full h-8 w-8 border-t-4 border-green-500"></div>
@@ -91,7 +97,6 @@ const CreateProfilePage = () => {
         )}
 
         <form onSubmit={handleSubmit} className="space-y-4">
-          {/* First Name */}
           <div>
             <label className="block text-gray-700 font-semibold mb-1">
               First Name
@@ -107,7 +112,6 @@ const CreateProfilePage = () => {
             />
           </div>
 
-          {/* Last Name */}
           <div>
             <label className="block text-gray-700 font-semibold mb-1">
               Last Name
@@ -123,7 +127,6 @@ const CreateProfilePage = () => {
             />
           </div>
 
-          {/* Phone Number */}
           <div>
             <label className="block text-gray-700 font-semibold mb-1">
               Phone Number
@@ -139,10 +142,8 @@ const CreateProfilePage = () => {
             />
           </div>
 
-          {/* Dynamic Fields Based on User Type */}
           {userType === "STUDENT" && (
             <>
-              {/* University */}
               <div>
                 <label className="block text-gray-700 font-semibold mb-1">
                   University
@@ -158,7 +159,6 @@ const CreateProfilePage = () => {
                 />
               </div>
 
-              {/* Student ID */}
               <div>
                 <label className="block text-gray-700 font-semibold mb-1">
                   Student ID
@@ -178,7 +178,6 @@ const CreateProfilePage = () => {
 
           {userType === "LANDLORD" && (
             <>
-              {/* Address */}
               <div>
                 <label className="block text-gray-700 font-semibold mb-1">
                   Address
