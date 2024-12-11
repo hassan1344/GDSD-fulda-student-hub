@@ -1,8 +1,14 @@
-import React from 'react';
+//import React from 'react';
+import React, { useState, useEffect } from 'react';  //-----
 import { Link } from 'react-router-dom';
 import LandlordNavbar from '../../components/LandlordNavbar';
+//import { fetchLandlordProfile } from '../../services/LandlordServices';  
+
 
 const LandlordHomepage = () => {
+
+ console.log(localStorage.getItem("accessToken"));
+
   const menuItems = [
     
     { title: 'Create New Listing', path: '/landlord/create-listing', icon: '📝' },
@@ -13,8 +19,8 @@ const LandlordHomepage = () => {
     { title: 'View Past Tenants', path: '/past-tenants', icon: '👥' },
     { title: 'Documents', path: '/documents', icon: '📁' },
     { title: 'Raise an Issue', path: '/raise-issue', icon: '⚠️' },
-    { title: 'View Properties', path: '/landlord/properties', icon: '⚠️' },
-    { title: ' Select Requests', path: '/landlord/select-requests', icon: '⚠️' },
+    { title: 'View Properties', path: '/landlord/properties', icon: '🏠' },
+    { title: ' Select Requests', path: '/landlord/select-requests', icon: '✅' },
   ];
 
   return (

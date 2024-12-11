@@ -16,18 +16,16 @@ import Disclaimer from './components/Disclaimer'; // Import the Disclaimer compo
 const App = () => {
   console.log("App rendered");
   return (
-    <Router >
+    <Router basename = '/app'>
        <Disclaimer /> {/* Show disclaimer on every page */}
       <Routes>
       <Route path="/" element={<AuthPage />} />
         <Route path="/Home" element={<Home />} />
         <Route path="/searchresults" element={<SearchResults />} />
-
         <Route path="/landlord" element={<LandlordHomepage />} />
         <Route path="/landlord/create-listing" element={<CreateNewListing />} />
         <Route path="/landlord/my-listings" element={<MyListing />} />
         <Route path="/landlord/edit-listing/:id" element={<EditDeleteListing />} />
-
         <Route path="/landlord/requests" element={<LandlordRequests />} />
         <Route path="/landlord/select-requests" element={<LandlordSelectRequests />} />
         <Route path="/landlord/tenants" element={<LandlordViewTenants />} />
