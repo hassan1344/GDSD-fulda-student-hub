@@ -1,7 +1,8 @@
 import axios from "axios";
 
 const apiClient = axios.create({
-  baseURL: "http://localhost:8000/api/v1",
+  // baseURL: "http://localhost:8000/api/v1",
+  baseURL: "https://fulda-student-hub.publicvm.com/api/v1",
   timeout: 10000,
 });
 

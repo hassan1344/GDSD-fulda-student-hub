@@ -24,15 +24,15 @@ app.get("/", (req, res) => {
   return res.send("Service is available...");
 });
 
-app.use("/api/v1/properties", propertyRouter);
+app.use("/v1/properties", propertyRouter);
 
-app.use("/api/v1/auth", authRouter);
+app.use("/v1/auth", authRouter);
 
-app.use("/api/v1/application", applicationRoutes);
+app.use("/v1/application", applicationRoutes);
 
-app.use("/api/v1/profile", profileRouter);
+app.use("/v1/profile", profileRouter);
 
-app.use("/api/v1/propertiesModule", propertyModuleRouter);
+app.use("/v1/propertiesModule", propertyModuleRouter);
 
 // app.use(ResHandler);
 
