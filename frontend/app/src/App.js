@@ -15,6 +15,7 @@ import CreateProfilePage from "./pages/CreateProfilePage";
 import ViewStudentProfile from "./pages/ViewStudentProfile";
 import Disclaimer from './components/Disclaimer'; // Import the Disclaimer component
 import ViewPropertyDetails from './pages/landlord/ViewPropertyDetails';
+import LandlordViewProfile from "./pages/landlordViewProfile";
 
 const App = () => {
   console.log("App rendered");
@@ -27,6 +28,9 @@ const App = () => {
 
         <Route path="/Home" element={<Home />} />
         <Route path="/searchresults" element={<SearchResults />} />
+        <Route path="/viewProfile" element = {<ViewStudentProfile/>}/>
+
+
         <Route path="/landlord" element={<LandlordHomepage />} />
         <Route path="/landlord/create-listing" element={<CreateNewProperties />} />
         <Route path="/landlord/view-property/:id" element={<ViewPropertyDetails />} />
@@ -43,6 +47,11 @@ const App = () => {
         <Route path="/landlord/tenants" element={<LandlordViewTenants />} />
         <Route path="/landlord/properties" element={<LandlordViewProperties />} />
        
+        <Route
+          path="/landlord/properties"
+          element={<LandlordViewProperties />}
+        />
+        <Route path="/landlord/viewProfile" element = {<LandlordViewProfile/>}/>
       </Routes>
     </Router>
   );
