@@ -2,6 +2,7 @@ import React, { useState } from "react";
 import { NavLink, useLocation, useNavigate } from "react-router-dom";
 import logoFHB from "./assets/images/logoFHB.png";
 import { logoutUser } from "../services/authServices";
+import { jwtDecode } from "jwt-decode"; // Import the library
 
 const Navbar = () => {
   const location = useLocation();
@@ -10,27 +11,31 @@ const Navbar = () => {
   const navLinks = [
     { path: "/home", name: "Home" },
     { path: "/favorites", name: "Favorites" },
-    { path: "/profile", name: "Profile" },
+    { path: "/viewProfile", name: "Profile" },
   ];
 
   const logoutHandler = async () => {
     try {
       const refreshToken = localStorage.getItem("refreshToken");
-  
+      const accessToken = localStorage.getItem("accessToken");
+
+      const decodedToken = jwtDecode(accessToken);
+      const { userName, userType } = decodedToken;
+
       if (!refreshToken) {
         console.error("No refresh token found.");
         return;
       }
-  
+
       // Call the logout API
-      const response = await logoutUser();
-  
+      const response = await logoutUser({userName});
+
       console.log(response.message); // Logs: "Logged out successfully"
-  
+
       // Clear tokens from local storage
       localStorage.removeItem("accessToken");
       localStorage.removeItem("refreshToken");
-  
+
       // Redirect the user to the login page
       navigate("/");
     } catch (error) {

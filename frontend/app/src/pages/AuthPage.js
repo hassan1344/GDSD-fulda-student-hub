@@ -75,15 +75,49 @@ const AuthPage = () => {
           userName,
         });
 
-        if (response.message === "User registered successfully") {
-          showNotification("Registration successful! Please log in.");
-          setTimeout(() => {
-            toggleForm();
-          }, 2000);
+        if (response?.message === "User registered successfully") {
+
+          showNotification("Registration successful!");
+
+          try {
+            const responseL = await loginUser({ userName, password });
+
+            if (responseL.tokens) {
+              const { accessToken, refreshToken } = responseL.tokens;
+
+              localStorage.setItem("accessToken", accessToken);
+              localStorage.setItem("refreshToken", refreshToken);
+
+              const decodedToken = jwtDecode(accessToken);
+              const { userName, userType } = decodedToken;
+
+              showNotification("Login successful...");
+              if (userType === "STUDENT") {
+                setTimeout(() => {
+                  navigate("/profile", {
+                    state: { userType: "STUDENT", userName: { userName } },
+                  });
+                }, 2000);
+              } else if (userType === "LANDLORD") {
+                setTimeout(() => {
+                  navigate("/profile", {
+                    state: { userType: "LANDLORD", userName: { userName } },
+                  });
+                }, 2000);
+              } else {
+                showNotification("An error occurred. Please try again.");
+              }
+            } else {
+              // Login failed
+              showNotification("Login failed. Please try logging in again.");
+            }
+          } catch (error) {
+            console.error("Login attempt error:", error);
+            showNotification("An unexpected error occurred. Please try again.");
+          }
         } else {
-          showNotification(
-            response.message || "Registration failed. Try again."
-          );
+          // Registration failed
+          showNotification("Registration failed. Please try again.");
         }
       } else {
         const { userName, password } = formData;
@@ -100,8 +134,10 @@ const AuthPage = () => {
 
         const response = await loginUser({ userName, password });
 
-        if (response.token) {
-          const { accessToken, refreshToken } = response.token;
+        console.log(response);
+
+        if (response.tokens) {
+          const { accessToken, refreshToken } = response.tokens;
 
           localStorage.setItem("accessToken", accessToken);
           localStorage.setItem("refreshToken", refreshToken);
@@ -115,10 +151,9 @@ const AuthPage = () => {
               navigate("/home");
             }, 2000);
           } else if (userType === "LANDLORD") {
-            showNotification("Add Navigation to Landlord Homepage.");
-            // setTimeout(() => {
-            //   navigate("/");//Add landlord landing page
-            // }, 2000);
+            setTimeout(() => {
+              navigate("/landlord"); //Add landlord landing page
+            }, 2000);
           } else {
             showNotification("An error occurred. Please try again.");
           }
