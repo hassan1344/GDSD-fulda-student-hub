@@ -174,7 +174,7 @@ const AuthPage = () => {
   };
 
   return (
-    <div className="min-h-screen flex flex-col justify-center items-center bg-gradient-to-br from-green-100 via-green-50 to-white">
+    <div className="flex flex-col justify-center items-center background-container">
       <div className="text-center mb-6">
         <img
           src={logoFHB}

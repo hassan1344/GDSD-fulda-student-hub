@@ -81,7 +81,7 @@ const PropertyDetails = ({ property, onBack }) => {
           <div className="relative h-96">
             <img
               src={
-                images[currentImageIndex]?.mediaUrl ??
+                `https://fulda-student-hub.s3.eu-north-1.amazonaws.com/public/uploads/images/${images[currentImageIndex]?.mediaUrl}` ??
                 "/assets/images/room1.jpg"
               }
               alt="Property"

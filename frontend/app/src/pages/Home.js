@@ -5,12 +5,14 @@ import SearchBar from "../components/SearchBar";
 import Disclaimer from "../components/Disclaimer";
 import SearchCard from "../components/SearchCard";
 import { fetchProperties } from "../services/propertyServices";
+import PropertyDetails from "../components/PropertyDetails";
 
 const Home = () => {
   const [location, setLocation] = useState("");
   const [roomType, setRoomType] = useState("");
   const [priceRange, setPriceRange] = useState([0, 1000]);
   const [showAdvanced, setShowAdvanced] = useState(false);
+  const [selectedProperty, setSelectedProperty] = useState(null);
   const [advancedFilters, setAdvancedFilters] = useState({
     shower: false,
     heater: false,
@@ -54,12 +56,28 @@ const Home = () => {
     });
   };
 
+  // Handler to select a property
+  const handleSelectProperty = (property) => {
+    setSelectedProperty(property); // Select a property to view in detail
+  };
+
+  const handleBackToResults = () => {
+    setSelectedProperty(null); // Reset selected property
+  };
+
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-100 to-gray-200">
+    <div className="background-container">
       {/* Navigation Bar */}
       <Navbar />
 
-      {/* Main Search Section */}
+      {selectedProperty ? (
+        // Render PropertyDetails if a property is selected
+        <PropertyDetails
+          property={selectedProperty}
+          onBack={handleBackToResults}
+        />
+      ) : (
+
       <div className="flex justify-center mt-12">
         <div className="bg-white shadow-lg rounded-lg p-8 w-full max-w-4xl">
           <h2 className="text-2xl font-semibold text-gray-800 text-center mb-6">
@@ -125,11 +143,11 @@ const Home = () => {
                 properties.map((property) => (
                   <SearchCard
                     key={property.property_id}
-                    image={property.Media[0]?.mediaUrl || "/default.jpg"}
+                    image={`https://fulda-student-hub.s3.eu-north-1.amazonaws.com/public/uploads/images/${property.Media[0]?.mediaUrl}` || "/default.jpg"}
                     description={property.amenities.join(", ")}
                     price={`€${property.rent}`}
                     poster={`${property.landlord.first_name} ${property.landlord.last_name}`}
-                    onClick={() => console.log("Clicked")} // Placeholder action
+                    onClick={() => handleSelectProperty(property)}
                   />
                 ))
               ) : (
@@ -148,8 +166,9 @@ const Home = () => {
           </div>
         </div>
       </div>
+      )}
 
-      <div className="pb-16"></div>
+      <div className="pb-16"></div> 
 
       <Disclaimer />
     </div>

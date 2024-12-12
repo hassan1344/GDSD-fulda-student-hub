@@ -1,10 +1,10 @@
 import React, { useEffect, useState } from "react";
 import { getProfileByUsername } from "../services/profileServices"; // Adjust the import based on your structure
-import { jwtDecode } from "jwt-decode";
-import Navbar from "../components/NavBar";
+import {jwtDecode} from "jwt-decode";
+import LandlordNavbar from "../components/LandlordNavbar";
 import Disclaimer from "../components/Disclaimer";
 
-const ViewStudentProfile = () => {
+const LandlordViewProfile = () => {
   const [profile, setProfile] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -15,12 +15,9 @@ const ViewStudentProfile = () => {
     const accessToken = localStorage.getItem("accessToken");
 
     const decodedToken = jwtDecode(accessToken);
-    const { userName, userType } = decodedToken;
+    const { userName } = decodedToken;
 
     setUserName(userName);
-
-    if (userName) {
-    }
 
     if (userName) {
       const fetchProfile = async () => {
@@ -47,18 +44,16 @@ const ViewStudentProfile = () => {
     return <div className="text-center mt-10 text-red-500">{error}</div>;
 
   return (
-    <div className="background-container">
+    <div className="min-h-screen bg-gradient-to-br from-blue-100 via-blue-50 to-white">
       {/* Navbar */}
-      <Navbar />
+      <LandlordNavbar />
 
       {/* Profile Content */}
       <div className="max-w-4xl mx-auto p-6 bg-white shadow-lg rounded-lg mt-8">
         {/* Profile Header */}
         <div className="text-center mb-6">
-          <h1 className="text-2xl font-bold text-gray-700">Student Profile</h1>
-          <p className="text-sm text-gray-500">
-            Welcome to the Fulda Student Hub
-          </p>
+          <h1 className="text-2xl font-bold text-gray-700">Landlord Profile</h1>
+          <p className="text-sm text-gray-500">Explore landlord details</p>
         </div>
 
         {/* Profile Content */}
@@ -83,20 +78,26 @@ const ViewStudentProfile = () => {
             <h2 className="text-lg font-semibold text-gray-800">
               {profile?.first_name} {profile?.last_name}
             </h2>
-            <p className="text-sm text-gray-600">{profile?.university}</p>
-            <p className="text-sm text-gray-600">
-              Student ID: {profile?.student_id_number}
-            </p>
             <p className="text-sm text-gray-600">Email: {profile?.email}</p>
           </div>
 
-          {/* Contact Info Section */}
+          {/* Address Section */}
+          <div className="border-t pt-4 space-y-2">
+            <p className="text-sm text-gray-600">
+              <strong>Address:</strong> {profile?.address || "N/A"}
+            </p>
+          </div>
+
+          {/* Additional Details Section */}
           <div className="border-t pt-4 space-y-2">
             <p className="text-sm text-gray-600">
               <strong>Phone:</strong> {profile?.phone_number || "N/A"}
             </p>
             <p className="text-sm text-gray-600">
               <strong>Username:</strong> {profile?.user_id || "N/A"}
+            </p>
+            <p className="text-sm text-gray-600">
+              <strong>Trust Score:</strong> {profile?.trust_score || 0}
             </p>
           </div>
         </div>
@@ -110,4 +111,4 @@ const ViewStudentProfile = () => {
   );
 };
 
-export default ViewStudentProfile;
+export default LandlordViewProfile;
