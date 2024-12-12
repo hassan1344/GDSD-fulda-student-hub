@@ -36,3 +36,13 @@
     transform: rotate(360deg);
   }
 }
+
+.background-container {
+  @apply min-h-screen bg-gradient-to-br from-green-100 via-green-50 to-white;
+}
+
+.property-card-button {
+  margin: 0rem 1rem 0rem 0rem;
+  @apply inline-block mt-4 bg-green-600 hover:bg-green-700 text-white font-bold py-2 px-4 rounded transition duration-200
+  
+}

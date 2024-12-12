@@ -41,22 +41,24 @@ model Student {
   user_id            String   @unique // Foreign key for User table
 
   // Relationships
-  user            User          @relation(fields: [user_id], references: [user_name])
-  profile_picture Media?        @relation(fields: [profile_picture_id], references: [media_id]) // Foreign key for Media table
-  Application     Application[]
+  user            User   @relation(fields: [user_id], references: [user_name])
+  profile_picture Media? @relation(fields: [profile_picture_id], references: [media_id]) // Foreign key for Media table
 
   @@map("student")
 }
 
 model User {
-  created_at DateTime  @default(now())
-  updated_at DateTime  @updatedAt
-  email      String
-  password   String
-  user_name  String    @id
-  user_type  UserType  @default(STUDENT)
-  Landlord   Landlord?
-  Student    Student?
+  created_at    DateTime  @default(now())
+  updated_at    DateTime  @updatedAt
+  email         String
+  password      String
+  user_name     String    @id
+  user_type     UserType  @default(STUDENT)
+  refresh_token String?   @db.Text
+  Landlord      Landlord?
+  Student       Student?
+
+  Application Application[]
 
   @@map("user")
 }
@@ -92,15 +94,17 @@ model Listing {
 }
 
 model Media {
-  media_id   String     @id @default(uuid())
-  model_name String
-  model_id   String
-  media_url  String
-  media_type String
-  created_at DateTime   @default(now())
-  updated_at DateTime   @updatedAt
-  Landlord   Landlord[]
-  Student    Student[]
+  media_id       String     @id @default(uuid())
+  model_name     String
+  model_id       String
+  media_url      String
+  media_type     String
+  media_category String //  (profile_picture, property_image, document, etc.)
+  identifier     String? //  (government_id, enrolment_certificate)
+  created_at     DateTime   @default(now())
+  updated_at     DateTime   @updatedAt
+  Landlord       Landlord[]
+  Student        Student[]
 
   @@map("media")
 }
@@ -109,6 +113,10 @@ model Application {
   application_id     String            @id @default(uuid())
   listing_id         String
   student_id         String
+  student_card_id    String
+  full_name          String
+  contact_number     String
+  current_address    String
   application_status ApplicationStatus @default(PENDING)
   applied_at         DateTime          @default(now())
   reviewed_at        DateTime?
@@ -117,7 +125,7 @@ model Application {
   updated_at         DateTime          @updatedAt
 
   listing Listing @relation(fields: [listing_id], references: [listing_id])
-  student Student @relation(fields: [student_id], references: [student_id])
+  user    User    @relation(fields: [student_id], references: [user_name])
 
   @@map("application")
 }

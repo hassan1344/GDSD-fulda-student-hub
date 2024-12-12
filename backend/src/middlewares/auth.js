@@ -1,5 +1,19 @@
 import { verifyToken } from "../utils/jwtUtils.js";
 
+export const authenticate = (req, res, next) => {
+  const token = req.headers.authorization?.split(" ")[1];
+  if (!token) {
+    return res.status(401).json({ error: "Unauthorized" });
+  }
+  try {
+    const user = verifyToken(token, process.env.ACCESS_TOKEN_SECRET);
+    req.user = user;
+    next();
+  } catch {
+    res.status(401).json({ error: "Invalid token" });
+  }
+}
+
 export const authenticateStudent = (req, res, next) => {
   const token = req.headers.authorization?.split(" ")[1];
   if (!token) {
@@ -7,9 +21,8 @@ export const authenticateStudent = (req, res, next) => {
   }
 
   try {
-    const user = verifyToken(token);
+    const user = verifyToken(token, process.env.ACCESS_TOKEN_SECRET);
     req.user = user;
-    console.log(user);
 
     if (user.userType !== "STUDENT") {
       return res
@@ -24,23 +37,28 @@ export const authenticateStudent = (req, res, next) => {
 };
 
 export const authenticateLandlord = (req, res, next) => {
-  const token = req.headers.authorization?.split(" ")[1];
+  const token = req.headers.authorization?.split(" ")[1]; // Extract token from Authorization header
+  // console.log("Extracted Token:", token); // Log the extracted token
+  
   if (!token) {
     return res.status(401).json({ error: "Unauthorized" });
   }
-
+  
   try {
-    const user = verifyToken(token);
-    req.user = user;
+    const user = verifyToken(token, process.env.ACCESS_TOKEN_SECRET); // Verify the token
+    req.user = user; // Attach user info to the request object
 
-    if (user.user_type !== "LANDLORD") {
-      return res
-        .status(403)
-        .json({ error: "Forbidden: Only landlord can access this route" });
+    // Debug: Print entire user object
+    // console.log("Authenticated User:", req.user);
+
+    // Check if the user type is LANDLORD
+    if (user.userType !== "LANDLORD") {  // Use userType instead of user_type
+      return res.status(403).json({ error: "Forbidden: Only landlord can access this route" });
     }
 
-    next();
-  } catch {
+    next(); // Proceed to the next middleware or route handler
+  } catch (error) {
+    // console.error("Token verification error:", error.message);
     res.status(401).json({ error: "Invalid token" });
   }
 };

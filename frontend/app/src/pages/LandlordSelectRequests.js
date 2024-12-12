@@ -35,8 +35,8 @@ const LandlordSelectRequests = () => {
   console.log("Current requests:", requests);
 
   return (
-    <div className="min-h-screen bg-gray-100">
-      <Navbar />
+    <div className="background-container">
+      <LandlordNavbar />
       <div className="p-8">
         <h2 className="text-2xl font-semibold text-gray-800 mb-4">Select Suitable Requests</h2>
         
