@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import Navbar from '../components/NavBar';
+import LandlordNavbar from '../components/LandlordNavbar';
 
 const LandlordRequests = () => {
   const [filters, setFilters] = useState({
@@ -48,8 +49,8 @@ const LandlordRequests = () => {
   console.log("LandlordRequests rendered", filters);
 
   return (
-    <div className="min-h-screen bg-gray-100">
-      <Navbar />
+    <div className="background-container">
+      <LandlordNavbar />
       <div className="p-8">
         <h2 className="text-2xl font-semibold text-gray-800 mb-4">View Requests</h2>
         

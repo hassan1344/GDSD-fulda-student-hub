@@ -2,7 +2,7 @@
 import React, { useState, useEffect } from 'react';
 //import { mockLandlordData } from '../../mockData'; // Import mock data
 import LandlordNavbar from '../../components/LandlordNavbar'; // Adjusted path to Navbar component
-import { fetchAllProperties, fetchPropertyById  } from '../../services/LandlordServices';
+import { fetchAllProperties, fetchPropertyById } from '../../services/LandlordServices';
 import { useNavigate } from 'react-router-dom';
 import { Link } from 'react-router-dom';
 
@@ -12,21 +12,21 @@ const ViewProperties = () => {
   const [error, setError] = useState(null);
   const navigate = useNavigate();
 
-const viewPropertyById = async (propertyId) => {
+  const viewPropertyById = async (propertyId) => {
 
-  try {
-    const token = localStorage.getItem('accessToken');
-    const data = await fetchPropertyById(propertyId, token);
-    if (data.success) {
-      // Navigate to a new page or display the property details
-      navigate(`/landlord/view-property/${propertyId}`, { state: { property: data.data } });
-    } else {
-      console.error('Error fetching property details:', data.message);
+    try {
+      const token = localStorage.getItem('accessToken');
+      const data = await fetchPropertyById(propertyId, token);
+      if (data.success) {
+        // Navigate to a new page or display the property details
+        navigate(`/landlord/view-property/${propertyId}`, { state: { property: data.data } });
+      } else {
+        console.error('Error fetching property details:', data.message);
+      }
+    } catch (error) {
+      console.error('Error fetching property details:', error);
     }
-  } catch (error) {
-    console.error('Error fetching property details:', error);
-  }
-};
+  };
 
   useEffect(() => {
     const fetchListings = async () => {
@@ -67,14 +67,15 @@ const viewPropertyById = async (propertyId) => {
               <div key={listing.property_id} className="bg-white shadow-lg rounded-lg overflow-hidden">
 
                 <div className="p-4">
-                <h2 className="text-xl font-semibold text-green-700 cursor-pointer hover:underline">{listing.address}</h2>
-  
+                  <h2 className="text-xl font-semibold text-green-700 cursor-pointer hover:underline">{listing.address}</h2>
+
                   <p className="text-lg font-bold text-green-600">Rent: €{listing.rent}</p>
                   <p className="text-sm text-gray-500">Amenities: {listing.amenities.join(', ')}</p>
-                  <Link to={`/landlord/edit-listing/${listing.property_id}`} className="inline-block mt-4 bg-green-600 hover:bg-green-700 text-white font-bold py-2 px-4 rounded transition duration-200">
+                  <Link to={`/landlord/edit-listing/${listing.property_id}`} className="property-card-button">
                     Edit Property
                   </Link>
-                  <button onClick={viewPropertyById(listing.property_id)}>
+                  <button className="property-card-button" 
+                  onClick={() => viewPropertyById(listing.property_id)}>
                     View Property
                   </button>
 

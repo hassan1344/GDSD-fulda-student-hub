@@ -47,7 +47,7 @@ const ViewStudentProfile = () => {
     return <div className="text-center mt-10 text-red-500">{error}</div>;
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-green-100 via-green-50 to-white">
+    <div className="background-container">
       {/* Navbar */}
       <Navbar />
 

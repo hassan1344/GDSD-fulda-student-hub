@@ -60,6 +60,8 @@ const SearchResults = () => {
   // Paginate data
   const paginatedListings = listings.slice(startIndex, endIndex);
 
+  console.log(paginatedListings, "heherere");
+
   // Handler to select a property
   const handleSelectProperty = (property) => {
     setSelectedProperty(property); // Select a property to view in detail
@@ -71,7 +73,7 @@ const SearchResults = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gray-100">
+    <div className="background-container">
       <Navbar />
       {selectedProperty ? (
         // Render PropertyDetails if a property is selected
@@ -115,7 +117,7 @@ const SearchResults = () => {
                 {paginatedListings.map((listing) => (
                   <SearchCard
                     key={listing.property_id}
-                    image={listing.Media[0]?.mediaUrl || "/default.jpg"}
+                    image={`https://fulda-student-hub.s3.eu-north-1.amazonaws.com/public/uploads/images/${listing.Media[0]?.mediaUrl}` || "/default.jpg"}
                     description={listing.amenities.join(", ")}
                     price={`€${listing.rent}`}
                     poster={`${listing.landlord.first_name} ${listing.landlord.last_name}`}

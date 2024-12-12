@@ -75,7 +75,7 @@ const CreateProfilePage = () => {
   };
 
   return (
-    <div className="min-h-screen flex flex-col justify-center items-center bg-gradient-to-br from-green-100 via-green-50 to-white">
+    <div className="flex flex-col justify-center items-center background-container">
       <div className="text-center mb-6">
         <h1 className="text-3xl font-bold text-gray-800">Create Profile</h1>
         <p className="text-sm text-gray-500">

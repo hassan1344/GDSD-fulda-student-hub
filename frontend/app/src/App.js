@@ -16,6 +16,8 @@ import ViewStudentProfile from "./pages/ViewStudentProfile";
 import Disclaimer from './components/Disclaimer'; // Import the Disclaimer component
 import ViewPropertyDetails from './pages/landlord/ViewPropertyDetails';
 import LandlordViewProfile from "./pages/landlordViewProfile";
+import './App.css';
+
 
 const App = () => {
   console.log("App rendered");
