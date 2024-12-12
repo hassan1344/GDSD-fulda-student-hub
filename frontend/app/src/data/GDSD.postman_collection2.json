@@ -1,0 +1,613 @@
+{
+	"info": {
+		"_postman_id": "6ceefdb1-d7f0-4a7c-90f5-7535b50663fa",
+		"name": "GDSD",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+	},
+	"item": [
+		{
+			"name": "properties",
+			"item": [
+				{
+					"name": "properties",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{appUrl}}/properties?address=eigilstraße&maxRent=1100",
+							"host": [
+								"{{appUrl}}"
+							],
+							"path": [
+								"properties"
+							],
+							"query": [
+								{
+									"key": "address",
+									"value": "eigilstraße"
+								},
+								{
+									"key": "maxRent",
+									"value": "1100"
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Get By Id",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{appUrl}}/properties/1b30f98d-ac56-11ef-839c-0a0dbba42faf",
+							"host": [
+								"{{appUrl}}"
+							],
+							"path": [
+								"properties",
+								"1b30f98d-ac56-11ef-839c-0a0dbba42faf"
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Application module",
+			"item": [
+				{
+					"name": "Add application",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{accessToken}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [
+							{
+								"key": "authorization",
+								"value": "Bearer {{accessToken}}",
+								"type": "default",
+								"disabled": true
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n    \"listing_id\" : \"29bb77d7-b2fd-11ef-ab25-0a9fe28af2b5\",\r\n    \"remarks\" : \"sdf\"\r\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{appUrl}}/application/create-application",
+							"host": [
+								"{{appUrl}}"
+							],
+							"path": [
+								"application",
+								"create-application"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Get all applications (for a user)",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "{{ACCESS_TOKEN}}",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "{{appUrl}}/application/get-all-application",
+							"host": [
+								"{{appUrl}}"
+							],
+							"path": [
+								"application",
+								"get-all-application"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Get application by id (for a user)",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "{{ACCESS_TOKEN}}",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "{{appUrl}}/application/create-application/get-application-by-id/<application id>",
+							"host": [
+								"{{appUrl}}"
+							],
+							"path": [
+								"application",
+								"create-application",
+								"get-application-by-id",
+								"<application id>"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Update application (for a user)",
+					"request": {
+						"method": "PUT",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "{{ACCESS_TOKEN}}",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n    \"application_status\" : \"\",  //  PENDING, APPROVED ,REJECTED ,WITHDRAWN\r\n    \"remarks\" : \"\"\r\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{appUrl}}/application/update-application-by-id/<application id>",
+							"host": [
+								"{{appUrl}}"
+							],
+							"path": [
+								"application",
+								"update-application-by-id",
+								"<application id>"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Delete application by id (for a user)",
+					"request": {
+						"method": "DELETE",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "{{ACCESS_TOKEN}}",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "{{appUrl}}/application/create-application/delete-application-by-id/<application id>",
+							"host": [
+								"{{appUrl}}"
+							],
+							"path": [
+								"application",
+								"create-application",
+								"delete-application-by-id",
+								"<application id>"
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Profiles",
+			"item": [
+				{
+					"name": "Create (landlord)",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{accessToken}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [
+							{
+								"key": "authorization",
+								"value": "Bearer {{accessToken}}",
+								"type": "default"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n    \"firstName\" : \"Jason\",\r\n    \"lastName\" : \"Bourne\",\r\n    \"phoneNumber\": \"98780000009\",\r\n    \"address\": \"Leipziger 111, Fulda\",\r\n    \"trustScore\": 0\r\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{appUrl}}/profile",
+							"host": [
+								"{{appUrl}}"
+							],
+							"path": [
+								"profile"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Create (student)",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{accessToken}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [
+							{
+								"key": "authorization",
+								"value": "Bearer {{accessToken}}",
+								"type": "default"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n    \"userName\": \"abcd\",\r\n    \"firstName\" : \"John\",\r\n    \"lastName\" : \"Wick\",\r\n    \"phoneNumber\": \"22222222\",\r\n    \"university\": \"Hochschule Fulda\",\r\n    \"studentIdNumber\": \"student111\",\r\n    \"emailVerified\": true\r\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{appUrl}}/profile",
+							"host": [
+								"{{appUrl}}"
+							],
+							"path": [
+								"profile"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Get profile",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{accessToken}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "{{ACCESS_TOKEN}}",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "{{appUrl}}/profile/landlord2",
+							"host": [
+								"{{appUrl}}"
+							],
+							"path": [
+								"profile",
+								"landlord2"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Update application (for a user)",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{accessToken}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "PATCH",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "{{ACCESS_TOKEN}}",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n    \"lastName\": \"Bourne2\"\r\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{appUrl}}/profile",
+							"host": [
+								"{{appUrl}}"
+							],
+							"path": [
+								"profile"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Delete application by id (for a user)",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{accessToken}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "DELETE",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "{{ACCESS_TOKEN}}",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "{{appUrl}}/profile",
+							"host": [
+								"{{appUrl}}"
+							],
+							"path": [
+								"profile"
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Auth",
+			"item": [
+				{
+					"name": "Login",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"var res = pm.response.json();\r",
+									"pm.environment.set('ACCESS_TOKEN', `Bearer ${res.token.accessToken}`)\r",
+									""
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n    \"userName\": \"abcd\",\r\n    \"password\" : \"1234\"\r\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{appUrl}}/auth/login",
+							"host": [
+								"{{appUrl}}"
+							],
+							"path": [
+								"auth",
+								"login"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Refresh Token",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"var res = pm.response.json();\r",
+									"pm.environment.set('ACCESS_TOKEN', `Bearer ${res.token.accessToken}`)\r",
+									""
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n    \"userName\": \"abc3\",\r\n    \"refreshToken\" : \"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VyTmFtZSI6ImFiYzMiLCJlbWFpbCI6ImFiYzNAZ21haWwuY29tIiwidXNlclR5cGUiOiJTVFVERU5UIiwiaWF0IjoxNzMzODYyOTUyLCJleHAiOjE3MzQ0Njc3NTJ9.F1LmYqL1EKOxho3atpt2KCzhGtnvurwpEI0O4zfG1kg\"\r\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{appUrl}}/auth/refresh-token",
+							"host": [
+								"{{appUrl}}"
+							],
+							"path": [
+								"auth",
+								"refresh-token"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Logout",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"var res = pm.response.json();\r",
+									"pm.environment.set('ACCESS_TOKEN', `Bearer ${res.token.accessToken}`)\r",
+									""
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n    \"userName\": \"abc3\"\r\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{appUrl}}/auth/logout",
+							"host": [
+								"{{appUrl}}"
+							],
+							"path": [
+								"auth",
+								"logout"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Register",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"var res = pm.response.json();\r",
+									"pm.environment.set('ACCESS_TOKEN', `Bearer ${res.token.accessToken}`)\r",
+									""
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n    \"userName\": \"landlord2\",\r\n    \"email\" : \"land2@gmail.com\",\r\n    \"password\" : \"1234\",\r\n    \"userType\": \"LANDLORD\"\t\r\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{appUrl}}/auth/register",
+							"host": [
+								"{{appUrl}}"
+							],
+							"path": [
+								"auth",
+								"register"
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		}
+	],
+	"event": [
+		{
+			"listen": "prerequest",
+			"script": {
+				"type": "text/javascript",
+				"exec": [
+					""
+				]
+			}
+		},
+		{
+			"listen": "test",
+			"script": {
+				"type": "text/javascript",
+				"exec": [
+					""
+				]
+			}
+		}
+	],
+	"variable": [
+		{
+			"key": "appUrl",
+			"value": "http://localhost:8000/api/v1",
+			"type": "default"
+		},
+		{
+			"key": "accessToken",
+			"value": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VyTmFtZSI6ImFiYzMiLCJlbWFpbCI6ImFiYzNAZ21haWwuY29tIiwidXNlclR5cGUiOiJTVFVERU5UIiwiaWF0IjoxNzMzODc3NTkwLCJleHAiOjE3MzM4NzkzOTB9.vlqPaiL3e8cfXOsGxihIRbjBmoay1ksaZFJtauDcRK0",
+			"type": "default"
+		}
+	]
+}
