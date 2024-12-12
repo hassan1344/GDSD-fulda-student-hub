@@ -14,7 +14,7 @@ export const fetchAllProperties = async (token) => {
 };
 
 export const fetchPropertyById = async (propertyId, token) => {
-  const response = await fetch(`${BASE_URL}/${propertyId}`, {
+  const response = await fetch(`${BASE_URL}/propertiesModule/${propertyId}`, {
     headers: { 'Authorization': `Bearer ${token}` }
   });
   return response.json();
