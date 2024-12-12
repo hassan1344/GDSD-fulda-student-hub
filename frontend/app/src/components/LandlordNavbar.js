@@ -34,9 +34,9 @@ const navigate = useNavigate();
 
 
   const navLinks = [
-    { path: "/", name: "Home" },
+    { path: "/landlord", name: "Home" },
     { path: "/message", name: "Message" },
-    { path: "/profile", name: "Profile" },
+    { path: "/landlord/viewProfile", name: "Profile" },
   ];
 
   return (
