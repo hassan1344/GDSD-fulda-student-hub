@@ -13,9 +13,15 @@ const SearchResults = () => {
     location = "",
     roomType = "",
     priceRange = [0, 1000],
-    advancedFilters = {},
+    advancedFilters = {
+      shower: false,
+      heater: false,
+      kitchen: false,
+      balcony: false,
+    },
   } = state || {};
 
+  // State to hold listings fetched from API
   const [listings, setListings] = useState([]);
   const [currentPage, setCurrentPage] = useState(1);
   const [selectedProperty, setSelectedProperty] = useState(null);
@@ -24,6 +30,7 @@ const SearchResults = () => {
 
   const itemsPerPage = 10;
 
+  // Fetch listings from the API
   useEffect(() => {
     const loadProperties = async () => {
       setIsLoading(true);
@@ -46,12 +53,22 @@ const SearchResults = () => {
     loadProperties();
   }, [location, priceRange, advancedFilters]);
 
+  // Calculate the indices for slicing the data
   const startIndex = (currentPage - 1) * itemsPerPage;
   const endIndex = startIndex + itemsPerPage;
+
+  // Paginate data
   const paginatedListings = listings.slice(startIndex, endIndex);
 
-  const handleSelectProperty = (property) => setSelectedProperty(property);
-  const handleBackToResults = () => setSelectedProperty(null);
+  // Handler to select a property
+  const handleSelectProperty = (property) => {
+    setSelectedProperty(property); // Select a property to view in detail
+  };
+
+  // Handler to return to the search results
+  const handleBackToResults = () => {
+    setSelectedProperty(null); // Reset selected property
+  };
 
   return (
     <div className="min-h-screen bg-gray-100">

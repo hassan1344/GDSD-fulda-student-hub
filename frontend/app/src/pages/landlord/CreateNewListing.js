@@ -1,6 +1,5 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-//import { mockLandlordData } from '../../mockData'; // Import mock data for initial state
 import LandlordNavbar from '../../components/LandlordNavbar'; // Adjusted path to Navbar component
 import { createProperty } from '../../services/LandlordServices'; //-----
 

@@ -55,6 +55,7 @@ model User {
   password   String
   user_name  String    @id
   user_type  UserType  @default(STUDENT)
+  refresh_token String? @db.Text
   Landlord   Landlord?
   Student    Student?
 

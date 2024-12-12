@@ -2,17 +2,17 @@ import React, { useState } from "react";
 import { NavLink, useLocation, useNavigate } from "react-router-dom";
 import logoFHB from "./assets/images/logoFHB.png";
 import { logoutUser } from "../services/authServices";
+
 const Navbar = () => {
   const location = useLocation();
-
   const navigate = useNavigate();
 
   const navLinks = [
     { path: "/home", name: "Home" },
     { path: "/favorites", name: "Favorites" },
     { path: "/profile", name: "Profile" },
- 
   ];
+
   const logoutHandler = async () => {
     try {
       const refreshToken = localStorage.getItem("refreshToken");

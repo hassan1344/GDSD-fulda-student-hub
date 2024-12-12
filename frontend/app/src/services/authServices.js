@@ -1,6 +1,10 @@
 const BASE_URL =
   process.env.REACT_APP_API_BASE_URL ||
-  'http://localhost:8000/v1';
+  'http://localhost:8000/api/v1';
+  
+//  'https://localhost:8000/api/v1';
+//  'https://16.171.165.15/api/v1';
+
 
 // Register User
 export const registerUser = async (userType, userData) => {

@@ -100,8 +100,8 @@ const AuthPage = () => {
 
         const response = await loginUser({ userName, password });
 
-        if (response.token) {
-          const { accessToken, refreshToken } = response.token;
+        if (response.tokens) {
+          const { accessToken, refreshToken } = response.tokens;
 
           localStorage.setItem("accessToken", accessToken);
           localStorage.setItem("refreshToken", refreshToken);
