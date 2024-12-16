@@ -21,81 +21,137 @@ async function getLandlordId(user_name) {
 
 export const createProperty = async (req, res) => {
   try {
-    console.log("Incoming request to create property:", req.body);
-
     if (!req.user || !req.user.userName) {
-      console.log("User not authenticated:", req.user);
       return res.status(401).json({ success: false, error: "User not authenticated" });
     }
 
-    const { address, rent, amenities } = req.body;
-
-    if (!Array.isArray(amenities)) {
-      return res.status(400).json({ success: false, error: "Amenities must be an array" });
-    }
-
+    const { address, amenities } = req.body;
     const landlord_id = await getLandlordId(req.user.userName);
-    console.log("createProperty called with landlord_id:", landlord_id);
 
-    // Create the property in the Property table
-    const property = await prisma.property.create({
-      data: {
-        landlord_id,
-        address,
-        rent: parseFloat(rent),
-        amenities,
-      },
-      include: { landlord: true },
-    });
+    console.log("Request body:", req.body);
+    console.log("Files attached to request:", req.files);
 
-    // Handle media uploads
-    if (req.files && req.files.length > 0) {
-      const mediaEntries = await Promise.all(
-        req.files.map(async (file) => {
-          const fileName = await uploadToS3(file); // Upload file to S3
-          return {
-            model_name: 'property', // Model name (for example, "property")
-            model_id: property.property_id, // Associate this media with the created property
-            media_url: fileName, // URL of the file uploaded to S3
-            media_type: file.mimetype, // File type (MIME type)
-            media_category: 'property_image', // Media category for properties
-          };
-        })
-      );
+    // Parse amenities if it's a JSON string
+    const parsedAmenities = typeof amenities === 'string' ? JSON.parse(amenities) : amenities;
 
-      // Insert media entries into the Media table
-      await prisma.media.createMany({
-        data: mediaEntries, // Insert all media entries at once
+    // Start a transaction
+    const result = await prisma.$transaction(async (prisma) => {
+      // Create the property
+      const property = await prisma.property.create({
+        data: {
+          landlord_id,
+          address,
+        },
+        include: { landlord: true },
       });
 
-      console.log("Media entries inserted into the media table:", mediaEntries);
-    }
+      console.log("Property created:", property);
 
+      // Handle amenity creation and property-amenity association
+      if (Array.isArray(parsedAmenities) && parsedAmenities.length > 0) {
+        for (const { amenity_name, amenity_value } of parsedAmenities) {
+          // Create a new amenity entry every time
+          const createdAmenity = await prisma.amenity.create({
+            data: {
+              amenity_id: `am-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
+              amenity_name,
+              amenity_value,
+              updated_at: new Date(),
+            },
+          });
+
+          // Create the association between the property and the amenity
+          await prisma.property_amenity.create({
+            data: {
+              property_amenity_id: `pa-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
+              property_id: property.property_id,
+              amenity_id: createdAmenity.amenity_id,
+              updated_at: new Date(),
+            },
+          });
+        }
+      }
+
+      console.log("Amenities processed");
+
+      // Handle media uploads
+      console.log("Starting media upload process");
+      if (req.files && req.files.length > 0) {
+        console.log(`Found ${req.files.length} files to upload`);
+        const mediaEntries = await Promise.all(
+          req.files.map(async (file, index) => {
+            console.log(`Uploading file ${index + 1}/${req.files.length}`);
+            try {
+              const fileName = await uploadToS3(file);
+              console.log(`File ${index + 1} uploaded successfully. Filename: ${fileName}`);
+              return {
+                media_id: `med-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
+                model_name: 'property',
+                model_id: property.property_id,
+                media_url: fileName,
+                media_type: file.mimetype,
+                media_category: 'property_image',
+                updated_at: new Date(),
+              };
+            } catch (uploadError) {
+              console.error(`Error uploading file ${index + 1}:`, uploadError);
+              throw uploadError;
+            }
+          })
+        );
+
+        console.log("All files uploaded, creating media entries");
+        await prisma.media.createMany({
+          data: mediaEntries,
+        });
+        console.log("Media entries created in database");
+      } else {
+        console.log("No files to upload");
+      }
+
+      // Fetch the created property with all relations
+      return await prisma.property.findUnique({
+        where: { property_id: property.property_id },
+        include: {
+          landlord: true,
+          property_amenity: {
+            include: {
+              amenity: true,
+            },
+          },
+        },
+      });
+    });
+
+    console.log("Transaction completed successfully");
     res.status(201).json({
       success: true,
       message: "Property created successfully",
-      data: property,
+      data: result,
     });
+
   } catch (error) {
-    console.error("Error creating property:", error.message, error.stack);
+    console.error("Error creating property:", error);
     if (error instanceof Prisma.PrismaClientKnownRequestError && error.code === 'P2002') {
       return res.status(409).json({ success: false, error: "A property with this address already exists" });
     }
     if (error.message === "Associated landlord profile not found") {
       return res.status(404).json({ success: false, error: "Landlord profile not found" });
     }
-    res.status(500).json({ success: false, error: "An unexpected error occurred while creating the property" });
+    res.status(500).json({ 
+      success: false, 
+      error: "An unexpected error occurred while creating the property" 
+    });
   }
 };
 
 
-
 export const getAllProperties = async (req, res) => {
   try {
-    console.log("Request to get all properties for user:", req.user); // Log user info
+    console.log("Request to get all properties for user:", req.user);
 
     if (!req.user || !req.user.userName) {
-      console.log("User not authenticated:", req.user); // Log user object
+      console.log("User not authenticated:", req.user);
       return res.status(401).json({ success: false, error: "User not authenticated" });
     }
 
@@ -103,30 +159,68 @@ export const getAllProperties = async (req, res) => {
     console.log("getAllProperties called with landlord_id:", landlord_id);
 
     const properties = await prisma.property.findMany({
-      where: { landlord_id },
-      include: { landlord: true },
+      where: { 
+        landlord_id 
+      },
+      include: {
+        landlord: {
+          include: {
+            profile_picture: true
+          }
+        },
+        property_amenity: {
+          include: {
+            amenity: true
+          }
+        },
+        Listing: {
+          include: {
+            room_type: true
+          }
+        }
+      }
     });
+
+    // Get media for each property
+    const propertiesWithMedia = await Promise.all(
+      properties.map(async (property) => {
+        const media = await prisma.media.findMany({
+          where: {
+            model_name: 'property',
+            model_id: property.property_id
+          }
+        });
+
+        return {
+          ...property,
+          media
+        };
+      })
+    );
 
     res.status(200).json({
       success: true,
       message: "Properties retrieved successfully",
-      data: properties,
+      data: propertiesWithMedia
     });
   } catch (error) {
     console.error("Error retrieving properties:", error.message, error.stack);
     if (error.message === "Associated landlord profile not found") {
       return res.status(404).json({ success: false, error: "Landlord profile not found" });
     }
-    res.status(500).json({ success: false, error: "An unexpected error occurred while retrieving properties" });
+    res.status(500).json({ 
+      success: false, 
+      error: "An unexpected error occurred while retrieving properties" 
+    });
   }
 };
 
 export const getPropertyById = async (req, res) => {
   try {
-    console.log("Request to get property by ID for user:", req.user); // Log user info
+    console.log("Request to get property by ID for user:", req.user);
 
     if (!req.user || !req.user.userName) {
-      console.log("User not authenticated:", req.user); // Log user object
+      console.log("User not authenticated:", req.user);
       return res.status(401).json({ success: false, error: "User not authenticated" });
     }
 
@@ -136,17 +230,40 @@ export const getPropertyById = async (req, res) => {
 
     const property = await prisma.property.findUnique({
       where: { property_id: id, landlord_id },
-      include: { landlord: true },
+      include: {
+        landlord: {
+          include: {
+            profile_picture: true
+          }
+        },
+        property_amenity: {
+          include: {
+            amenity: true
+          }
+        },
+        Listing: {
+          include: {
+            room_type: true
+          }
+        }
+      }
     });
 
     if (!property) {
       return res.status(404).json({ success: false, error: "Property not found or does not belong to you" });
     }
 
+    const media = await prisma.media.findMany({
+      where: {
+        model_name: 'property',
+        model_id: id
+      }
+    });
+
     res.status(200).json({
       success: true,
       message: "Property retrieved successfully",
-      data: property,
+      data: { ...property, media },
     });
   } catch (error) {
     console.error("Error retrieving property:", error.message, error.stack);
@@ -164,60 +281,120 @@ export const updateProperty = async (req, res) => {
     }
 
     const { id } = req.params;
-    const { rent, amenities, imagesToDelete } = req.body;
-    
+    const { address, amenities, imagesToDelete } = req.body;
     const landlord_id = await getLandlordId(req.user.userName);
 
-    const updateData = {};
-    if (rent) updateData.rent = parseFloat(rent);
-    if (amenities) {
-      const amenitiesArray = typeof amenities === 'string' ? JSON.parse(amenities) : amenities;
-      if (!Array.isArray(amenitiesArray)) {
-        return res.status(400).json({ success: false, error: "Amenities must be an array" });
-      }
-      updateData.amenities = amenitiesArray;
-    }
+    // Start a transaction
+    const result = await prisma.$transaction(async (prisma) => {
+      // Update basic property information
+      const property = await prisma.property.update({
+        where: { property_id: id, landlord_id },
+        data: {
+          address: address || undefined,
+        },
+      });
 
-    if (imagesToDelete) {
-      const imageIdsToDelete = Array.isArray(imagesToDelete) ? imagesToDelete : [imagesToDelete];
-      for (const imageId of imageIdsToDelete) {
-        const media = await prisma.media.findUnique({ where: { media_id: imageId } });
-        if (media && media.model_id === id) {
-          await deleteS3Object(media.media_url);
-          await prisma.media.delete({ where: { media_id: imageId } });
+      // Handle amenities update
+      if (amenities) {
+        const parsedAmenities = typeof amenities === 'string' ? JSON.parse(amenities) : amenities;
+        
+        // Delete existing amenities
+        await prisma.property_amenity.deleteMany({
+          where: { property_id: id }
+        });
+
+        // Create new amenities
+        if (Array.isArray(parsedAmenities) && parsedAmenities.length > 0) {
+          for (const { amenity_name, amenity_value } of parsedAmenities) {
+            const createdAmenity = await prisma.amenity.create({
+              data: {
+                amenity_id: `am-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
+                amenity_name,
+                amenity_value,
+                updated_at: new Date(),
+              },
+            });
+
+            await prisma.property_amenity.create({
+              data: {
+                property_amenity_id: `pa-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
+                property_id: id,
+                amenity_id: createdAmenity.amenity_id,
+                updated_at: new Date(),
+              },
+            });
+          }
         }
       }
-    }
 
-    if (req.files && req.files.length > 0) {
-      const mediaEntries = await Promise.all(
-        req.files.map(async (file) => {
-          const fileName = await uploadToS3(file);
-          return {
-            model_name: 'property',
-            model_id: id,
-            media_url: fileName,
-            media_type: file.mimetype,
-            media_category: 'property_image',
-          };
-        })
-      );
-      await prisma.media.createMany({ data: mediaEntries });
-    }
+      // Handle media deletions
+      if (imagesToDelete) {
+        const imageIdsToDelete = Array.isArray(imagesToDelete) ? imagesToDelete : [imagesToDelete];
+        for (const imageId of imageIdsToDelete) {
+          const media = await prisma.media.findUnique({ 
+            where: { media_id: imageId } 
+          });
+          if (media && media.model_id === id) {
+            await deleteS3Object(media.media_url);
+            await prisma.media.delete({ 
+              where: { media_id: imageId } 
+            });
+          }
+        }
+      }
 
-    const updatedProperty = await prisma.property.update({
-      where: { property_id: id, landlord_id },
-      data: updateData,
+      // Handle new media uploads
+      if (req.files && req.files.length > 0) {
+        console.log("Files to upload:", req.files);
+        const mediaEntries = await Promise.all(
+          req.files.map(async (file) => {
+            console.log("Uploading file:", file.originalname);
+            const fileName = await uploadToS3(file);
+            console.log("File uploaded to S3:", fileName);
+            return {
+              media_id: `med-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
+              model_name: 'property',
+              model_id: id,
+              media_url: fileName,
+              media_type: file.mimetype,
+              media_category: 'property_image',
+              updated_at: new Date(),
+            };
+          })
+        );
+      
+        console.log("Media entries to create:", mediaEntries);
+        await prisma.media.createMany({
+          data: mediaEntries,
+        });
+      }
+
+      // Fetch updated property with all relations
+      return await prisma.property.findUnique({
+        where: { property_id: id },
+        include: {
+          landlord: true,
+          property_amenity: {
+            include: {
+              amenity: true,
+            },
+          },
+        },
+      });
     });
 
+    // Fetch media separately
     const media = await prisma.media.findMany({
-      where: { model_name: 'property', model_id: id }
+      where: { 
+        model_name: 'property', 
+        model_id: id 
+      }
     });
 
     res.status(200).json({
       success: true,
       message: "Property updated successfully",
-      data: { ...updatedProperty, media }
+      data: { ...result, media }
     });
 
   } catch (error) {
@@ -235,10 +412,7 @@ export const updateProperty = async (req, res) => {
 
 export const deleteProperty = async (req, res) => {
   try {
-    console.log("Request to delete property for user:", req.user); // Log user info
-
     if (!req.user || !req.user.userName) {
-      console.log("User not authenticated:", req.user); // Log user object
       return res.status(401).json({ success: false, error: "User not authenticated" });
     }
 
@@ -246,48 +420,69 @@ export const deleteProperty = async (req, res) => {
     const landlord_id = await getLandlordId(req.user.userName);
     console.log("deleteProperty called with landlord_id:", landlord_id);
 
-    // Fetch all media associated with the property before deleting
-    const media = await prisma.media.findMany({
-      where: { model_name: "property", model_id: id },
-    });
-
-    // Delete media files from S3
-    if (media.length > 0) {
-      const deletePromises = media.map(async (mediaFile) => {
-        try {
-          await deleteS3Object(mediaFile.media_url); // Delete media from S3
-          console.log(`Deleted media from S3: ${mediaFile.media_url}`);
-        } catch (error) {
-          console.error(`Error deleting media from S3: ${mediaFile.media_url}`, error);
-        }
+    // Use transaction to ensure all deletions happen atomically
+    const result = await prisma.$transaction(async (prisma) => {
+      // Fetch all media associated with the property
+      const media = await prisma.media.findMany({
+        where: { model_name: "property", model_id: id },
       });
 
-      await Promise.all(deletePromises); // Wait for all media deletions to finish
-    }
+      // Delete media files from S3
+      if (media.length > 0) {
+        const deletePromises = media.map(async (mediaFile) => {
+          try {
+            await deleteS3Object(mediaFile.media_url);
+            console.log(`Deleted media from S3: ${mediaFile.media_url}`);
+          } catch (error) {
+            console.error(`Error deleting media from S3: ${mediaFile.media_url}`, error);
+            throw error;
+          }
+        });
+        await Promise.all(deletePromises);
+      }
 
-    // Delete media entries from the media table
-    await prisma.media.deleteMany({
-      where: { model_name: "property", model_id: id },
-    });
+      // Delete all related records in order
+      await prisma.media.deleteMany({
+        where: { model_name: "property", model_id: id },
+      });
 
-    // Delete the property itself from the property table
-    const deletedProperty = await prisma.property.delete({
-      where: { property_id: id, landlord_id },
+      // Delete property amenities
+      await prisma.property_amenity.deleteMany({
+        where: { property_id: id },
+      });
+
+      // Delete listings associated with the property
+      await prisma.listing.deleteMany({
+        where: { property_id: id },
+      });
+
+      // Finally delete the property
+      const deletedProperty = await prisma.property.delete({
+        where: { 
+          property_id: id,
+          landlord_id 
+        },
+      });
+
+      return deletedProperty;
     });
 
     res.status(200).json({
       success: true,
-      message: "Property and associated media deleted successfully",
-      data: deletedProperty,
+      message: "Property and all associated data deleted successfully",
+      data: result,
     });
   } catch (error) {
-    console.error("Error deleting property:", error.message, error.stack);
+    console.error("Error deleting property:", error);
     if (error instanceof Prisma.PrismaClientKnownRequestError && error.code === 'P2025') {
       return res.status(404).json({ success: false, error: "Property not found" });
     }
     if (error.message === "Associated landlord profile not found") {
       return res.status(404).json({ success: false, error: "Landlord profile not found" });
     }
-    res.status(500).json({ success: false, error: "An unexpected error occurred while deleting the property" });
+    res.status(500).json({ 
+      success: false, 
+      error: "An unexpected error occurred while deleting the property" 
+    });
   }
 };
