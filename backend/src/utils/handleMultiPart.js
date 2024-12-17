@@ -4,7 +4,7 @@ import path from "path";
 const storage = multer.memoryStorage();
 
 const fileFilter = (req, file, callback) => {
-  const FileTypes = /jpeg|jpg|png|gif|avif/;
+  const FileTypes = /jpeg|jpg|png|gif|avif|pdf/;
   const mimType = FileTypes.test(file.mimetype);
   const extname = FileTypes.test(path.extname(file.originalname));
   if (mimType && extname) {
