@@ -1,7 +1,9 @@
 import React, { useState } from "react";
+import { submitApplication } from "../services/applicationServices";
 
-const ApplicationForm = ({ onBack }) => {
+const ApplicationForm = ({ listing_id , onBack }) => {
   const [formData, setFormData] = useState({
+    listing_id: listing_id,
     fullName: "",
     studentId: "",
     contactNumber: "",
@@ -51,10 +53,32 @@ const ApplicationForm = ({ onBack }) => {
     setFormData((prev) => ({ ...prev, [name]: value }));
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    // Logic to handle form submission
-    alert("Application Submitted Successfully!");
+    const formPayload = new FormData();
+    formPayload.append("listing_id", formData.listing_id);
+    formPayload.append("full_name", formData.fullName);
+    formPayload.append("student_card_id", formData.studentId);
+    formPayload.append("contact_number", formData.contactNumber);
+    formPayload.append("current_address", formData.currentAddress);
+
+    formPayload.append("enrolment_certificate", formData.enrollmentCertificate);
+    formPayload.append("government_id", formData.governmentId);
+    formPayload.append("financial_proof", formData.financialProof);
+
+    formData.otherDocuments.forEach((file, index) => {
+      formPayload.append(`other_documents[${index}]`, file);
+    });
+
+    // try {
+    //   const response = await submitApplication(formPayload);
+    //   console.log("Response:", response);
+    //   alert("Application submitted successfully!");
+    // } catch (error) {
+    //   console.error("Error during submission:", error);
+    //   alert("There was an error submitting the application.");
+    // }
+
   };
 
   return (

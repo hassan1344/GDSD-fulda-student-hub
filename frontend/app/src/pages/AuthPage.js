@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { replace, useNavigate } from "react-router-dom";
 import logoFHB from "../assets/images/logoFHB.png";
 import { registerUser, loginUser } from "../services/authServices";
 import Disclaimer from "../components/Disclaimer";
@@ -69,10 +69,11 @@ const AuthPage = () => {
           return;
         }
 
-        const response = await registerUser(userType, {
+        const response = await registerUser({
           email,
           password,
           userName,
+          userType,
         });
 
         if (response?.message === "User registered successfully") {
@@ -94,13 +95,13 @@ const AuthPage = () => {
               showNotification("Login successful...");
               if (userType === "STUDENT") {
                 setTimeout(() => {
-                  navigate("/profile", {
+                  navigate("/profile", {replace: true}, {
                     state: { userType: "STUDENT", userName: { userName } },
                   });
                 }, 2000);
               } else if (userType === "LANDLORD") {
                 setTimeout(() => {
-                  navigate("/profile", {
+                  navigate("/profile", {replace: true}, {
                     state: { userType: "LANDLORD", userName: { userName } },
                   });
                 }, 2000);
@@ -148,11 +149,11 @@ const AuthPage = () => {
           showNotification("Login successful...");
           if (userType === "STUDENT") {
             setTimeout(() => {
-              navigate("/home");
+              navigate("/home", {replace: true});
             }, 2000);
           } else if (userType === "LANDLORD") {
             setTimeout(() => {
-              navigate("/landlord"); //Add landlord landing page
+              navigate("/landlord", {replace: true},); //Add landlord landing page
             }, 2000);
           } else {
             showNotification("An error occurred. Please try again.");
