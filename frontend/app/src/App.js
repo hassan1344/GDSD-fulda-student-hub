@@ -18,7 +18,6 @@ import ViewPropertyDetails from './pages/landlord/ViewPropertyDetails';
 import LandlordViewProfile from "./pages/landlordViewProfile";
 import Messages from "./pages/message/Messages";
 import './App.css';
-import TestApp from "./pages/message/TestApp";
 
 
 const App = () => {
@@ -34,8 +33,6 @@ const App = () => {
         <Route path="/searchresults" element={<SearchResults />} />
         <Route path="/viewProfile" element = {<ViewStudentProfile/>}/>
         <Route path="/messages" element = {<Messages/>}/>
-
-        <Route path="/test-messages" element = {<TestApp/>}/>
 
 
         <Route path="/landlord" element={<LandlordHomepage />} />
