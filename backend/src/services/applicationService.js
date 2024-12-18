@@ -161,7 +161,7 @@ export const getAllApplications = async (req, res) => {
     const mediaPromises = applications.map(async (application) => {
       const media = await prisma.media.findMany({
         where: {
-          model_id: application.id,
+          model_id: application.application_id,
           model_name: "application",
         },
       });
