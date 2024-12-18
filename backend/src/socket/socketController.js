@@ -10,7 +10,6 @@ export const createConversation = async (socket, payload) => {
     console.log(sender_id, receiver_id);
 
     let createConversation;
-    let messages;
 
     // validate convo existence
     createConversation = await prisma.conversation.findFirst({
@@ -26,13 +25,7 @@ export const createConversation = async (socket, payload) => {
       },
     });
 
-    // if exists, get the msgs
-    if (createConversation) {
-      messages = await prisma.chat.findMany({
-        where: { conversation_id: createConversation.conversation_id },
-      });
-    } else {
-      // if doesnot create new
+    if (!createConversation) {
       createConversation = await prisma.conversation.create({
         data: {
           sender_id,
@@ -47,7 +40,6 @@ export const createConversation = async (socket, payload) => {
 
     const data = {
       conversation: createConversation,
-      messages,
     };
 
     console.log("*****************************", data);
@@ -80,3 +72,44 @@ export const createChat = async (payload) => {
     console.log(error.message);
   }
 };
+
+export const getConversations = async (socket) => {
+  try {
+    const { userName } = socket.decoded;
+    const conversations = await prisma.conversation.findMany({
+      where: {
+        OR: [{ sender_id: userName }, { receiver_id: userName }],
+      },
+    });
+  return conversations;
+  } catch(error) {
+    console.error("Error fetching conversations:", error.message);
+  }
+}
+
+export const getChats = async (socket, payload) => {
+  try {
+    const {conversation_id} = payload;
+    const { userName } = socket.decoded;
+    const conversations = await prisma.conversation.findMany({
+      where: {
+        conversation_id: conversation_id,
+        OR: [{ sender_id: userName }, { receiver_id: userName }],
+      },
+    });
+    if(conversations.length === 0) {
+      throw new Error('Chat inaccessible');
+    }
+    const chats = await prisma.chat.findMany({
+      where: {
+        conversation_id: conversation_id,
+      },
+      orderBy: {
+        created_at: "asc", // Sort messages by creation time
+      },
+    });
+    return chats;
+  } catch (error) {
+    console.error("Error fetching chats:", error.message);
+  }
+}
