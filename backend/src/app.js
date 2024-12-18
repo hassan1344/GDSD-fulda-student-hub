@@ -9,6 +9,7 @@ import authRouter from "./routes/authRoutes.js";
 import profileRouter from './routes/profileRoutes.js';
 import { applicationRoutes } from "./routes/applicationRoutes.js";
 import propertyModuleRouter from "./routes/propertyModuleRoutes.js";
+import listingModuleRouter from "./routes/listingModuleRoutes.js";
 
 const app = express();
 
@@ -33,6 +34,8 @@ app.use("/api/v1/application", applicationRoutes);
 app.use("/api/v1/profile", profileRouter);
 
 app.use("/api/v1/propertiesModule", propertyModuleRouter);
+
+app.use("/api/v1/listingsModule", listingModuleRouter);
 
 // app.use(ResHandler);
 
