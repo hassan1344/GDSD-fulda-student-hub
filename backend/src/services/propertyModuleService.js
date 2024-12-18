@@ -284,24 +284,43 @@ export const updateProperty = async (req, res) => {
     const { address, amenities, imagesToDelete } = req.body;
     const landlord_id = await getLandlordId(req.user.userName);
 
-    // Start a transaction
     const result = await prisma.$transaction(async (prisma) => {
       // Update basic property information
       const property = await prisma.property.update({
         where: { property_id: id, landlord_id },
-        data: {
-          address: address || undefined,
-        },
+        data: { address: address || undefined },
       });
 
       // Handle amenities update
       if (amenities) {
         const parsedAmenities = typeof amenities === 'string' ? JSON.parse(amenities) : amenities;
-        
-        // Delete existing amenities
+
+        // Get existing property amenities
+        const existingPropertyAmenities = await prisma.property_amenity.findMany({
+          where: { property_id: id },
+          include: { amenity: true }
+        });
+
+        // Delete existing property-amenity associations
         await prisma.property_amenity.deleteMany({
           where: { property_id: id }
         });
+
+        // Delete orphaned amenities
+        for (const propertyAmenity of existingPropertyAmenities) {
+          const otherReferences = await prisma.property_amenity.count({
+            where: { 
+              amenity_id: propertyAmenity.amenity_id,
+              NOT: { property_id: id }
+            }
+          });
+
+          if (otherReferences === 0) {
+            await prisma.amenity.delete({
+              where: { amenity_id: propertyAmenity.amenity_id }
+            });
+          }
+        }
 
         // Create new amenities
         if (Array.isArray(parsedAmenities) && parsedAmenities.length > 0) {
@@ -327,30 +346,26 @@ export const updateProperty = async (req, res) => {
         }
       }
 
-      // Handle media deletions
+      // Rest of the media handling code remains the same
       if (imagesToDelete) {
         const imageIdsToDelete = Array.isArray(imagesToDelete) ? imagesToDelete : [imagesToDelete];
         for (const imageId of imageIdsToDelete) {
-          const media = await prisma.media.findUnique({ 
-            where: { media_id: imageId } 
+          const media = await prisma.media.findUnique({
+            where: { media_id: imageId }
           });
           if (media && media.model_id === id) {
             await deleteS3Object(media.media_url);
-            await prisma.media.delete({ 
-              where: { media_id: imageId } 
+            await prisma.media.delete({
+              where: { media_id: imageId }
             });
           }
         }
       }
 
-      // Handle new media uploads
       if (req.files && req.files.length > 0) {
-        console.log("Files to upload:", req.files);
         const mediaEntries = await Promise.all(
           req.files.map(async (file) => {
-            console.log("Uploading file:", file.originalname);
             const fileName = await uploadToS3(file);
-            console.log("File uploaded to S3:", fileName);
             return {
               media_id: `med-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
               model_name: 'property',
@@ -362,33 +377,25 @@ export const updateProperty = async (req, res) => {
             };
           })
         );
-      
-        console.log("Media entries to create:", mediaEntries);
+
         await prisma.media.createMany({
           data: mediaEntries,
         });
       }
 
-      // Fetch updated property with all relations
       return await prisma.property.findUnique({
         where: { property_id: id },
         include: {
           landlord: true,
           property_amenity: {
-            include: {
-              amenity: true,
-            },
+            include: { amenity: true },
           },
         },
       });
     });
 
-    // Fetch media separately
     const media = await prisma.media.findMany({
-      where: { 
-        model_name: 'property', 
-        model_id: id 
-      }
+      where: { model_name: 'property', model_id: id }
     });
 
     res.status(200).json({
@@ -396,19 +403,14 @@ export const updateProperty = async (req, res) => {
       message: "Property updated successfully",
       data: { ...result, media }
     });
-
   } catch (error) {
     console.error("Error updating property:", error);
     if (error instanceof Prisma.PrismaClientKnownRequestError && error.code === 'P2025') {
       return res.status(404).json({ success: false, error: "Property not found" });
     }
-    res.status(500).json({ 
-      success: false, 
-      error: "An unexpected error occurred while updating the property" 
-    });
+    res.status(500).json({ success: false, error: "An unexpected error occurred while updating the property" });
   }
 };
-
 
 export const deleteProperty = async (req, res) => {
   try {
@@ -418,53 +420,64 @@ export const deleteProperty = async (req, res) => {
 
     const { id } = req.params;
     const landlord_id = await getLandlordId(req.user.userName);
-    console.log("deleteProperty called with landlord_id:", landlord_id);
 
-    // Use transaction to ensure all deletions happen atomically
     const result = await prisma.$transaction(async (prisma) => {
-      // Fetch all media associated with the property
+      // Get all property amenities before deletion
+      const propertyAmenities = await prisma.property_amenity.findMany({
+        where: { property_id: id },
+        include: { amenity: true }
+      });
+
+      // Delete media files from S3
       const media = await prisma.media.findMany({
         where: { model_name: "property", model_id: id },
       });
 
-      // Delete media files from S3
       if (media.length > 0) {
-        const deletePromises = media.map(async (mediaFile) => {
-          try {
-            await deleteS3Object(mediaFile.media_url);
-            console.log(`Deleted media from S3: ${mediaFile.media_url}`);
-          } catch (error) {
-            console.error(`Error deleting media from S3: ${mediaFile.media_url}`, error);
-            throw error;
-          }
-        });
-        await Promise.all(deletePromises);
+        await Promise.all(
+          media.map(async (mediaFile) => {
+            try {
+              await deleteS3Object(mediaFile.media_url);
+            } catch (error) {
+              console.error(`Error deleting media from S3: ${mediaFile.media_url}`, error);
+              throw error;
+            }
+          })
+        );
       }
 
-      // Delete all related records in order
+      // Delete all related records
       await prisma.media.deleteMany({
         where: { model_name: "property", model_id: id },
       });
 
-      // Delete property amenities
       await prisma.property_amenity.deleteMany({
         where: { property_id: id },
       });
 
-      // Delete listings associated with the property
       await prisma.listing.deleteMany({
         where: { property_id: id },
       });
 
-      // Finally delete the property
-      const deletedProperty = await prisma.property.delete({
-        where: { 
-          property_id: id,
-          landlord_id 
-        },
-      });
+      // Delete orphaned amenities
+      for (const propertyAmenity of propertyAmenities) {
+        const otherReferences = await prisma.property_amenity.count({
+          where: {
+            amenity_id: propertyAmenity.amenity_id,
+            NOT: { property_id: id }
+          }
+        });
 
-      return deletedProperty;
+        if (otherReferences === 0) {
+          await prisma.amenity.delete({
+            where: { amenity_id: propertyAmenity.amenity_id }
+          });
+        }
+      }
+
+      return await prisma.property.delete({
+        where: { property_id: id, landlord_id },
+      });
     });
 
     res.status(200).json({
@@ -480,9 +493,6 @@ export const deleteProperty = async (req, res) => {
     if (error.message === "Associated landlord profile not found") {
       return res.status(404).json({ success: false, error: "Landlord profile not found" });
     }
-    res.status(500).json({ 
-      success: false, 
-      error: "An unexpected error occurred while deleting the property" 
-    });
+    res.status(500).json({ success: false, error: "An unexpected error occurred while deleting the property" });
   }
 };
