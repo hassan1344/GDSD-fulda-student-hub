@@ -7,16 +7,18 @@ export const createConversation = async (socket, payload) => {
     const { receiver_id } = payload;
     const { userName: sender_id } = socket.decoded;
 
-    console.log(sender_id, receiver_id);
+    console.log("senderrrid ", sender_id, receiver_id);
 
+    // if (sender_id === receiver_id) return null;
     let createConversation;
 
     // validate convo existence
+
     createConversation = await prisma.conversation.findFirst({
       where: {
         OR: [
-          { AND: [{ sender_id }, { receiver_id }] },
-          { AND: [{ sender_id }, { receiver_id }] },
+          { AND: [{ sender_id }, { receiver_id }] }, // Case 1: sender -> receiver
+          { AND: [{ sender_id: receiver_id }, { receiver_id: sender_id }] }, // Case 2: swapped sender and receiver
         ],
       },
       include: {
@@ -80,25 +82,39 @@ export const getConversations = async (socket) => {
       where: {
         OR: [{ sender_id: userName }, { receiver_id: userName }],
       },
+      include: {
+        sender: true,
+        receiver: true,
+      },
     });
-  return conversations;
-  } catch(error) {
+
+    const processedConversations = conversations.map((conversation) => {
+      const isSender = conversation.sender_id === userName;
+
+      return {
+        ...conversation,
+        user: isSender ? conversation.receiver : conversation.sender,
+      };
+    });
+    console.log("processed onversationssss", processedConversations);
+    return processedConversations;
+  } catch (error) {
     console.error("Error fetching conversations:", error.message);
   }
-}
+};
 
 export const getChats = async (socket, payload) => {
   try {
-    const {conversation_id} = payload;
+    const { conversation_id } = payload;
     const { userName } = socket.decoded;
     const conversations = await prisma.conversation.findMany({
       where: {
-        conversation_id: conversation_id,
+        // conversation_id: conversation_id,
         OR: [{ sender_id: userName }, { receiver_id: userName }],
       },
     });
-    if(conversations.length === 0) {
-      throw new Error('Chat inaccessible');
+    if (conversations.length === 0) {
+      throw new Error("Chat inaccessible");
     }
     const chats = await prisma.chat.findMany({
       where: {
@@ -112,4 +128,4 @@ export const getChats = async (socket, payload) => {
   } catch (error) {
     console.error("Error fetching chats:", error.message);
   }
-}
+};

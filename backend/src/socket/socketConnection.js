@@ -1,6 +1,11 @@
 import { Server } from "socket.io";
 import { authenticateSocket } from "../middlewares/auth.js";
-import { createChat, createConversation, getChats, getConversations } from "./socketController.js";
+import {
+  createChat,
+  createConversation,
+  getChats,
+  getConversations,
+} from "./socketController.js";
 
 export const initiateSocket = (server) => {
   try {
@@ -22,7 +27,7 @@ export const initiateSocket = (server) => {
 
         console.log("conversationn ==>", conversation);
         if (conversation) {
-          socket.join(conversation.conversationId);
+          socket.join(conversation.conversation.conversation_id);
         }
         socket.emit("createConversation", conversation);
       });
@@ -34,25 +39,25 @@ export const initiateSocket = (server) => {
             message: data.message,
             sender_id: data.sender_id,
             createdAt: data.created_at,
-            conversation_id: data.conversation_id
+            conversation_id: data.conversation_id,
           });
           io.emit("updatedLastMessage", data.message);
         }
       });
 
-       // Fetch all conversations for a user
+      // Fetch all conversations for a user
       socket.on("getConversations", async () => {
-          const conversations = await getConversations(socket);
+        const conversations = await getConversations(socket);
 
-          // Emit the fetched conversations back to the client
-          socket.emit("getConversations", conversations);
+        // Emit the fetched conversations back to the client
+        socket.emit("getConversations", conversations);
       });
 
       // Fetch all chats in a conversation
       socket.on("getChats", async (data) => {
-          const chats = await getChats(socket, data);
-          // Emit the fetched chats back to the client
-          io.emit("getChats", chats);
+        const chats = await getChats(socket, data);
+        // Emit the fetched chats back to the client
+        io.emit("getChats", chats);
       });
 
       socket.on("disconnect", () => {
