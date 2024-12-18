@@ -9,6 +9,8 @@ const CreateProfilePage = () => {
   const userName = state?.userName;
   const accessToken = localStorage.getItem("accessToken"); // Access token passed from registration or login
 
+  console.log("userType from state:", userType);
+
   const [formData, setFormData] = useState({
     firstName: "",
     lastName: "",

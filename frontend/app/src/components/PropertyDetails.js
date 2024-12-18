@@ -67,9 +67,7 @@ const PropertyDetails = ({ listing, onBack }) => {
         return (
           <div>
             <h3 className="text-lg font-semibold mb-4">Application Form</h3>
-            <ApplicationForm 
-            listing_id = {listing.listing_id}
-            />
+            <ApplicationForm listing_id={listing.listing_id} />
           </div>
         );
       default:
@@ -124,7 +122,7 @@ const PropertyDetails = ({ listing, onBack }) => {
               {images.map((image, index) => (
                 <img
                   key={index}
-                  src={image.mediaUrl}
+                  src={`https://fulda-student-hub.s3.eu-north-1.amazonaws.com/public/uploads/images/${image.mediaUrl}`}
                   alt={`Thumbnail ${index + 1}`}
                   className={`w-full h-24 object-cover rounded-md cursor-pointer ${
                     index === currentImageIndex

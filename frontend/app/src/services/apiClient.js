@@ -4,7 +4,7 @@ import { logoutUser } from "./authServices";
 
 const apiClient = axios.create({
   baseURL: "http://localhost:8000/api/v1",
-  timeout: 10000,
+  timeout: 30000,
 });
 
 let isRefreshing = false; // Tracks ongoing refresh requests

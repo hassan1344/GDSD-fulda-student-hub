@@ -45,28 +45,28 @@ export const getAllListings = async (req, res) => {
 
     // Filter by amenities
     if (amenities) {
-        const amenitiesArray = JSON.parse(amenities);
-      
-        filters.where.property = {
-          ...filters.where.property,
-          AND: amenitiesArray.map((amenityId) => ({
-            property_amenity: {
-              some: {
-                amenity: {
-                  amenity_id: amenityId,
-                },
+      const amenitiesArray = JSON.parse(amenities);
+
+      filters.where.property = {
+        ...filters.where.property,
+        AND: amenitiesArray.map((amenityId) => ({
+          property_amenity: {
+            some: {
+              amenity: {
+                amenity_id: amenityId,
               },
             },
-          })),
-        };
-      }
-                  
+          },
+        })),
+      };
+    }
+
     // Filter by room type
     if (roomType) {
-        filters.where.room_type = {
-          room_type_id: roomType, // Match the room type name
-        };
-      }
+      filters.where.room_type = {
+        room_type_id: roomType, // Match the room type name
+      };
+    }
 
     // Fetch listings with filters
     const listings = await prisma.listing.findMany(filters);
@@ -76,8 +76,16 @@ export const getAllListings = async (req, res) => {
       listings.map(async (listing) => {
         const media = await prisma.media.findMany({
           where: {
-            model_id: listing.property_id, // Fetch media associated with the property
-            model_name: "property",
+            OR: [
+              {
+                model_id: listing.property_id, // Fetch media associated with the property
+                model_name: "property",
+              },
+              {
+                model_id: listing.listing_id,
+                model_name: "listing",
+              }
+            ],
           },
         });
 

@@ -77,7 +77,6 @@ const AuthPage = () => {
         });
 
         if (response?.message === "User registered successfully") {
-
           showNotification("Registration successful!");
 
           try {
@@ -95,15 +94,11 @@ const AuthPage = () => {
               showNotification("Login successful...");
               if (userType === "STUDENT") {
                 setTimeout(() => {
-                  navigate("/profile", {replace: true}, {
-                    state: { userType: "STUDENT", userName: { userName } },
-                  });
+                  navigate('/profile', { state: { userType: "STUDENT", userName: {userName} } });
                 }, 2000);
               } else if (userType === "LANDLORD") {
                 setTimeout(() => {
-                  navigate("/profile", {replace: true}, {
-                    state: { userType: "LANDLORD", userName: { userName } },
-                  });
+                  navigate('/profile', { state: { userType: "LANDLORD", userName: {userName} } });
                 }, 2000);
               } else {
                 showNotification("An error occurred. Please try again.");
@@ -137,7 +132,7 @@ const AuthPage = () => {
 
         console.log(response);
 
-        if (response.tokens) {
+        if (response && response.tokens) {
           const { accessToken, refreshToken } = response.tokens;
 
           localStorage.setItem("accessToken", accessToken);
@@ -149,16 +144,16 @@ const AuthPage = () => {
           showNotification("Login successful...");
           if (userType === "STUDENT") {
             setTimeout(() => {
-              navigate("/home", {replace: true});
+              navigate("/home", { replace: true });
             }, 2000);
           } else if (userType === "LANDLORD") {
             setTimeout(() => {
-              navigate("/landlord", {replace: true},); //Add landlord landing page
+              navigate("/landlord", { replace: true }); //Add landlord landing page
             }, 2000);
           } else {
             showNotification("An error occurred. Please try again.");
           }
-        } else {
+        } else if (response?.data.error === "Invalid credentials") {
           showNotification("Invalid login credentials!");
           setFieldErrors({
             userName: "Invalid username or password.",
@@ -167,8 +162,26 @@ const AuthPage = () => {
         }
       }
     } catch (error) {
-      console.error("Error:", error);
-      showNotification("An error occurred. Please try again.");
+      console.error("Login error:", error);
+
+      if (error.response) {
+        // Server responded with an error, like 401 Unauthorized
+        if (
+          error.response.status === 401 &&
+          error.response.data?.error === "Invalid credentials."
+        ) {
+          showNotification("Invalid login credentials!");
+          setFieldErrors({
+            userName: "Invalid username or password.",
+            password: "Invalid username or password.",
+          });
+        } else {
+          showNotification("An error occurred. Please try again.");
+        }
+      } else {
+        // Network or other issues not related to server response
+        showNotification("Network error. Please try again.");
+      }
     }
 
     setLoading(false);
