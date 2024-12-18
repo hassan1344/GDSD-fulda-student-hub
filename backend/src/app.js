@@ -9,6 +9,8 @@ import authRouter from "./routes/authRoutes.js";
 import profileRouter from './routes/profileRoutes.js';
 import { applicationRoutes } from "./routes/applicationRoutes.js";
 import propertyModuleRouter from "./routes/propertyModuleRoutes.js";
+import utilRouter from "./routes/utilRoutes.js";
+import searchListingRouter from "./routes/searchListingRoute.js";
 import listingModuleRouter from "./routes/listingModuleRoutes.js";
 
 const app = express();
@@ -35,6 +37,9 @@ app.use("/api/v1/profile", profileRouter);
 
 app.use("/api/v1/propertiesModule", propertyModuleRouter);
 
+app.use("/api/v1/utils", utilRouter);
+
+app.use("/api/v1/searchListing", searchListingRouter);
 app.use("/api/v1/listingsModule", listingModuleRouter);
 
 // app.use(ResHandler);

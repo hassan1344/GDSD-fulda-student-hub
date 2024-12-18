@@ -31,7 +31,7 @@ const LandlordNavbar = () => {
       localStorage.removeItem("refreshToken");
 
       // Redirect the user to the login page
-      navigate("/");
+      navigate("/", {replace: true});
     } catch (error) {
       console.error("Error during logout:", error.message);
     }

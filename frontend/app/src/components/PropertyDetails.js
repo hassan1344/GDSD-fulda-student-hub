@@ -1,12 +1,20 @@
 import React, { useState } from "react";
 import ApplicationForm from "./ApplicationForm";
 
-const PropertyDetails = ({ property, onBack }) => {
+const PropertyDetails = ({ listing, onBack }) => {
   const [activeTab, setActiveTab] = useState("about");
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
 
+  if (!listing) {
+    return (
+      <div className="text-center text-red-500">
+        No property details available.
+      </div>
+    );
+  }
+
   // Ensure we have media array to work with
-  const images = property.Media ?? [];
+  const images = listing.Media ?? [];
 
   // Handle showing the next image
   const handleNextImage = () => {
@@ -28,12 +36,12 @@ const PropertyDetails = ({ property, onBack }) => {
       case "about":
         return (
           <div>
-            <p>{property.description}</p>
+            <p>{listing.title}</p>
             <p className="mt-4 font-semibold">Amenities:</p>
             <ul className="list-disc ml-5">
-              {property.amenities &&
-                property.amenities.map((amenity, index) => (
-                  <li key={index}>{amenity}</li>
+              {listing.property.property_amenity &&
+                listing.property.property_amenity.map((amenity, index) => (
+                  <li key={index}>{amenity.amenity?.amenity_name}</li>
                 ))}
             </ul>
           </div>
@@ -42,7 +50,7 @@ const PropertyDetails = ({ property, onBack }) => {
         return (
           <div>
             <p className="text-yellow-500">
-              Trust Score: {property.landlord.trust_score} ⭐
+              Trust Score: {listing.property.landlord.trust_score} ⭐
             </p>
           </div>
         );
@@ -50,16 +58,16 @@ const PropertyDetails = ({ property, onBack }) => {
         return (
           <div>
             <p className="font-semibold">
-              Landlord Name: {property.landlord.name}
+              Landlord Name: {listing.property.landlord.first_name}
             </p>
-            <p>Phone: {property.landlord.phone_number}</p>
+            <p>Phone: {listing.property.landlord.phone_number}</p>
           </div>
         );
       case "apply":
         return (
           <div>
             <h3 className="text-lg font-semibold mb-4">Application Form</h3>
-            <ApplicationForm />
+            <ApplicationForm listing_id={listing.listing_id} />
           </div>
         );
       default:
@@ -72,7 +80,7 @@ const PropertyDetails = ({ property, onBack }) => {
       <button onClick={onBack} className="text-blue-600 mb-4">
         Back to Results
       </button>
-      <h1 className="text-2xl font-bold mb-4">{property.title}</h1>
+      <h1 className="text-2xl font-bold mb-4">{listing.title}</h1>
 
       {/* Image Gallery */}
       <div className="mb-6 flex">
@@ -87,58 +95,56 @@ const PropertyDetails = ({ property, onBack }) => {
               alt="Property"
               className="w-full h-full object-cover rounded-md shadow-md"
             />
-            <button
-              className="absolute left-2 top-1/2 transform -translate-y-1/2 bg-white rounded-full p-2 shadow-md"
-              onClick={handlePreviousImage}
-            >
-              ◀
-            </button>
-            <button
-              className="absolute right-2 top-1/2 transform -translate-y-1/2 bg-white rounded-full p-2 shadow-md"
-              onClick={handleNextImage}
-            >
-              ▶
-            </button>
-          </div>
 
-          {/* Image Preview Indicators */}
-          <div className="flex justify-center space-x-2 mt-4">
-            {images.map((_, index) => (
-              <button
-                key={index}
-                className={`w-3 h-3 rounded-full ${
-                  index === currentImageIndex ? "bg-blue-500" : "bg-gray-300"
-                }`}
-                onClick={() => setCurrentImageIndex(index)}
-              />
-            ))}
+            {images.length > 1 && (
+              <>
+                <button
+                  className="absolute left-2 top-1/2 transform -translate-y-1/2 bg-white rounded-full p-2 shadow-md"
+                  onClick={handlePreviousImage}
+                >
+                  ◀
+                </button>
+                <button
+                  className="absolute right-2 top-1/2 transform -translate-y-1/2 bg-white rounded-full p-2 shadow-md"
+                  onClick={handleNextImage}
+                >
+                  ▶
+                </button>
+              </>
+            )}
           </div>
         </div>
 
-        {/* Thumbnail Sidebar */}
-        <div className="w-1/4 space-y-2 overflow-y-auto max-h-96">
-          {images.map((image, index) => (
-            <img
-              key={index}
-              src={image.mediaUrl}
-              alt={`Thumbnail ${index + 1}`}
-              className={`w-full h-24 object-cover rounded-md cursor-pointer ${
-                index === currentImageIndex ? "border-2 border-blue-500" : ""
-              }`}
-              onClick={() => setCurrentImageIndex(index)}
-            />
-          ))}
-        </div>
+        {images.length > 1 && (
+          <>
+            {/* Thumbnail Sidebar */}
+            <div className="w-1/4 space-y-2 overflow-y-auto max-h-96">
+              {images.map((image, index) => (
+                <img
+                  key={index}
+                  src={`https://fulda-student-hub.s3.eu-north-1.amazonaws.com/public/uploads/images/${image.mediaUrl}`}
+                  alt={`Thumbnail ${index + 1}`}
+                  className={`w-full h-24 object-cover rounded-md cursor-pointer ${
+                    index === currentImageIndex
+                      ? "border-2 border-blue-500"
+                      : ""
+                  }`}
+                  onClick={() => setCurrentImageIndex(index)}
+                />
+              ))}
+            </div>
+          </>
+        )}
       </div>
 
       {/* Property Details */}
       <div className="grid grid-cols-3 gap-4 mb-6">
         <div>
           <p>
-            <strong>Address:</strong> {property.address}
+            <strong>Address:</strong> {listing.property.address}
           </p>
           <p>
-            <strong>Total Rent:</strong> €{property.rent}
+            <strong>Total Rent:</strong> €{listing.rent}
           </p>
         </div>
       </div>
