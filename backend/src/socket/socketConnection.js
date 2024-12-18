@@ -30,12 +30,13 @@ export const initiateSocket = (server) => {
       socket.on("sendMessage", async (data) => {
         if (data) {
           await createChat(data);
-          io.to(data.conversation_id).emit("sendMessage", {
+          io.emit("sendMessage", {
             message: data.message,
-            sender_id: data.senderId,
+            sender_id: data.sender_id,
             createdAt: data.created_at,
+            conversation_id: data.conversation_id
           });
-          io.to(data.conversation_id).emit("updatedLastMessage", data.message);
+          io.emit("updatedLastMessage", data.message);
         }
       });
 
@@ -51,7 +52,7 @@ export const initiateSocket = (server) => {
       socket.on("getChats", async (data) => {
           const chats = await getChats(socket, data);
           // Emit the fetched chats back to the client
-          socket.emit("getChats", chats);
+          io.emit("getChats", chats);
       });
 
       socket.on("disconnect", () => {

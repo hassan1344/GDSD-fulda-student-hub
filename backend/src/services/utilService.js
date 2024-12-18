@@ -32,7 +32,7 @@ export const getAmenityById = async (req, res) => {
 
 export const getAllRoomTypes = async (req, res) => {
     try {
-      const roomTypes = await prisma.room_type.findMany();
+      const roomTypes = await prisma.roomType.findMany();
       res.status(200).json(roomTypes);
     } catch (error) {
       console.error("Error fetching room types:", error);
