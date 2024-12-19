@@ -14,6 +14,7 @@ export const initiateSocket = (server) => {
         // origin: config.CLIENT_URL,
         origin: "*",
         methods: ["GET", "POST"],
+        transports: ["polling", "websocket"],
       },
     });
     io.use((socket, next) => {
