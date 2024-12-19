@@ -25,7 +25,7 @@ const Messages = () => {
   const [receiverUser, setReceiverUser] = useState(null);
   const [receiverUsers, setReceiverUsers] = useState([]);
 
-  const socketBaseUrl = apiClient.defaults.baseURL.replace("/api/v1", "/socket.io");
+  const socketBaseUrl = "wss://fulda-student-hub.publicvm.com:8000/socket.io";
   const token = getToken();
   const socket = io(`${socketBaseUrl}?token=${token}`);
 
