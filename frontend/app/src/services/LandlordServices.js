@@ -1,9 +1,22 @@
+import axios from 'axios';
 const BASE_URL = 'http://localhost:8000/api/v1';
 //const BASE_URL = 'https://localhost:8000/api/v1/propertiesModule';
 
 //const BASE_URL = 'https://16.171.165.15/api/v1';
 
-
+export const getProfileByUsername = async (userName) => {
+  try {
+    const response = await axios.get(`/api/v1/profile/${userName}`, {
+      headers: {
+        Authorization: `Bearer ${localStorage.getItem('accessToken')}`,
+      },
+    });
+    return response.data;
+  } catch (error) {
+    console.error('Error fetching profile by username:', error);
+    throw error;
+  }
+};
 
 export const fetchAllProperties = async (token) => {
   const response = await fetch(`${BASE_URL}/propertiesModule/`, {
@@ -18,6 +31,7 @@ export const fetchAllProperties = async (token) => {
 
 
 
+
 export const fetchPropertyById = async (propertyId, token) => {
   const response = await fetch(`${BASE_URL}/propertiesModule/${propertyId}`, {
     headers: { 'Authorization': `Bearer ${token}` }
@@ -25,19 +39,6 @@ export const fetchPropertyById = async (propertyId, token) => {
   return response.json();
 };
 
-/*
-export const createProperty = async (formData, token) => {
-  const response = await fetch(`${BASE_URL}/propertiesModule/`, {
-    method: 'POST',
-    headers: {
-      'Authorization': `Bearer ${token}`
-      // Do not set 'Content-Type' header, let the browser set it automatically for FormData
-    },
-    body: formData // Send the FormData object directly
-  });
-  return response.json();
-};
-*/
 
 export const createProperty = async (formData, token) => {
   try {
