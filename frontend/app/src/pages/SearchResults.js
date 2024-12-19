@@ -1,27 +1,16 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import { useLocation } from "react-router-dom";
 import Navbar from "../components/NavBar";
 import SearchCard from "../components/SearchCard";
 import Pagination from "../components/Pagination";
 import PropertyDetails from "../components/PropertyDetails";
-import { fetchProperties } from "../services/propertyServices";
+import { fetchListings } from "../services/searchListingServices";
 import Disclaimer from "../components/Disclaimer";
 
 const SearchResults = () => {
   const { state } = useLocation();
-  const {
-    location = "",
-    roomType = "",
-    priceRange = [0, 1000],
-    advancedFilters = {
-      shower: false,
-      heater: false,
-      kitchen: false,
-      balcony: false,
-    },
-  } = state || {};
 
-  // State to hold listings fetched from API
+  // State for API results
   const [listings, setListings] = useState([]);
   const [currentPage, setCurrentPage] = useState(1);
   const [selectedProperty, setSelectedProperty] = useState(null);
@@ -30,55 +19,64 @@ const SearchResults = () => {
 
   const itemsPerPage = 10;
 
-  // Fetch listings from the API
+  const { location, priceRange, roomType, amenities } = state || {};
+
+  const createPayload = useCallback(() => {
+    const payload = {};
+    if (location) payload.address = location;
+    if (priceRange && priceRange.length === 2) {
+      payload.minRent = priceRange[0];
+      payload.maxRent = priceRange[1];
+    }
+    if (roomType?.id) payload.roomType = roomType.id;
+    if (amenities?.length > 0) {
+      payload.amenities = JSON.stringify(
+        amenities.map((amenity) => amenity.id)
+      );
+    }
+    return payload;
+  }, [location, priceRange, roomType, amenities]);
+
   useEffect(() => {
-    const loadProperties = async () => {
+    const fetchData = async () => {
+      const payload = createPayload();
       setIsLoading(true);
       setError(null);
+
       try {
-        const data = await fetchProperties(
-          location,
-          priceRange,
-          advancedFilters
-        );
+        const data = await fetchListings(payload);
         setListings(data);
-      } catch (err) {
-        console.error("Error fetching properties:", err);
-        setError("Failed to load properties. Please try again later.");
+      } catch (error) {
+        console.error("Error loading properties:", error);
+        setError("Failed to load properties.");
       } finally {
         setIsLoading(false);
       }
     };
 
-    loadProperties();
-  }, [location, priceRange, advancedFilters]);
+    fetchData();
+  }, [createPayload]); // Dependency only on the payload object derived logic
 
-  // Calculate the indices for slicing the data
-  const startIndex = (currentPage - 1) * itemsPerPage;
-  const endIndex = startIndex + itemsPerPage;
+  const paginatedListings = listings.slice(
+    (currentPage - 1) * itemsPerPage,
+    currentPage * itemsPerPage
+  );
 
-  // Paginate data
-  const paginatedListings = listings.slice(startIndex, endIndex);
-
-  console.log(paginatedListings, "heherere");
-
-  // Handler to select a property
   const handleSelectProperty = (property) => {
-    setSelectedProperty(property); // Select a property to view in detail
+    setSelectedProperty(property);
   };
 
-  // Handler to return to the search results
   const handleBackToResults = () => {
-    setSelectedProperty(null); // Reset selected property
+    setSelectedProperty(null);
   };
 
   return (
     <div className="background-container">
       <Navbar />
+
       {selectedProperty ? (
-        // Render PropertyDetails if a property is selected
         <PropertyDetails
-          property={selectedProperty}
+          listing={selectedProperty}
           onBack={handleBackToResults}
         />
       ) : (
@@ -91,18 +89,18 @@ const SearchResults = () => {
               Applied Filters:
             </h3>
             {location && <p className="text-gray-600">Location: {location}</p>}
-            {roomType && <p className="text-gray-600">Room Type: {roomType}</p>}
-            <p className="text-gray-600">
-              Price Range: €{priceRange[0]} - €{priceRange[1]}
-            </p>
-            {/* Display active advanced filters */}
+            {roomType?.name && (
+              <p className="text-gray-600">Room Type: {roomType.name}</p>
+            )}
+            {priceRange && (
+              <p className="text-gray-600">
+                Price Range: €{priceRange[0]} - €{priceRange[1]}
+              </p>
+            )}
             <div className="text-gray-600">
-              {Object.keys(advancedFilters)
-                .filter((key) => advancedFilters[key])
-                .map((key, index) => (
-                  <p key={index}>
-                    {key.charAt(0).toUpperCase() + key.slice(1)}
-                  </p>
+              {amenities?.length > 0 &&
+                amenities.map((amenity) => (
+                  <p key={amenity.id}>{amenity.name}</p>
                 ))}
             </div>
           </div>
@@ -117,11 +115,17 @@ const SearchResults = () => {
                 {paginatedListings.map((listing) => (
                   <SearchCard
                     key={listing.property_id}
-                    image={`https://fulda-student-hub.s3.eu-north-1.amazonaws.com/public/uploads/images/${listing.Media[0]?.mediaUrl}` || "/default.jpg"}
-                    description={listing.amenities.join(", ")}
+                    image={
+                      `https://fulda-student-hub.s3.eu-north-1.amazonaws.com/public/uploads/images/${listing.Media[0]?.mediaUrl}` ||
+                      "/default.jpg"
+                    }
+                    description={listing.description}
                     price={`€${listing.rent}`}
-                    poster={`${listing.landlord.first_name} ${listing.landlord.last_name}`}
-                    onClick={() => handleSelectProperty(listing)}
+                    poster={`${listing.property.landlord?.first_name} ${listing.property.landlord?.last_name}`}
+                    onClick={() => {
+                      console.log("Selected listing:", listing); // Debug log
+                      handleSelectProperty(listing);
+                    }}
                   />
                 ))}
               </div>
