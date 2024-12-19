@@ -30,13 +30,13 @@ const SearchResults = () => {
     }
     if (roomType?.id) payload.roomType = roomType.id;
     if (amenities?.length > 0) {
-      payload.amenities = JSON.stringify(
-        amenities.map((amenity) => amenity.id)
-      );
+      // Create a unique list of amenity names (case-insensitive and no duplicates)
+      const amenityNames = [...new Set(amenities.map((amenity) => amenity.name.toLowerCase()))];
+      payload.amenities = JSON.stringify(amenityNames);
     }
     return payload;
   }, [location, priceRange, roomType, amenities]);
-
+  
   useEffect(() => {
     const fetchData = async () => {
       const payload = createPayload();
@@ -55,7 +55,7 @@ const SearchResults = () => {
     };
 
     fetchData();
-  }, [createPayload]); // Dependency only on the payload object derived logic
+  }, [createPayload]);
 
   const paginatedListings = listings.slice(
     (currentPage - 1) * itemsPerPage,
@@ -69,6 +69,21 @@ const SearchResults = () => {
   const handleBackToResults = () => {
     setSelectedProperty(null);
   };
+
+  // Function to normalize and filter amenity names
+  const normalizeAmenities = (amenities) => {
+    const seenAmenities = new Set();
+    return amenities
+      .map((amenity) => amenity.name.replace(/_/g, " ").toLowerCase()) // Replace _ with space and convert to lowercase
+      .filter((amenity) => {
+        if (seenAmenities.has(amenity)) return false;
+        seenAmenities.add(amenity);
+        return true;
+      })
+      .map((amenity) => amenity.charAt(0).toUpperCase() + amenity.slice(1)); // Capitalize the first letter
+  };
+
+  const normalizedAmenities = normalizeAmenities(amenities || []);
 
   return (
     <div className="background-container">
@@ -98,10 +113,13 @@ const SearchResults = () => {
               </p>
             )}
             <div className="text-gray-600">
-              {amenities?.length > 0 &&
-                amenities.map((amenity) => (
-                  <p key={amenity.id}>{amenity.name}</p>
-                ))}
+              {normalizedAmenities?.length > 0 ? (
+                normalizedAmenities.map((amenity, index) => (
+                  <p key={index}>{amenity}</p>
+                ))
+              ) : (
+                <p>No amenities selected.</p>
+              )}
             </div>
           </div>
 
@@ -123,7 +141,6 @@ const SearchResults = () => {
                     price={`€${listing.rent}`}
                     poster={`${listing.property.landlord?.first_name} ${listing.property.landlord?.last_name}`}
                     onClick={() => {
-                      console.log("Selected listing:", listing); // Debug log
                       handleSelectProperty(listing);
                     }}
                   />

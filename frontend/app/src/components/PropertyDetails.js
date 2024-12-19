@@ -39,9 +39,9 @@ const PropertyDetails = ({ listing, onBack }) => {
             <p>{listing.title}</p>
             <p className="mt-4 font-semibold">Amenities:</p>
             <ul className="list-disc ml-5">
-              {listing.property.property_amenity &&
-                listing.property.property_amenity.map((amenity, index) => (
-                  <li key={index}>{amenity.amenity?.amenity_name}</li>
+              {listing.property.PropertyAmenity &&
+                listing.property.PropertyAmenity.map((amenity, index) => (
+                  <li key={index}>{amenity.Amenity?.amenity_name}</li>
                 ))}
             </ul>
           </div>

@@ -16,6 +16,7 @@ import ViewStudentProfile from "./pages/ViewStudentProfile";
 import Disclaimer from './components/Disclaimer'; // Import the Disclaimer component
 import ViewPropertyDetails from './pages/landlord/ViewPropertyDetails';
 import LandlordViewProfile from "./pages/landlordViewProfile";
+import ViewApplicationStudent from "./pages/ViewApplicationStudent";
 import Messages from "./pages/message/Messages";
 import './App.css';
 
@@ -31,6 +32,7 @@ const App = () => {
 
         <Route path="/Home" element={<Home />} />
         <Route path="/searchresults" element={<SearchResults />} />
+        <Route path="/myApplications" element = {<ViewApplicationStudent/>}/>
         <Route path="/viewProfile" element = {<ViewStudentProfile/>}/>
         <Route path="/messages" element = {<Messages/>}/>
 
