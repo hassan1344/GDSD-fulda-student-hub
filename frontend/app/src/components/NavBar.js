@@ -11,6 +11,7 @@ const Navbar = () => {
   const navLinks = [
     { path: "/home", name: "Home" },
     { path: "/favorites", name: "Favorites" },
+    { path: "/messages", name: "Messages" },
     { path: "/viewProfile", name: "Profile" },
   ];
 
@@ -37,7 +38,7 @@ const Navbar = () => {
       localStorage.removeItem("refreshToken");
 
       // Redirect the user to the login page
-      navigate("/");
+      navigate("/", {replace: true});
     } catch (error) {
       console.error("Error during logout:", error.message);
     }
