@@ -16,7 +16,12 @@ import ViewStudentProfile from "./pages/ViewStudentProfile";
 import Disclaimer from './components/Disclaimer'; // Import the Disclaimer component
 import ViewPropertyDetails from './pages/landlord/ViewPropertyDetails';
 import LandlordViewProfile from "./pages/landlordViewProfile";
+import ViewApplicationStudent from "./pages/ViewApplicationStudent";
 import Messages from "./pages/message/Messages";
+//listings from here
+import MyListings from "./pages/landlord/MyListings";
+import EditListing from "./pages/landlord/EditListing";
+import CreateListing from "./pages/landlord/CreateListing";
 import './App.css';
 
 
@@ -31,6 +36,7 @@ const App = () => {
 
         <Route path="/Home" element={<Home />} />
         <Route path="/searchresults" element={<SearchResults />} />
+        <Route path="/myApplications" element = {<ViewApplicationStudent/>}/>
         <Route path="/viewProfile" element = {<ViewStudentProfile/>}/>
         <Route path="/messages" element = {<Messages/>}/>
 
@@ -57,6 +63,12 @@ const App = () => {
         />
         <Route path="/landlord/viewProfile" element = {<LandlordViewProfile/>}/>
         <Route path="/landlord/messages" element = {<Messages/>}/>
+
+      
+       <Route path="/landlord/my-prop-listings" element={<MyListings />} />
+       <Route path ="/landlord/edit-prop-listing/:id" element={<EditListing />} />
+       <Route path="/landlord/create-prop-listing" element={<CreateListing />} />
+
       </Routes>
     </Router>
   );

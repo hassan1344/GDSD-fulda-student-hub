@@ -49,3 +49,11 @@
 .left-panel, .middle-panel, .right-panel {
   height: 100%; /* Ensure the inner panels expand to fill the container */
 }
+
+.disclaimer {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  z-index: 1000; /* High z-index to keep disclaimer on top */
+}
