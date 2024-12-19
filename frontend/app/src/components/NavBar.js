@@ -11,6 +11,7 @@ const Navbar = () => {
   const navLinks = [
     { path: "/home", name: "Home" },
     { path: "/myApplications", name: "My Applications" },
+    { path: "/messages", name: "Messages" },
     { path: "/viewProfile", name: "Profile" },
   ];
 

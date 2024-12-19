@@ -41,7 +41,7 @@ const LandlordNavbar = () => {
 
   const navLinks = [
     { path: "/landlord", name: "Home" },
-    { path: "/message", name: "Message" },
+    { path: "/messages", name: "Messages" },
     { path: "/landlord/viewProfile", name: "Profile" },
   ];
 

@@ -2,7 +2,7 @@ import React from "react";
 
 const Disclaimer = () => {
   return (
-    <footer className="fixed bottom-0 left-0 w-full bg-gray-200 text-gray-700 py-4">
+    <footer className="fixed bottom-0 left-0 w-full bg-gray-200 text-gray-700 py-4 z-50">
       <div className="container mx-auto px-4 text-center">
         <p className="text-sm">
           &copy; 2024 Fulda Student Hub. All rights reserved. This website is

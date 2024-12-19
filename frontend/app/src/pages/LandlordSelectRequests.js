@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import Navbar from '../components/NavBar';
+import LandlordNavbar from '../components/LandlordNavbar';
 
 const LandlordSelectRequests = () => {
   // Mock data for pending requests

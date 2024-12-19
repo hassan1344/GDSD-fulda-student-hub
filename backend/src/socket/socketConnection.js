@@ -1,6 +1,11 @@
 import { Server } from "socket.io";
 import { authenticateSocket } from "../middlewares/auth.js";
-import { createChat, createConversation, getChats, getConversations } from "./socketController.js";
+import {
+  createChat,
+  createConversation,
+  getChats,
+  getConversations,
+} from "./socketController.js";
 
 export const initiateSocket = (server) => {
   try {
@@ -13,16 +18,21 @@ export const initiateSocket = (server) => {
     io.use((socket, next) => {
       authenticateSocket(socket, next);
     }).on("connection", (socket) => {
+      const userName = socket.decoded?.userName;
+      if (userName) {
+        socket.join(userName);
+        console.log(`User ${userName} joined room ${userName}`);
+      }
       console.log(`A client has connected : ${socket.id}`);
 
       socket.on("createConversation", async (data) => {
-        console.log("======> data from client", data);
+        // console.log("======> data from client", data);
 
         const conversation = await createConversation(socket, data);
 
-        console.log("conversationn ==>", conversation);
+        // console.log("conversationn ==>", conversation);
         if (conversation) {
-          socket.join(conversation.conversationId);
+          socket.join(conversation.conversation.conversation_id);
         }
         socket.emit("createConversation", conversation);
       });
@@ -30,28 +40,30 @@ export const initiateSocket = (server) => {
       socket.on("sendMessage", async (data) => {
         if (data) {
           await createChat(data);
-          io.to(data.conversation_id).emit("sendMessage", {
+          io.emit("sendMessage", {
             message: data.message,
-            sender_id: data.senderId,
+            sender_id: data.sender_id,
             createdAt: data.created_at,
+            conversation_id: data.conversation_id,
           });
-          io.to(data.conversation_id).emit("updatedLastMessage", data.message);
+          io.emit("updatedLastMessage", data.message);
         }
       });
 
-       // Fetch all conversations for a user
+      // Fetch all conversations for a user
       socket.on("getConversations", async () => {
-          const conversations = await getConversations(socket);
+        const conversations = await getConversations(socket);
 
-          // Emit the fetched conversations back to the client
-          socket.emit("getConversations", conversations);
+        // Emit the fetched conversations back to the client
+        socket.emit("getConversations", conversations);
       });
 
       // Fetch all chats in a conversation
       socket.on("getChats", async (data) => {
-          const chats = await getChats(socket, data);
-          // Emit the fetched chats back to the client
-          socket.emit("getChats", chats);
+        const chats = await getChats(socket, data);
+        console.log(socket.decoded, "decoded");
+        // Emit the fetched chats back to the client
+        io.to(socket.decoded.userName).emit("getChats", chats);
       });
 
       socket.on("disconnect", () => {

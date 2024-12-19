@@ -48,6 +48,7 @@ export const getAllListings = async (req, res) => {
       const amenitiesArray = JSON.parse(amenities);
       filters.where.property = {
         ...filters.where.property,
+<<<<<<< HEAD
         AND: amenitiesArray.map((amenityName) => ({
           PropertyAmenity: {
             some: {
@@ -55,6 +56,13 @@ export const getAllListings = async (req, res) => {
                 amenity_name: {
                     contains: amenityName.toLowerCase(),
                 },
+=======
+        AND: amenitiesArray.map((amenityId) => ({
+          PropertyAmenity: {
+            some: {
+              Amenity: {
+                amenity_id: amenityId,
+>>>>>>> common-development
               },
             },
           },
@@ -125,7 +133,7 @@ export const getListingById = async (req, res) => {
             landlord: true, // Include the landlord through the property relation
             PropertyAmenity: {
               include: {
-                amenity: true,
+                Amenity: true,
               },
             },
           },

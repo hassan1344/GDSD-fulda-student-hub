@@ -1,19 +1,35 @@
 import { PrismaClient } from "@prisma/client";
+import { uploadToS3, deleteS3Object } from "../utils/uploadToS3.js";
 
 const prisma = new PrismaClient();
 
 export const getProfile = async (req, res) => {
   try {
     const { id: userName } = req.params;
+    let userProfile, modelId;
     const user = await prisma.user.findUnique({where: {user_name: userName}});
     if (user.user_type.toUpperCase() === 'STUDENT') {
-      const student = await prisma.student.findUnique({ where: { user_id: userName } });
-      return res.json({...student, email: user.email, userType: user.user_type});
+      userProfile = await prisma.student.findUnique({ where: { user_id: userName } });
+      modelId = userProfile.student_id;
     } else if (user.user_type.toUpperCase() === 'LANDLORD') {
-      const landlord = await prisma.landlord.findUnique({ where: { user_id: userName } });
-      return res.json({...landlord, email: user.email, userType: user.user_type});
+      userProfile = await prisma.landlord.findUnique({ where: { user_id: userName } });
+      modelId = userProfile.landlord_id;
     }
-    res.status(400).json({ error: 'Invalid user type' });
+    
+    const media = await prisma.media.findMany({
+      where: {
+        model_id: modelId,
+      },
+    });
+
+    const userProfileWithMedia = {
+      ...userProfile,
+      Media: media.map((media) => ({
+        mediaUrl: media.media_url,
+        mediaType: media.media_type,
+      })),
+    };
+    return res.json({...userProfileWithMedia, email: user.email, userType: user.user_type});
   } catch (error) {
     res.status(500).json({ error: error.message });
   }
@@ -24,6 +40,9 @@ export const createProfile = async (req, res) => {
   try {
     const { userName, userType } = req.user;
     const { firstName, lastName, phoneNumber, address, profilePicture, university, studentIdNumber, emailVerified, trustScore } = req.body;
+
+    const mediaEntries = [];
+    let modelId, newProfile;
     if (userType === 'STUDENT') {
       const newStudent = await prisma.student.create({
         data: {
@@ -37,7 +56,8 @@ export const createProfile = async (req, res) => {
           email_verified: emailVerified,
         },
       });
-      return res.status(201).json(newStudent);
+      modelId = newStudent.student_id;
+      newProfile = newStudent;
     } else if (userType === 'LANDLORD') {
       const newLandlord = await prisma.landlord.create({
         data: {
@@ -47,12 +67,18 @@ export const createProfile = async (req, res) => {
           phone_number: phoneNumber,
           address,
           profile_picture_id: profilePicture,
-          trust_score: trustScore
+          trust_score: parseInt(trustScore)
         },
       });
-      return res.status(201).json(newLandlord);
+      modelId = newLandlord.landlord_id;
+      newProfile = newLandlord;
     }
-    res.status(400).json({ error: 'Invalid user type' });
+
+    if (req.files["profile_pic"]) {
+      const file = req.files["profile_pic"][0];
+      await addMedia(file, modelId);
+    }
+    res.status(201).json(newProfile);
   } catch (error) {
     res.status(500).json({ error: error.message });
   }
@@ -75,20 +101,28 @@ export const updateProfile = async (req, res) => {
     emailVerified && (updates.email_verified = emailVerified);
     trustScore && (updates.trust_score = trustScore);
 
+    let updatedProfile, modelId;
+
     if (userType === 'STUDENT') {
-      const updatedStudent = await prisma.student.update({
+      updatedProfile = await prisma.student.update({
         where: { user_id: userName },
         data: updates,
       });
-      return res.json(updatedStudent);
+      modelId = updatedProfile.student_id;
     } else if (userType === 'LANDLORD') {
-      const updatedLandlord = await prisma.landlord.update({
+      updatedProfile = await prisma.landlord.update({
         where: { user_id: userName },
         data: updates,
       });
-      return res.json(updatedLandlord);
+      modelId = updatedProfile.landlord_id;
     }
-    res.status(400).json({ error: 'Invalid user type' });
+
+    if (req.files["profile_pic"]) {
+      await deleteMedia(modelId);
+      const file = req.files["profile_pic"][0];
+      await addMedia(file, modelId);
+    }
+    res.status(200).json(updatedProfile);
   } catch (error) {
     if (error.code === 'P2025') {
       // Handles case where record does not exist
@@ -104,15 +138,59 @@ export const deleteProfile = async (req, res) => {
   const { userName, userType } = req.user;
 
   try {
+    let modelId;
     if (userType === 'STUDENT') {
+      const student = await prisma.student.findUnique({ where: { user_id: userName } });
+      modelId = student.student_id;
       await prisma.student.delete({ where: { user_id: userName } });
-      return res.json({ message: 'Student details deleted successfully' });
     } else if (userType === 'LANDLORD') {
+      const landlord = await prisma.landlord.findUnique({ where: { user_id: userName } });
+      modelId = landlord.landlord_id;
       await prisma.landlord.delete({ where: { user_id: userName } });
-      return res.json({ message: 'Landlord details deleted successfully' });
     }
-    res.status(400).json({ error: 'Invalid user type' });
+    await deleteMedia(modelId);
+    res.status(204).json({ message: 'Details deleted successfully' });
   } catch (error) {
     res.status(500).json({ error: 'Failed to delete user details' });
   }
 };
+
+const deleteMedia = async (modelId) => {
+  const mediaEntries = await prisma.media.findMany({
+    where: { model_id: modelId},
+  });
+
+  if (mediaEntries && mediaEntries.length > 0) {
+    const deletePromises = mediaEntries.map(async (media) => {
+      try {
+        await deleteS3Object(media.media_url);
+      } catch (error) {
+        console.error(`Error deleting media file: ${media.media_url}`, error);
+      }
+    });
+    await Promise.all(deletePromises);
+
+    await prisma.media.deleteMany({
+      where: { model_id: modelId },
+    });
+  }
+}
+
+const addMedia = async (file, modelId) => {
+  const mediaEntries = [];
+  await uploadToS3(file).then((uploadedFile) => {
+    mediaEntries.push({
+      model_name: "profile",
+      model_id: modelId,
+      media_url: uploadedFile,
+      media_type: "profile_pic",
+      media_category: "image",
+    });
+  })
+
+  if (mediaEntries.length > 0) {
+    await prisma.media.createMany({
+      data: mediaEntries,
+    });
+  }
+}
