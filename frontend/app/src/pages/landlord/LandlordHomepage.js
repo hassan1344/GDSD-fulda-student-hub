@@ -49,14 +49,14 @@ const LandlordHomepage = () => {
 
     { title: 'Create New Properties', path: '/landlord/create-listing', icon: '📝' },
     { title: 'View Properties', path: '/landlord/my-listings', icon: '📊' },
+    { title: 'My Listings', path: '/landlord/my-prop-listings', icon: '🏠' },
+    { title: ' Select Requests', path: '/landlord/select-requests', icon: '✅' },
     { title: 'New Requests', path: '/landlord/requests', icon: '🔔' },
     { title: 'View Tenants', path: '/landlord/tenants', icon: '👁️' },
     { title: 'Register for Bidding', path: '/register-bidding', icon: '🏷️' },
     { title: 'View Past Tenants', path: '/past-tenants', icon: '👥' },
     { title: 'Documents', path: '/documents', icon: '📁' },
     { title: 'Raise an Issue', path: '/raise-issue', icon: '⚠️' },
-    { title: 'My Listing', path: '/landlord/properties', icon: '🏠' },
-    { title: ' Select Requests', path: '/landlord/select-requests', icon: '✅' },
   ];
 
   return (

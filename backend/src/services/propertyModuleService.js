@@ -61,7 +61,7 @@ export const createProperty = async (req, res) => {
           });
 
           // Create the association between the property and the amenity
-          await prisma.property_amenity.create({
+          await prisma.PropertyAmenity.create({
             data: {
               property_amenity_id: `pa-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
               property_id: property.property_id,
@@ -114,9 +114,9 @@ export const createProperty = async (req, res) => {
         where: { property_id: property.property_id },
         include: {
           landlord: true,
-          property_amenity: {
+          PropertyAmenity: {
             include: {
-              amenity: true,
+              Amenity:true,
             },
           },
         },
@@ -168,9 +168,9 @@ export const getAllProperties = async (req, res) => {
             profile_picture: true
           }
         },
-        property_amenity: {
+        PropertyAmenity: {
           include: {
-            amenity: true
+            Amenity: true
           }
         },
         Listing: {
@@ -236,9 +236,9 @@ export const getPropertyById = async (req, res) => {
             profile_picture: true
           }
         },
-        property_amenity: {
+        PropertyAmenity: {
           include: {
-            amenity: true
+            Amenity:true
           }
         },
         Listing: {
@@ -296,19 +296,19 @@ export const updateProperty = async (req, res) => {
         const parsedAmenities = typeof amenities === 'string' ? JSON.parse(amenities) : amenities;
 
         // Get existing property amenities
-        const existingPropertyAmenities = await prisma.property_amenity.findMany({
+        const existingPropertyAmenities = await prisma.PropertyAmenity.findMany({
           where: { property_id: id },
-          include: { amenity: true }
+          include: { Amenity:true }
         });
 
         // Delete existing property-amenity associations
-        await prisma.property_amenity.deleteMany({
+        await prisma.PropertyAmenity.deleteMany({
           where: { property_id: id }
         });
 
         // Delete orphaned amenities
         for (const propertyAmenity of existingPropertyAmenities) {
-          const otherReferences = await prisma.property_amenity.count({
+          const otherReferences = await prisma.PropertyAmenity.count({
             where: { 
               amenity_id: propertyAmenity.amenity_id,
               NOT: { property_id: id }
@@ -334,7 +334,7 @@ export const updateProperty = async (req, res) => {
               },
             });
 
-            await prisma.property_amenity.create({
+            await prisma.PropertyAmenity.create({
               data: {
                 property_amenity_id: `pa-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
                 property_id: id,
@@ -387,8 +387,8 @@ export const updateProperty = async (req, res) => {
         where: { property_id: id },
         include: {
           landlord: true,
-          property_amenity: {
-            include: { amenity: true },
+          PropertyAmenity: {
+            include: { Amenity:true },
           },
         },
       });
@@ -423,9 +423,9 @@ export const deleteProperty = async (req, res) => {
 
     const result = await prisma.$transaction(async (prisma) => {
       // Get all property amenities before deletion
-      const propertyAmenities = await prisma.property_amenity.findMany({
+      const propertyAmenities = await prisma.PropertyAmenity.findMany({
         where: { property_id: id },
-        include: { amenity: true }
+        include: { Amenity: true }
       });
 
       // Delete media files from S3
@@ -451,7 +451,7 @@ export const deleteProperty = async (req, res) => {
         where: { model_name: "property", model_id: id },
       });
 
-      await prisma.property_amenity.deleteMany({
+      await prisma.PropertyAmenity.deleteMany({
         where: { property_id: id },
       });
 
@@ -461,7 +461,7 @@ export const deleteProperty = async (req, res) => {
 
       // Delete orphaned amenities
       for (const propertyAmenity of propertyAmenities) {
-        const otherReferences = await prisma.property_amenity.count({
+        const otherReferences = await prisma.PropertyAmenity.count({
           where: {
             amenity_id: propertyAmenity.amenity_id,
             NOT: { property_id: id }

@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { getProfileByUsername } from "../services/profileServices"; // Adjust the import based on your structure
+import { getProfileByUsername } from "../services/profileServices"; 
 import {jwtDecode} from "jwt-decode";
 import LandlordNavbar from "../components/LandlordNavbar";
 import Disclaimer from "../components/Disclaimer";
