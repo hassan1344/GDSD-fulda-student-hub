@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { getApplicationByID } from "../services/applicationServices";
 import Navbar from "../components/NavBar";
+import Disclaimer from "./Disclaimer";
 
 const ApplicationDetails = ({ applicationId, onBack }) => {
   const [application, setApplication] = useState(null);
@@ -50,6 +51,15 @@ const ApplicationDetails = ({ applicationId, onBack }) => {
     <div className="background-container">
       <Navbar />
       <div className="max-w-4xl mx-auto p-6 bg-white shadow-md rounded-lg mt-8">
+        <div className="flex justify-between">
+          <button
+            onClick={onBack}
+            className="px-6 py-2 bg-gray-300 hover:bg-gray-400 text-gray-800 font-semibold rounded-md transition-all duration-200"
+          >
+            Back to Applications
+          </button>
+        </div>
+
         <h2 className="text-2xl font-semibold text-gray-800 mb-4">
           Application Details
         </h2>
@@ -112,54 +122,74 @@ const ApplicationDetails = ({ applicationId, onBack }) => {
 
         <div className="mb-6">
           <h3 className="text-lg font-medium text-gray-700">Media Files</h3>
-          <div className="mt-2">
+          <div className="mt-4 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
             {application.media?.length > 0 ? (
-              <div className="grid grid-cols-2 gap-4">
-                {application.media.map((item) => (
-                  <div
-                    key={item.media_id}
-                    className="media-item border rounded-lg p-4 bg-gray-100"
-                  >
-                    {item.media_url.includes("pdf") ? (
+              application.media.map((item) => (
+                <div
+                  key={item.media_id}
+                  className="relative border rounded-lg overflow-hidden shadow-lg hover:shadow-xl transition-shadow duration-300 bg-white"
+                >
+                  {item.media_url.includes("pdf") ? (
+                    <div className="flex flex-col items-center justify-center p-6 bg-gray-100 h-48">
+                      <div className="w-16 h-16 bg-red-500 rounded-full flex items-center justify-center mb-4">
+                        <svg
+                          xmlns="http://www.w3.org/2000/svg"
+                          fill="none"
+                          viewBox="0 0 24 24"
+                          strokeWidth="2"
+                          stroke="white"
+                          className="w-8 h-8"
+                        >
+                          <path
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            d="M14.25 2.25h-4.5a2.25 2.25 0 00-2.25 2.25v15a2.25 2.25 0 002.25 2.25h7.5a2.25 2.25 0 002.25-2.25v-11.25l-3.75-3.75z"
+                          />
+                          <path
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            d="M14.25 2.25V6h3.75"
+                          />
+                        </svg>
+                      </div>
                       <a
                         href={`https://fulda-student-hub.s3.eu-north-1.amazonaws.com/public/uploads/images/${item.media_url}`}
                         target="_blank"
                         rel="noopener noreferrer"
-                        className="text-blue-500 underline"
+                        className="text-blue-600 font-semibold underline text-sm"
                       >
-                        View {item.media_type} file
+                        View {item.media_type} File
                       </a>
-                    ) : (
-                      <div>
+                    </div>
+                  ) : (
+                    <div className="relative h-48 bg-gray-50">
+                      <a
+                        href={`https://fulda-student-hub.s3.eu-north-1.amazonaws.com/public/uploads/images/${item.media_url}`}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="text-blue-600 font-semibold underline text-sm"
+                      >
                         <img
                           src={`https://fulda-student-hub.s3.eu-north-1.amazonaws.com/public/uploads/images/${item.media_url}`}
-                          alt={item.media_category}
-                          className="rounded-md w-full object-cover max-h-48"
+                          alt={item.media_type}
+                          className="w-full h-full object-cover transition-transform duration-300 hover:scale-105"
                         />
-                        <p className="text-sm text-gray-500 mt-2">
+                        <div className="absolute bottom-0 left-0 w-full bg-gray-900 bg-opacity-50 text-white text-sm py-2 px-4">
                           {item.media_type}
-                        </p>
-                      </div>
-                    )}
-                  </div>
-                ))}
-              </div>
+                        </div>
+                      </a>
+                    </div>
+                  )}
+                </div>
+              ))
             ) : (
               <p className="text-sm text-gray-500">No media available</p>
             )}
           </div>
         </div>
 
-        <div className="flex justify-between">
-          <button
-            onClick={onBack}
-            className="px-6 py-2 bg-gray-300 hover:bg-gray-400 text-gray-800 font-semibold rounded-md transition-all duration-200"
-          >
-            Back to Applications
-          </button>
-        </div>
-
         <div className="mt-8">
+          <Disclaimer />
         </div>
       </div>
     </div>

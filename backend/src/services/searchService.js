@@ -7,23 +7,16 @@ const prisma = new PrismaClient();
  */
 export const getAllListings = async (req, res) => {
   try {
-    const { address, minRent, maxRent, amenities, roomType } = req.query;
+    const { address, minRent, maxRent, amenities } = req.query;
 
     // Base filters object
     const filters = {
       where: {},
       include: {
-        property: {
-          include: {
-            landlord: true, // Include the landlord through the property relation
-            PropertyAmenity: {
-              include: {
-                Amenity: true,
-              },
-            },
-          },
-        },
-        room_type: true,
+        property: true, // Include related property details
+        amenities: true, // Include related amenities
+        landlord: true,  // Include landlord details
+        roomType: true,  // Include room type details
       },
     };
 
@@ -38,34 +31,20 @@ export const getAllListings = async (req, res) => {
 
     // Filter by rent range
     if (minRent || maxRent) {
-      filters.where.rent = {};
-      if (minRent) filters.where.rent.gte = parseFloat(minRent);
-      if (maxRent) filters.where.rent.lte = parseFloat(maxRent);
+      filters.where.price = {};
+      if (minRent) filters.where.price.gte = parseFloat(minRent);
+      if (maxRent) filters.where.price.lte = parseFloat(maxRent);
     }
 
     // Filter by amenities
     if (amenities) {
-      const amenitiesArray = JSON.parse(amenities);
-      filters.where.property = {
-        ...filters.where.property,
-        AND: amenitiesArray.map((amenityName) => ({
-          PropertyAmenity: {
-            some: {
-              Amenity: {
-                amenity_name: {
-                    contains: amenityName.toLowerCase(),
-                },
-              },
-            },
+      const amenitiesArray = JSON.parse(amenities); // Ensure it's an array
+      filters.where.amenities = {
+        some: {
+          id: {
+            in: amenitiesArray,
           },
-        })),
-      };
-    }
-
-    // Filter by room type
-    if (roomType) {
-      filters.where.room_type = {
-        room_type_id: roomType, // Match the room type name
+        },
       };
     }
 
@@ -77,16 +56,8 @@ export const getAllListings = async (req, res) => {
       listings.map(async (listing) => {
         const media = await prisma.media.findMany({
           where: {
-            OR: [
-              {
-                model_id: listing.property_id, // Fetch media associated with the property
-                model_name: "property",
-              },
-              {
-                model_id: listing.listing_id,
-                model_name: "listing",
-              }
-            ],
+            model_id: listing.property_id, // Fetch media associated with the property
+            model_name: "property",
           },
         });
 
@@ -103,9 +74,7 @@ export const getAllListings = async (req, res) => {
     res.status(200).json(listingsWithMedia);
   } catch (error) {
     console.error("Error fetching listings:", error);
-    res
-      .status(500)
-      .json({ error: "An error occurred while fetching listings" });
+    res.status(500).json({ error: "An error occurred while fetching listings" });
   }
 };
 
@@ -120,17 +89,15 @@ export const getListingById = async (req, res) => {
         listing_id: id,
       },
       include: {
-        property: {
-          include: {
-            landlord: true, // Include the landlord through the property relation
-            PropertyAmenity: {
-              include: {
-                amenity: true,
-              },
-            },
+        property: true, // Include related property details
+        amenities: true, // Include related amenities
+        roomType: true, // Include room type details
+        landlord: {
+          select: {
+            name: true,
+            contact: true,
           },
         },
-        room_type: true,
       },
     });
 
@@ -157,8 +124,6 @@ export const getListingById = async (req, res) => {
     res.status(200).json(listingWithMedia);
   } catch (error) {
     console.error("Error fetching listing:", error);
-    res
-      .status(500)
-      .json({ error: "An error occurred while fetching the listing" });
+    res.status(500).json({ error: "An error occurred while fetching the listing" });
   }
 };
