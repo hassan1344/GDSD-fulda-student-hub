@@ -16,9 +16,9 @@ export const getAllListings = async (req, res) => {
         property: {
           include: {
             landlord: true, // Include the landlord through the property relation
-            property_amenity: {
+            PropertyAmenity: {
               include: {
-                amenity: true,
+                Amenity: true,
               },
             },
           },
@@ -50,9 +50,9 @@ export const getAllListings = async (req, res) => {
       filters.where.property = {
         ...filters.where.property,
         AND: amenitiesArray.map((amenityId) => ({
-          property_amenity: {
+          PropertyAmenity: {
             some: {
-              amenity: {
+              Amenity: {
                 amenity_id: amenityId,
               },
             },
@@ -122,7 +122,7 @@ export const getListingById = async (req, res) => {
         property: {
           include: {
             landlord: true, // Include the landlord through the property relation
-            property_amenity: {
+            PropertyAmenity: {
               include: {
                 amenity: true,
               },
