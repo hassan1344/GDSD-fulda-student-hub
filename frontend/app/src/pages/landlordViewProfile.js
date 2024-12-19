@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { getProfileByUsername } from "../services/profileServices"; // Adjust the import based on your structure
+import { getProfileByUsername } from "../services/profileServices"; 
 import {jwtDecode} from "jwt-decode";
 import LandlordNavbar from "../components/LandlordNavbar";
 import Disclaimer from "../components/Disclaimer";
@@ -44,7 +44,7 @@ const LandlordViewProfile = () => {
     return <div className="text-center mt-10 text-red-500">{error}</div>;
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-100 via-blue-50 to-white">
+    <div className="background-container">
       {/* Navbar */}
       <LandlordNavbar />
 

@@ -1,4 +1,6 @@
 import axios from "axios";
+import { jwtDecode } from "jwt-decode";
+import { logoutUser } from "./authServices";
 
 const apiClient = axios.create({
   // baseURL: "http://localhost:8000/api/v1",
@@ -36,6 +38,9 @@ apiClient.interceptors.response.use(
       if (!isRefreshing) {
         isRefreshing = true;
 
+        const decodedToken = jwtDecode(localStorage.getItem("accessToken"));
+        const { userName, userType } = decodedToken;
+
         try {
           // Attempt to refresh the token
           const refreshToken = localStorage.getItem("refreshToken");
@@ -43,9 +48,12 @@ apiClient.interceptors.response.use(
             throw new Error("No refresh token available.");
           }
 
-          const response = await axios.post("https://localhost:8000/api/v1/auth/refresh-token", {
-            refreshToken,
-          });
+          const response = await apiClient.post("/auth/refresh-token",
+            {
+              userName,
+              refreshToken,
+            }
+          );
 
           const { accessToken: newAccessToken } = response.data;
 
@@ -62,7 +70,9 @@ apiClient.interceptors.response.use(
 
           // Handle token refresh failure (e.g., logout user)
           localStorage.clear();
-          window.location.href = "/login"; // Redirect to login
+          logoutUser(userName);
+          window.location.href = "/app";
+          // Redirect to login
           return Promise.reject(refreshError);
         }
       }

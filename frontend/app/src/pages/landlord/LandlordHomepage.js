@@ -1,56 +1,72 @@
-import React, { useState, useEffect } from 'react';  
+import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import LandlordNavbar from '../../components/LandlordNavbar';
+import { jwtDecode } from 'jwt-decode';
+import { getProfileByUsername } from '../../services/profileServices';
 // import { fetchLandlordProfile } from '../../services/LandlordServices';   //---
 
 
 const LandlordHomepage = () => {
 
-  console.log(localStorage.getItem("accessToken"));
+  // console.log(localStorage.getItem("accessToken"));
 
-//---------------------------------------------------
-/*
- const [landlordName, setLandlordName] = useState('');
+  //---------------------------------------------------
 
- useEffect(() => {
-   const fetchLandlordData = async () => {
-     const token = localStorage.getItem("accessToken");
-     try {
-       const data = await fetchLandlordProfile(token);
-       if (data.success) {
-         setLandlordName(`${data.data.first_name} ${data.data.last_name}`);
-       }
-     } catch (error) {
-       console.error('Error fetching landlord profile:', error);
-     }
-   };
-   fetchLandlordData();
- }, []);
-*/
-//------------------------------------------------
+  const [profile, setProfile] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+  const [username, setUserName] = useState("");
+
+  useEffect(() => {
+    const accessToken = localStorage.getItem("accessToken");
+
+    const decodedToken = jwtDecode(accessToken);
+    const { userName } = decodedToken;
+
+    setUserName(userName);
+
+    if (userName) {
+      const fetchProfile = async () => {
+        try {
+          const data = await getProfileByUsername(userName);
+          console.log("Data in fetchProfile", data);
+          setProfile(data);
+        } catch (err) {
+          setError("Error loading profile: " + err.message);
+        } finally {
+          setLoading(false);
+        }
+      };
+
+      fetchProfile();
+    } else {
+      setError("Username is not valid.");
+      setLoading(false);
+    }
+  }, []);
 
   const menuItems = [
-    
+
     { title: 'Create New Properties', path: '/landlord/create-listing', icon: '📝' },
     { title: 'View Properties', path: '/landlord/my-listings', icon: '📊' },
+    { title: 'My Listings', path: '/landlord/my-prop-listings', icon: '🏠' },
+    { title: ' Select Requests', path: '/landlord/select-requests', icon: '✅' },
     { title: 'New Requests', path: '/landlord/requests', icon: '🔔' },
     { title: 'View Tenants', path: '/landlord/tenants', icon: '👁️' },
     { title: 'Register for Bidding', path: '/register-bidding', icon: '🏷️' },
     { title: 'View Past Tenants', path: '/past-tenants', icon: '👥' },
     { title: 'Documents', path: '/documents', icon: '📁' },
     { title: 'Raise an Issue', path: '/raise-issue', icon: '⚠️' },
-    { title: 'My Listing', path: '/landlord/properties', icon: '🏠' },
-    { title: ' Select Requests', path: '/landlord/select-requests', icon: '✅' },
   ];
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-green-100 to-green-100">
+    <div className="background-container">
       <LandlordNavbar />
       <div className="container mx-auto px-4 py-8">
 
-         <h1 className="text-4xl font-bold text-center text-gray-800 mb-8">Welcome, Mr Schmidt</h1>
-     {/* <h1 className="text-4xl font-bold text-center text-gray-800 mb-8">Welcome, {landlordName || 'Landlord'} </h1>*/}  
-      
+        <h1 className="text-4xl font-bold text-center text-gray-800 mb-8">Welcome, {profile?.first_name} {profile?.last_name}</h1>
+        {/* <h1 className="text-4xl font-bold text-center text-gray-800 mb-8">Welcome, {landlordName || 'Landlord'} </h1>*/}
+
         <div className="bg-white shadow-2xl rounded-lg p-6 max-w-6xl mx-auto">
           <h2 className="text-2xl font-semibold mb-6 text-gray-700">What would you like to do today?</h2>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">

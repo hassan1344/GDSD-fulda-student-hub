@@ -9,6 +9,8 @@ const CreateProfilePage = () => {
   const userName = state?.userName;
   const accessToken = localStorage.getItem("accessToken"); // Access token passed from registration or login
 
+  console.log("userType from state:", userType);
+
   const [formData, setFormData] = useState({
     firstName: "",
     lastName: "",
@@ -61,9 +63,9 @@ const CreateProfilePage = () => {
       showNotification("Profile created successfully!");
       setTimeout(() => {
         if (userType === "STUDENT") {
-          navigate("/Home");
+          navigate("/Home", {replace: true});
         } else if (userType === "LANDLORD") {
-          navigate("/landlord");
+          navigate("/landlord", {replace: true});
         }
       }, 2000); // Redirect after success
     } catch (error) {

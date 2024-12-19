@@ -1,7 +1,9 @@
 import React, { useState } from "react";
+import { submitApplication } from "../services/applicationServices";
 
-const ApplicationForm = ({ onBack }) => {
+const ApplicationForm = ({ listing_id, onBack }) => {
   const [formData, setFormData] = useState({
+    listing_id: listing_id,
     fullName: "",
     studentId: "",
     contactNumber: "",
@@ -19,24 +21,35 @@ const ApplicationForm = ({ onBack }) => {
 
   const handleFileChange = (e, key) => {
     const file = e.target.files[0];
-    if (file && file.type === "application/pdf") {
+    if (file && file.type.match(/(jpeg|jpg|png|gif|avif|pdf)$/)) {
       setFormData((prev) => ({ ...prev, [key]: file }));
     } else {
-      alert("Please upload a valid PDF document.");
+      alert("Please upload a valid document (PDF, JPEG, JPG, PNG, GIF, AVIF).");
       e.target.value = ""; // Reset file input if invalid
     }
   };
 
   const handleMultipleFilesChange = (e) => {
     const files = Array.from(e.target.files);
-    const validFiles = files.filter((file) => file.type === "application/pdf");
+    const validFiles = files.filter((file) =>
+      file.type.match(/(jpeg|jpg|png|gif|avif|pdf)$/)
+    );
+
     if (validFiles.length !== files.length) {
-      alert("Only PDF files are allowed.");
+      alert("Only PDF, JPEG, JPG, PNG, GIF, or AVIF files are allowed.");
     }
-    setFormData((prev) => ({
-      ...prev,
-      otherDocuments: [...prev.otherDocuments, ...validFiles],
-    }));
+
+    setFormData((prev) => {
+      const existingFiles = prev.otherDocuments.map((file) => file.name);
+      const uniqueFiles = validFiles.filter(
+        (file) => !existingFiles.includes(file.name)
+      );
+
+      return {
+        ...prev,
+        otherDocuments: [...prev.otherDocuments, ...uniqueFiles],
+      };
+    });
   };
 
   const removeOtherDocument = (index) => {
@@ -51,10 +64,33 @@ const ApplicationForm = ({ onBack }) => {
     setFormData((prev) => ({ ...prev, [name]: value }));
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    // Logic to handle form submission
-    alert("Application Submitted Successfully!");
+    const formPayload = new FormData();
+    formPayload.append("listing_id", formData.listing_id);
+    formPayload.append("full_name", formData.fullName);
+    formPayload.append("student_card_id", formData.studentId);
+    formPayload.append("contact_number", formData.contactNumber);
+    formPayload.append("current_address", formData.currentAddress);
+
+    formPayload.append("enrolment_certificate", formData.enrollmentCertificate);
+    formPayload.append("government_id", formData.governmentId);
+    formPayload.append("financial_proof", formData.financialProof);
+
+    formData.otherDocuments.forEach((file, index) => {
+      formPayload.append("other_documents", file); // Use the same field name for all files
+    });
+
+    console.log(formPayload);
+    try {
+      const response = await submitApplication(formPayload, localStorage.getItem("accessToken"));
+      console.log("Response:", response);
+      
+      alert("Application submitted successfully!");
+    } catch (error) {
+      console.error(error);
+      alert(error.response.data.error);
+    }
   };
 
   return (
@@ -159,7 +195,7 @@ const ApplicationForm = ({ onBack }) => {
               <input
                 type="file"
                 id="enrollmentCertificate"
-                accept="application/pdf"
+                accept="application/pdf,image/jpeg,image/jpg,image/png,image/gif,image/avif"
                 onChange={(e) => handleFileChange(e, "enrollmentCertificate")}
                 className="mt-1 block w-full text-sm"
                 required
@@ -175,7 +211,7 @@ const ApplicationForm = ({ onBack }) => {
               <input
                 type="file"
                 id="governmentId"
-                accept="application/pdf"
+                accept="application/pdf,image/jpeg,image/jpg,image/png,image/gif,image/avif"
                 onChange={(e) => handleFileChange(e, "governmentId")}
                 className="mt-1 block w-full text-sm"
                 required
@@ -191,7 +227,7 @@ const ApplicationForm = ({ onBack }) => {
               <input
                 type="file"
                 id="financialProof"
-                accept="application/pdf"
+                accept="application/pdf,image/jpeg,image/jpg,image/png,image/gif,image/avif"
                 onChange={(e) => handleFileChange(e, "financialProof")}
                 className="mt-1 block w-full text-sm"
                 required
@@ -207,7 +243,7 @@ const ApplicationForm = ({ onBack }) => {
               <input
                 type="file"
                 id="otherDocuments"
-                accept="application/pdf"
+                accept="application/pdf,image/jpeg,image/jpg,image/png,image/gif,image/avif"
                 multiple
                 onChange={handleMultipleFilesChange}
                 className="mt-1 block w-full text-sm"
