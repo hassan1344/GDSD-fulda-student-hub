@@ -1,5 +1,6 @@
 import axios from 'axios';
-const BASE_URL = 'http://localhost:8000/api/v1';
+// const BASE_URL = 'http://localhost:8000/api/v1';
+const BASE_URL = 'https://fulda-student-hub.publicvm.com/api/v1';
 //const BASE_URL = 'https://localhost:8000/api/v1/propertiesModule';
 
 //const BASE_URL = 'https://16.171.165.15/api/v1';
@@ -41,7 +42,7 @@ export const fetchPropertyById = async (propertyId, token) => {
 
 export const createProperty = async (formData, token) => {
   try {
-    const response = await fetch('http://localhost:8000/api/v1/propertiesModule', {
+    const response = await fetch(`${BASE_URL}/propertiesModule`, {
       method: 'POST',
       headers: {
         'Authorization': `Bearer ${token}`
@@ -60,10 +61,6 @@ export const createProperty = async (formData, token) => {
     throw error;
   }
 };
-
-
-
-
 
 export const updateProperty = async (propertyId, propertyData, token) => {
   const response = await fetch(`${BASE_URL}/${propertyId}`, {
