@@ -37,10 +37,9 @@ app.use("/v1/profile", profileRouter);
 
 app.use("/v1/propertiesModule", propertyModuleRouter);
 
-app.use("/api/v1/utils", utilRouter);
-
-app.use("/api/v1/searchListing", searchListingRouter);
-app.use("/api/v1/listingsModule", listingModuleRouter);
+app.use("/v1/utils", utilRouter);
+app.use("/v1/searchListing", searchListingRouter);
+app.use("/v1/listingsModule", listingModuleRouter);
 
 // app.use(ResHandler);
 
