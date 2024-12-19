@@ -22,11 +22,12 @@ const EditProperty = () => {
       try {
         const data = await fetchPropertyById(id, token);
         if (data.success) {
+          console.log("dev", data)
           setProperty(data.data);
           setAddress(data.data.address);
-          setAmenities(data.data.property_amenity.map(pa => ({
-            amenity_name: pa.amenity.amenity_name,
-            amenity_value: pa.amenity.amenity_value
+          setAmenities(data.data.PropertyAmenity.map(pa => ({
+            amenity_name: pa.Amenity.amenity_name,
+            amenity_value: pa.Amenity.amenity_value
           })));
           setDisplayedImages(data.data.media || []);
         }
