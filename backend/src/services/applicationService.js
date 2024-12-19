@@ -198,7 +198,7 @@ export const getApplicationById = async (req, res) => {
 
     const media = await prisma.media.findMany({
       where: {
-        model_id: application.id,
+        model_id: application.application_id,
         model_name: "application",
       },
     });
