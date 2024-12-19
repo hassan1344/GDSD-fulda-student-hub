@@ -4,6 +4,7 @@ import Navbar from "../../components/NavBar";
 import Disclaimer from "../../components/Disclaimer";
 import apiClient from "../../services/apiClient";
 import { jwtDecode } from "jwt-decode";
+import LandlordNavbar from "../../components/LandlordNavbar";
 
 const getToken = () => {
   const accessToken = localStorage.getItem("accessToken");
@@ -14,9 +15,6 @@ const getToken = () => {
   return accessToken;
 };
 
-const socketBaseUrl = apiClient.defaults.baseURL.replace("/api/v1", ""); // Extract base URL from apiClient
-const token = getToken();
-const socket = io(`${socketBaseUrl}?token=${token}`);
 
 const Messages = () => {
   const [conversations, setConversations] = useState([]);
@@ -24,7 +22,12 @@ const Messages = () => {
   const [currentConversation, setCurrentConversation] = useState(null);
   const [messageInput, setMessageInput] = useState("");
   
+  const socketBaseUrl = apiClient.defaults.baseURL.replace("/api/v1", ""); // Extract base URL from apiClient
+  const token = getToken();
+  const socket = io(`${socketBaseUrl}?token=${token}`);
+  
   const currentUserName = token ? jwtDecode(token).userName : null;
+  const currentUserType = token ? jwtDecode(token).userType : null;
 
   useEffect(() => {
     if (!token) {
@@ -34,7 +37,7 @@ const Messages = () => {
     // Initialize socket connection
 
     socket.on("connect", () => {
-      console.log("Socket connected:", socket.id);
+      // console.log("Socket connected:", jwtDecode(token).userType);
       socket.emit("getConversations");
     });
 
@@ -108,16 +111,18 @@ const Messages = () => {
   };
 
   const fetchChats = (conversationId) => {
-    console.log("Here11");
     if (currentConversation?.conversation_id !== conversationId) {
-      console.log("Here12");
       socket.emit("getChats", { conversation_id: conversationId });
     }
   };
 
   return (
     <div className="background-container">
-      <Navbar />
+      { currentUserType && currentUserType === 'LANDLORD' ? (
+        <LandlordNavbar />
+      ) : (
+        <Navbar />
+      )}
       <div className="max-w-6xl mx-auto p-6 bg-white shadow-lg rounded-lg mt-8 flex">
         <div className="w-1/3 p-4 bg-gray-100 rounded-lg mr-6 overflow-y-auto">
           <h2 className="text-xl font-semibold mb-4">Conversations</h2>

@@ -44,7 +44,7 @@ const LandlordViewProfile = () => {
     return <div className="text-center mt-10 text-red-500">{error}</div>;
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-100 via-blue-50 to-white">
+    <div className="background-container">
       {/* Navbar */}
       <LandlordNavbar />
 
