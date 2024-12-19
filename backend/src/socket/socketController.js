@@ -96,7 +96,7 @@ export const getConversations = async (socket) => {
         user: isSender ? conversation.receiver : conversation.sender,
       };
     });
-    console.log("processed onversationssss", processedConversations);
+    // console.log("processed onversationssss", processedConversations);
     return processedConversations;
   } catch (error) {
     console.error("Error fetching conversations:", error.message);

@@ -18,14 +18,19 @@ export const initiateSocket = (server) => {
     io.use((socket, next) => {
       authenticateSocket(socket, next);
     }).on("connection", (socket) => {
+      const userName = socket.decoded?.userName;
+      if (userName) {
+        socket.join(userName);
+        console.log(`User ${userName} joined room ${userName}`);
+      }
       console.log(`A client has connected : ${socket.id}`);
 
       socket.on("createConversation", async (data) => {
-        console.log("======> data from client", data);
+        // console.log("======> data from client", data);
 
         const conversation = await createConversation(socket, data);
 
-        console.log("conversationn ==>", conversation);
+        // console.log("conversationn ==>", conversation);
         if (conversation) {
           socket.join(conversation.conversation.conversation_id);
         }
@@ -56,8 +61,9 @@ export const initiateSocket = (server) => {
       // Fetch all chats in a conversation
       socket.on("getChats", async (data) => {
         const chats = await getChats(socket, data);
+        console.log(socket.decoded, "decoded");
         // Emit the fetched chats back to the client
-        io.emit("getChats", chats);
+        io.to(socket.decoded.userName).emit("getChats", chats);
       });
 
       socket.on("disconnect", () => {

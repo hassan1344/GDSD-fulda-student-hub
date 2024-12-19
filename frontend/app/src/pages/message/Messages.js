@@ -14,17 +14,17 @@ const getToken = () => {
   return accessToken;
 };
 
+const socketBaseUrl = apiClient.defaults.baseURL.replace("/api/v1", ""); // Extract base URL from apiClient
+const token = getToken();
+const socket = io(`${socketBaseUrl}?token=${token}`);
+
 const Messages = () => {
   const [conversations, setConversations] = useState([]);
   const [messages, setMessages] = useState([]);
   const [currentConversation, setCurrentConversation] = useState(null);
   const [messageInput, setMessageInput] = useState("");
-
-  const socketBaseUrl = apiClient.defaults.baseURL.replace("/api/v1", ""); // Extract base URL from apiClient
-  const token = getToken();
-  const socket = io(`${socketBaseUrl}?token=${token}`);
+  
   const currentUserName = token ? jwtDecode(token).userName : null;
-  console.log("curentttttttttttttttt", currentUserName);
 
   useEffect(() => {
     if (!token) {
@@ -36,18 +36,11 @@ const Messages = () => {
     socket.on("connect", () => {
       console.log("Socket connected:", socket.id);
       socket.emit("getConversations");
-      socket.emit("createConversation", { receiver_id: "abcd" });
     });
 
     socket.on("getConversations", (conversations) => {
       setConversations(conversations);
     });
-
-    // socket.emit("createConversation", () => {
-    //   // console.log("Socket connected:", socket.id);
-    //   // socket.emit("getConversations");
-    //   console.log("test");
-    // });
 
     socket.on("getChats", (chats) => {
       console.log("Chats received:", chats);
@@ -143,12 +136,11 @@ const Messages = () => {
                     setCurrentConversation(conversation);
                     fetchChats(conversation.conversation_id);
                   }}
-                  className={`cursor-pointer p-2 rounded mb-2 ${
-                    currentConversation?.conversation_id ===
-                    conversation.conversation_id
+                  className={`cursor-pointer p-2 rounded mb-2 ${currentConversation?.conversation_id ===
+                      conversation.conversation_id
                       ? "bg-blue-100"
                       : "hover:bg-gray-200"
-                  }`}
+                    }`}
                 >
                   <div className="flex justify-between items-center">
                     {/* Display the other participant's username */}
