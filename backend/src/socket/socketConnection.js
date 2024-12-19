@@ -15,7 +15,7 @@ export const initiateSocket = (server) => {
         origin: "*",
       },
     });
-    io.use((socket, next) => {
+    io.of("/wsapp").use((socket, next) => {
       authenticateSocket(socket, next);
     }).on("connection", (socket) => {
       const userName = socket.decoded?.userName;
