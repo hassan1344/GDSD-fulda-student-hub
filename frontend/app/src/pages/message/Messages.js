@@ -16,7 +16,6 @@ const getToken = () => {
   return accessToken;
 };
 
-
 const Messages = () => {
   const [conversations, setConversations] = useState([]);
   const [messages, setMessages] = useState([]);
@@ -25,7 +24,7 @@ const Messages = () => {
   const [receiverUser, setReceiverUser] = useState(null);
   const [receiverUsers, setReceiverUsers] = useState([]);
 
-  const socketBaseUrl = "wss://fulda-student-hub.publicvm.com:8000/socket.io";
+  const socketBaseUrl = "https://fulda-student-hub.publicvm.com";
   const token = getToken();
   const socket = io(`${socketBaseUrl}?token=${token}`);
 
@@ -50,7 +49,8 @@ const Messages = () => {
     socket.on("createConversation", (conversation) => {
       setConversations((prevConversations) => {
         const conversationExists = prevConversations.some(
-          (conv) => conv.conversation_id === conversation.conversation.conversation_id
+          (conv) =>
+            conv.conversation_id === conversation.conversation.conversation_id
         );
 
         if (!conversationExists) {
@@ -60,11 +60,11 @@ const Messages = () => {
         return prevConversations;
       });
 
-      const receiverId = localStorage.getItem('receiverId');
+      const receiverId = localStorage.getItem("receiverId");
       if (receiverId && conversation.conversation.receiver_id === receiverId) {
         setCurrentConversation(conversation.conversation);
         fetchChats(conversation.conversation.conversation_id);
-        localStorage.removeItem('receiverId');
+        localStorage.removeItem("receiverId");
       }
 
       creatingConversationRef.current = false;
@@ -72,18 +72,17 @@ const Messages = () => {
 
     socket.on("getConversations", async (fetchedConversations) => {
       setConversations(fetchedConversations);
-      const receiverId = localStorage.getItem('receiverId');
+      const receiverId = localStorage.getItem("receiverId");
       if (receiverId) {
         const existingConversation = fetchedConversations.find(
           (conv) =>
-            conv.sender_id === receiverId ||
-            conv.receiver_id === receiverId
+            conv.sender_id === receiverId || conv.receiver_id === receiverId
         );
 
         if (existingConversation) {
           setCurrentConversation(existingConversation);
           fetchChats(existingConversation.conversation_id);
-          localStorage.removeItem('receiverId');
+          localStorage.removeItem("receiverId");
         } else if (!creatingConversationRef.current) {
           creatingConversationRef.current = true;
           socket.emit("createConversation", { receiver_id: receiverId });
@@ -106,7 +105,9 @@ const Messages = () => {
     socket.on("getChats", async (chats) => {
       let data = null;
       if (currentConversation.sender_id === currentUserName) {
-        data = await getProfileByUsername(currentConversation.receiver.user_name);
+        data = await getProfileByUsername(
+          currentConversation.receiver.user_name
+        );
       } else {
         data = await getProfileByUsername(currentConversation.sender.user_name);
       }
@@ -148,13 +149,11 @@ const Messages = () => {
       );
     });
 
-    const receiverId = localStorage.getItem('receiverId');
+    const receiverId = localStorage.getItem("receiverId");
     if (receiverId && !creatingConversationRef.current) {
       creatingConversationRef.current = true;
       socket.emit("createConversation", { receiver_id: receiverId });
     }
-
-
 
     return () => {
       socket.off("connect");
@@ -193,7 +192,7 @@ const Messages = () => {
 
   return (
     <div className="background-container min-h-screen">
-      {currentUserType && currentUserType === 'LANDLORD' ? (
+      {currentUserType && currentUserType === "LANDLORD" ? (
         <LandlordNavbar />
       ) : (
         <Navbar />
@@ -206,9 +205,13 @@ const Messages = () => {
             {conversations.map((conversation) => {
               const otherParticipant =
                 conversation.sender_id === currentUserName
-                  ? receiverUsers.find(user => user.user_id === conversation.receiver.user_name)
-                  : receiverUsers.find(user => user.user_id === conversation.sender.user_name);
-  
+                  ? receiverUsers.find(
+                      (user) => user.user_id === conversation.receiver.user_name
+                    )
+                  : receiverUsers.find(
+                      (user) => user.user_id === conversation.sender.user_name
+                    );
+
               return (
                 <li
                   key={conversation.conversation_id}
@@ -216,15 +219,19 @@ const Messages = () => {
                     setCurrentConversation(conversation);
                     fetchChats(conversation.conversation_id);
                   }}
-                  className={`cursor-pointer p-2 rounded mb-2 ${currentConversation?.conversation_id ===
+                  className={`cursor-pointer p-2 rounded mb-2 ${
+                    currentConversation?.conversation_id ===
                     conversation.conversation_id
-                    ? "bg-blue-100"
-                    : "hover:bg-gray-200"
-                    }`}
+                      ? "bg-blue-100"
+                      : "hover:bg-gray-200"
+                  }`}
                 >
                   <div className="flex justify-between items-center">
                     <div className="flex items-center">
-                      <strong>{otherParticipant?.first_name} {otherParticipant?.last_name}</strong>
+                      <strong>
+                        {otherParticipant?.first_name}{" "}
+                        {otherParticipant?.last_name}
+                      </strong>
                     </div>
                     <span className="text-gray-500">
                       {conversation.last_message || "No messages yet"}
@@ -235,13 +242,14 @@ const Messages = () => {
             })}
           </ul>
         </div>
-  
+
         {/* Middle Panel - Chat Pane */}
         <div className="w-2/3 p-4 bg-gray-50 rounded-lg mr-6 overflow-y-auto flex-grow">
           {currentConversation ? (
             <div>
               <h3 className="text-2xl font-semibold mb-4">
-                <span className="mr-2">💬</span>{receiverUser?.first_name} {receiverUser?.last_name}
+                <span className="mr-2">💬</span>
+                {receiverUser?.first_name} {receiverUser?.last_name}
               </h3>
               <ul className="mb-4 max-h-72 overflow-y-auto">
                 {messages.map((message) => (
@@ -249,8 +257,20 @@ const Messages = () => {
                     key={`${message.chat_id}-${message.createdAt}`}
                     className="mb-2 flex"
                   >
-                    <div className={`flex ${message.sender_id === currentUserName ? "ml-auto" : "mr-auto"}`}>
-                      <span className={`${message.sender_id === currentUserName ? "bg-gray-300" : "bg-green-300"} p-2 rounded text-sm`}>
+                    <div
+                      className={`flex ${
+                        message.sender_id === currentUserName
+                          ? "ml-auto"
+                          : "mr-auto"
+                      }`}
+                    >
+                      <span
+                        className={`${
+                          message.sender_id === currentUserName
+                            ? "bg-gray-300"
+                            : "bg-green-300"
+                        } p-2 rounded text-sm`}
+                      >
                         {message.message}
                       </span>
                     </div>
@@ -279,7 +299,7 @@ const Messages = () => {
             </div>
           )}
         </div>
-  
+
         {/* Right Panel - User Profile */}
         <div className="w-1/4 p-4 bg-gray-200 rounded-lg">
           <h3 className="text-xl font-semibold mb-4">User Profile</h3>
@@ -299,28 +319,25 @@ const Messages = () => {
                   </div>
                 )}
               </div>
-              <p className="font-semibold text-lg">{receiverUser?.first_name} {receiverUser?.last_name}</p>
+              <p className="font-semibold text-lg">
+                {receiverUser?.first_name} {receiverUser?.last_name}
+              </p>
               <p className="text-gray-500">Email: {receiverUser?.email}</p>
-              <p className="text-gray-500">Phone: {receiverUser?.phone_number}</p>
+              <p className="text-gray-500">
+                Phone: {receiverUser?.phone_number}
+              </p>
             </div>
           ) : (
-            <div className="text-center text-gray-500">
-              No user selected
-            </div>
+            <div className="text-center text-gray-500">No user selected</div>
           )}
         </div>
       </div>
-  
+
       <div className="mt-8">
         <Disclaimer />
       </div>
     </div>
   );
-  
-  
-
-
-
 };
 
 export default Messages;
