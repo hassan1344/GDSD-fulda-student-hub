@@ -22,56 +22,63 @@ const Messages = () => {
   const [currentConversation, setCurrentConversation] = useState(null);
   const [messageInput, setMessageInput] = useState("");
   const [receiverUser, setReceiverUser] = useState(null);
-  const [receiverUsers, setReceiverUsers] = useState([]);
+  const [receiverUsers, setReceiverUsers] = useState([]); // Added back receiverUsers
+  const [loadingChats, setLoadingChats] = useState(false);
+  const [loadingConversations, setLoadingConversations] = useState(false);
 
-  const socketBaseUrl = "https://fulda-student-hub.publicvm.com";
+  const socketRef = useRef(null);
   const token = getToken();
-  const socket = io(`${socketBaseUrl}?token=${token}`);
-
   const currentUserName = token ? jwtDecode(token).userName : null;
   const currentUserType = token ? jwtDecode(token).userType : null;
 
-  // Ref to track if a conversation creation is already in progress
-  const creatingConversationRef = useRef(false);
-
-  useEffect(() => {
+  // Initialize Socket
+  const initializeSocket = () => {
     if (!token) {
       console.error("No token available. Cannot initialize socket.");
       return;
     }
-    // Initialize socket connection
 
-    socket.on("connect", () => {
-      // console.log("Socket connected:", jwtDecode(token).userType);
-      socket.emit("getConversations");
+    socketRef.current = io("https://fulda-student-hub.publicvm.com", {
+      query: { token },
     });
 
-    socket.on("createConversation", (conversation) => {
-      setConversations((prevConversations) => {
-        const conversationExists = prevConversations.some(
-          (conv) =>
-            conv.conversation_id === conversation.conversation.conversation_id
-        );
+    socketRef.current.on("connect", () => {
+      console.log("Socket connected.");
+      fetchConversations();
+    });
 
-        if (!conversationExists) {
-          return [...prevConversations, conversation.conversation];
-        }
-
-        return prevConversations;
-      });
-
-      const receiverId = localStorage.getItem("receiverId");
-      if (receiverId && conversation.conversation.receiver_id === receiverId) {
-        setCurrentConversation(conversation.conversation);
-        fetchChats(conversation.conversation.conversation_id);
+    socketRef.current.on("createConversation", (conversation) => {
+      setConversations((prev) => [...prev, conversation]);
+      if (
+        conversation.receiver_id === localStorage.getItem("receiverId") &&
+        conversation.conversation_id
+      ) {
+        setCurrentConversation(conversation);
+        fetchChats(conversation.conversation_id);
         localStorage.removeItem("receiverId");
       }
-
-      creatingConversationRef.current = false;
     });
 
-    socket.on("getConversations", async (fetchedConversations) => {
+    socketRef.current.on("sendMessage", (message) => {
+      if (message.conversation_id === currentConversation?.conversation_id) {
+        setMessages((prev) => [...prev, message]);
+      }
+      updateLastMessageInConversation(message);
+    });
+
+    socketRef.current.on("disconnect", () => {
+      console.log("Socket disconnected.");
+    });
+  };
+
+  // Fetch Conversations
+  const fetchConversations = () => {
+    setLoadingConversations(true);
+    socketRef.current.emit("getConversations");
+    socketRef.current.on("getConversations", async (fetchedConversations) => {
+      setLoadingConversations(false);
       setConversations(fetchedConversations);
+
       const receiverId = localStorage.getItem("receiverId");
       if (receiverId) {
         const existingConversation = fetchedConversations.find(
@@ -80,15 +87,21 @@ const Messages = () => {
         );
 
         if (existingConversation) {
-          setCurrentConversation(existingConversation);
-          fetchChats(existingConversation.conversation_id);
-          localStorage.removeItem("receiverId");
-        } else if (!creatingConversationRef.current) {
-          creatingConversationRef.current = true;
-          socket.emit("createConversation", { receiver_id: receiverId });
+          handleChatClick(existingConversation);
+        } else {
+          socketRef.current.emit("createConversation", {
+            receiver_id: receiverId,
+          });
+        }
+        localStorage.removeItem("receiverId");
+      } else {
+        // Automatically fetch messages for the first conversation or keep current conversation loaded
+        if (currentConversation) {
+          fetchChats(currentConversation.conversation_id);
         }
       }
 
+      // **Add the old logic here for setting receiverUsers**
       const updatedReceiverUsers = [];
       for (const conversation of fetchedConversations) {
         let data;
@@ -99,96 +112,90 @@ const Messages = () => {
         }
         updatedReceiverUsers.push(data);
       }
-      setReceiverUsers(updatedReceiverUsers);
+      setReceiverUsers(updatedReceiverUsers); // Set receiverUsers
     });
+  };
 
-    socket.on("getChats", async (chats) => {
-      let data = null;
-      if (currentConversation.sender_id === currentUserName) {
-        data = await getProfileByUsername(
-          currentConversation.receiver.user_name
-        );
-      } else {
-        data = await getProfileByUsername(currentConversation.sender.user_name);
-      }
+  // Fetch Chats
+  const fetchChats = (conversationId) => {
+    if (!conversationId || !socketRef.current || !currentConversation) return;
 
-      setReceiverUser(data);
-      console.log("receiverUser", receiverUsers);
+    setLoadingChats(true);
+    socketRef.current.emit("getChats", { conversation_id: conversationId });
+    socketRef.current.on("getChats", async (chats) => {
+      setLoadingChats(false);
       setMessages(chats);
+
+      if (currentConversation) {
+        const userName =
+          currentConversation.sender_id === currentUserName
+            ? currentConversation.receiver?.user_name
+            : currentConversation.sender?.user_name;
+
+        if (userName) {
+          const profile = await getProfileByUsername(userName);
+          setReceiverUser(profile); // **Old logic for setting receiverUser**
+        } else {
+          console.error("No username found in the current conversation.");
+        }
+      }
     });
+  };
 
-    socket.on("sendMessage", (message) => {
-      console.log("New message received:", message.message);
-      console.log("New message received:", message.sender_id);
+  // console.log("receiverUser", receiverUser);
 
-      // Update messages state with the new message in the correct conversation
-      setMessages((prevMessages) => {
-        // Append the new message to the appropriate conversation's message list
-        return [...prevMessages, message]; // Keeps the previous messages and adds the new one
-      });
+  // Update Last Message in Conversation
+  const updateLastMessageInConversation = (message) => {
+    setConversations((prev) =>
+      prev.map((conv) =>
+        conv.conversation_id === message.conversation_id
+          ? { ...conv, last_message: message.message }
+          : conv
+      )
+    );
+  };
 
-      // Update the last message in the conversation list
-      setConversations((prevConversations) =>
-        prevConversations.map((conversation) =>
-          conversation.conversation_id === message.conversation_id
-            ? { ...conversation, last_message: message.message } // Update the last message of the conversation
-            : conversation
-        )
-      );
-    });
+  // Handle Chat Click
+  const handleChatClick = (conversation) => {
+    // console.log("conversation in handle chat click", conversation);
+    if (currentConversation?.conversation_id === conversation.conversation_id)
+      return;
 
-    // Handle updated last message in conversation
-    socket.on("updatedLastMessage", (message) => {
-      console.log("New message received:", message);
-      setConversations((prevConversations) =>
-        prevConversations.map((conversation) =>
-          conversation.conversation_id === message.conversation_id
-            ? { ...conversation, last_message: message }
-            : conversation
-        )
-      );
-    });
+    setCurrentConversation(conversation);
+    fetchChats(conversation.conversation_id);
+  };
 
-    const receiverId = localStorage.getItem("receiverId");
-    if (receiverId && !creatingConversationRef.current) {
-      creatingConversationRef.current = true;
-      socket.emit("createConversation", { receiver_id: receiverId });
+  // Send Message
+  const sendMessage = () => {
+    if (!messageInput || !currentConversation) {
+      alert("Please enter a message.");
+      return;
+    }
+
+    const payload = {
+      sender_id: currentUserName,
+      message: messageInput,
+      conversation_id: currentConversation.conversation_id,
+      created_at: new Date().toISOString(),
+    };
+
+    socketRef.current.emit("sendMessage", payload);
+    setMessageInput("");
+  };
+
+  // useEffect to Initialize Socket on Token Change
+  useEffect(() => {
+    initializeSocket();
+
+    // Automatically load current conversation's chats if available after a refresh
+    if (currentConversation) {
+      fetchChats(currentConversation.conversation_id);
     }
 
     return () => {
-      socket.off("connect");
-      socket.off("getConversations");
-      socket.off("getChats");
-      socket.off("sendMessage");
-      socket.off("updatedLastMessage");
-      socket.off("createConversation");
+      socketRef.current?.disconnect();
     };
-  }, [currentConversation, receiverUser]);
-
-  const sendMessage = () => {
-    if (messageInput && currentConversation) {
-      const payload = {
-        sender_id: jwtDecode(token).userName,
-        message: messageInput,
-        conversation_id: currentConversation.conversation_id,
-        created_at: new Date().toISOString(),
-      };
-
-      // Emit message to the server
-      socket.emit("sendMessage", payload);
-
-      // Clear the input field
-      setMessageInput("");
-    } else {
-      alert("Please enter a message.");
-    }
-  };
-
-  const fetchChats = (conversationId) => {
-    if (currentConversation?.conversation_id !== conversationId) {
-      socket.emit("getChats", { conversation_id: conversationId });
-    }
-  };
+  }, [token, currentConversation]);
 
   return (
     <div className="background-container min-h-screen">
@@ -215,10 +222,7 @@ const Messages = () => {
               return (
                 <li
                   key={conversation.conversation_id}
-                  onClick={() => {
-                    setCurrentConversation(conversation);
-                    fetchChats(conversation.conversation_id);
-                  }}
+                  onClick={() => handleChatClick(conversation)}
                   className={`cursor-pointer p-2 rounded mb-2 ${
                     currentConversation?.conversation_id ===
                     conversation.conversation_id
