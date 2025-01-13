@@ -74,7 +74,7 @@ export const createProfile = async (req, res) => {
       newProfile = newLandlord;
     }
 
-    if (req.files["profile_pic"]) {
+    if (req.files && req.files["profile_pic"]) {
       const file = req.files["profile_pic"][0];
       await addMedia(file, modelId);
     }
@@ -117,7 +117,7 @@ export const updateProfile = async (req, res) => {
       modelId = updatedProfile.landlord_id;
     }
 
-    if (req.files["profile_pic"]) {
+    if (req.files && req.files["profile_pic"]) {
       await deleteMedia(modelId);
       const file = req.files["profile_pic"][0];
       await addMedia(file, modelId);
