@@ -38,7 +38,7 @@ const Messages = () => {
       return;
     }
 
-    socketRef.current = io("https://fulda-student-hub.publicvm.com", {
+    socketRef.current = io("http://localhost:8000", {
       query: { token },
     });
 
@@ -48,6 +48,10 @@ const Messages = () => {
     });
 
     socketRef.current.on("createConversation", (conversation) => {
+      if (!conversation) {
+        console.error("Failed to create or receive conversation.");
+        return;
+      }
       setConversations((prev) => [...prev, conversation]);
       if (
         conversation.receiver_id === localStorage.getItem("receiverId") &&
@@ -57,6 +61,19 @@ const Messages = () => {
         fetchChats(conversation.conversation_id);
         localStorage.removeItem("receiverId");
       }
+    });
+
+    socketRef.current.on("newConversation", (conversation) => {
+      if (!conversation) return;
+
+   
+      setConversations((prev) => [...prev, conversation]);
+
+     
+      // setCurrentConversation(conversation);
+      // fetchChats(conversation.conversation_id);
+
+ 
     });
 
     socketRef.current.on("sendMessage", (message) => {
@@ -76,6 +93,7 @@ const Messages = () => {
     setLoadingConversations(true);
     socketRef.current.emit("getConversations");
     socketRef.current.on("getConversations", async (fetchedConversations) => {
+      // console.log("FETCCHED CONVERSATIONSSSSSS!!!", fetchedConversations);
       setLoadingConversations(false);
       setConversations(fetchedConversations);
 
@@ -88,12 +106,13 @@ const Messages = () => {
 
         if (existingConversation) {
           handleChatClick(existingConversation);
+          localStorage.removeItem("receiverId");
         } else {
           socketRef.current.emit("createConversation", {
             receiver_id: receiverId,
           });
         }
-        localStorage.removeItem("receiverId");
+        // localStorage.removeItem("receiverId");
       } else {
         // Automatically fetch messages for the first conversation or keep current conversation loaded
         if (currentConversation) {
@@ -102,17 +121,28 @@ const Messages = () => {
       }
 
       // **Add the old logic here for setting receiverUsers**
-      const updatedReceiverUsers = [];
-      for (const conversation of fetchedConversations) {
-        let data;
-        if (conversation.sender_id === currentUserName) {
-          data = await getProfileByUsername(conversation.receiver.user_name);
-        } else {
-          data = await getProfileByUsername(conversation.sender.user_name);
-        }
-        updatedReceiverUsers.push(data);
+      try {
+        const profilePromises = fetchedConversations.map(
+          async (conversation) => {
+            if (conversation.sender_id === currentUserName) {
+              // console.log("Condition passed on first go!!!!!");
+              // Use optional chaining to avoid errors if properties are missing
+              return await getProfileByUsername(
+                conversation.receiver?.user_name
+              );
+            } else {
+              return await getProfileByUsername(conversation.sender?.user_name);
+            }
+          }
+        );
+
+        // Wait for all profile fetches to complete
+        const updatedReceiverUsers = await Promise.all(profilePromises);
+        setReceiverUsers(updatedReceiverUsers);
+        // console.log("Updated receiverUsers:", updatedReceiverUsers);
+      } catch (error) {
+        console.error("Error fetching profiles:", error);
       }
-      setReceiverUsers(updatedReceiverUsers); // Set receiverUsers
     });
   };
 
@@ -213,12 +243,12 @@ const Messages = () => {
               const otherParticipant =
                 conversation.sender_id === currentUserName
                   ? receiverUsers.find(
-                      (user) => user.user_id === conversation.receiver.user_name
+                      (user) =>
+                        user.user_id === conversation.receiver?.user_name
                     )
                   : receiverUsers.find(
-                      (user) => user.user_id === conversation.sender.user_name
+                      (user) => user.user_id === conversation.sender?.user_name
                     );
-
               return (
                 <li
                   key={conversation.conversation_id}

@@ -1,6 +1,6 @@
 import axios from 'axios';
 // const BASE_URL = 'http://localhost:8000/api/v1';
-const BASE_URL = 'https://fulda-student-hub.publicvm.com/api/v1';
+const BASE_URL = "http://localhost:8000/v1";
 //const BASE_URL = 'https://localhost:8000/api/v1/propertiesModule';
 
 //const BASE_URL = 'https://16.171.165.15/api/v1';

@@ -88,6 +88,11 @@ export const getConversations = async (socket) => {
       },
     });
 
+    console.log(
+      "INNNNNNNNNNNNNNNNNNNNNNNNNNNNNN GET CONVERSATION",
+      conversations
+    );
+
     const processedConversations = conversations.map((conversation) => {
       const isSender = conversation.sender_id === userName;
 
