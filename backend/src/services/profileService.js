@@ -53,7 +53,7 @@ export const createProfile = async (req, res) => {
           profile_picture_id: profilePicture,
           university,
           student_id_number: studentIdNumber,
-          email_verified: emailVerified,
+          email_verified: emailVerified === "true" ? true : false,
         },
       });
       modelId = newStudent.student_id;
