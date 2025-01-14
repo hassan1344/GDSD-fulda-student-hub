@@ -65,8 +65,11 @@ const PropertyDetails = ({ listing, onBack }) => {
               className="bg-blue-500 text-white p-2 rounded mt-2"
               onClick={() => {
                 // Store the landlord's user ID in localStorage to access on the Messages page
-                localStorage.setItem('receiverId', listing.property.landlord.user_id);
-                window.location.href = '/app/messages';
+                localStorage.setItem(
+                  "receiverId",
+                  listing.property.landlord.user_id
+                );
+                window.location.href = "/app/messages";
               }}
             >
               Contact
@@ -134,10 +137,11 @@ const PropertyDetails = ({ listing, onBack }) => {
                   key={index}
                   src={`https://fulda-student-hub.s3.eu-north-1.amazonaws.com/public/uploads/images/${image.mediaUrl}`}
                   alt={`Thumbnail ${index + 1}`}
-                  className={`w-full h-24 object-cover rounded-md cursor-pointer ${index === currentImageIndex
+                  className={`w-full h-24 object-cover rounded-md cursor-pointer ${
+                    index === currentImageIndex
                       ? "border-2 border-blue-500"
                       : ""
-                    }`}
+                  }`}
                   onClick={() => setCurrentImageIndex(index)}
                 />
               ))}
@@ -162,37 +166,41 @@ const PropertyDetails = ({ listing, onBack }) => {
       <div className="flex space-x-4 mb-6 border-b">
         <button
           onClick={() => setActiveTab("about")}
-          className={`py-2 px-4 transition-all duration-200 ${activeTab === "about"
+          className={`py-2 px-4 transition-all duration-200 ${
+            activeTab === "about"
               ? "border-b-2 border-blue-600 font-bold text-blue-600"
               : "text-gray-600 hover:text-blue-600 hover:font-medium"
-            }`}
+          }`}
         >
           About
         </button>
         <button
           onClick={() => setActiveTab("reviews")}
-          className={`py-2 px-4 transition-all duration-200 ${activeTab === "reviews"
+          className={`py-2 px-4 transition-all duration-200 ${
+            activeTab === "reviews"
               ? "border-b-2 border-blue-600 font-bold text-blue-600"
               : "text-gray-600 hover:text-blue-600 hover:font-medium"
-            }`}
+          }`}
         >
           Reviews
         </button>
         <button
           onClick={() => setActiveTab("contact")}
-          className={`py-2 px-4 transition-all duration-200 ${activeTab === "contact"
+          className={`py-2 px-4 transition-all duration-200 ${
+            activeTab === "contact"
               ? "border-b-2 border-blue-600 font-bold text-blue-600"
               : "text-gray-600 hover:text-blue-600 hover:font-medium"
-            }`}
+          }`}
         >
           Contact
         </button>
         <button
           onClick={() => setActiveTab("apply")}
-          className={`py-2 px-4 transition-all duration-200 ${activeTab === "apply"
+          className={`py-2 px-4 transition-all duration-200 ${
+            activeTab === "apply"
               ? "border-b-2 border-blue-600 font-bold text-blue-600"
               : "text-gray-600 hover:text-blue-600 hover:font-medium"
-            }`}
+          }`}
         >
           Apply Now
         </button>

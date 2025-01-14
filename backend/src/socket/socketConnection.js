@@ -9,6 +9,7 @@ import {
 
 export const initiateSocket = (server) => {
   try {
+    const connectedUsers = {};
     const io = new Server(server, {
       cors: {
         // origin: config.CLIENT_URL,
@@ -23,6 +24,7 @@ export const initiateSocket = (server) => {
       const userName = socket.decoded?.userName;
       if (userName) {
         socket.join(userName);
+        connectedUsers[userName] = socket.id;
         console.log(`User ${userName} joined room ${userName}`);
       }
       console.log(`A client has connected : ${socket.id}`);
@@ -30,13 +32,23 @@ export const initiateSocket = (server) => {
       socket.on("createConversation", async (data) => {
         // console.log("======> data from client", data);
 
-        const conversation = await createConversation(socket, data);
+        const result = await createConversation(socket, data);
+        console.log("Result", result);
 
-        // console.log("conversationn ==>", conversation);
+        const conversation = result?.conversation;
+
         if (conversation) {
-          socket.join(conversation.conversation.conversation_id);
+          socket.join(conversation.conversation_id);
+          socket.emit("createConversation", conversation);
+          const receiverId = conversation.receiver_id;
+          const receiverSocketId = connectedUsers[receiverId];
+          if (receiverSocketId) {
+            // Send the new conversation event to the receiver
+            io.to(receiverSocketId).emit("newConversation", conversation);
+          }
+        } else {
+          socket.emit("createConversation", null);
         }
-        socket.emit("createConversation", conversation);
       });
 
       socket.on("sendMessage", async (data) => {
@@ -52,11 +64,9 @@ export const initiateSocket = (server) => {
         }
       });
 
-      // Fetch all conversations for a user
       socket.on("getConversations", async () => {
         const conversations = await getConversations(socket);
 
-        // Emit the fetched conversations back to the client
         socket.emit("getConversations", conversations);
       });
 
@@ -64,11 +74,14 @@ export const initiateSocket = (server) => {
       socket.on("getChats", async (data) => {
         const chats = await getChats(socket, data);
         console.log(socket.decoded, "decoded");
-        // Emit the fetched chats back to the client
+
         io.to(socket.decoded.userName).emit("getChats", chats);
       });
 
       socket.on("disconnect", () => {
+        if (userName && connectedUsers[userName] === socket.id) {
+          delete connectedUsers[userName];
+        }
         console.log(`A client has disconnected : ${socket.id}`);
       });
     });
