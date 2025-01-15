@@ -1,4 +1,5 @@
 import React, { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { submitApplication } from "../services/applicationServices";
 
 const ApplicationForm = ({ listing_id, onBack }) => {
@@ -17,7 +18,9 @@ const ApplicationForm = ({ listing_id, onBack }) => {
   const [termsAccepted, setTermsAccepted] = useState(false);
   const [actAccepted, setActAccepted] = useState(false);
 
-  const isButtonDisabled = !(termsAccepted && actAccepted);
+  const [submitting, setSubmitting] = useState(false);
+  const navigate = useNavigate();
+  const isButtonDisabled = !(termsAccepted && actAccepted) || submitting;
 
   const handleFileChange = (e, key) => {
     const file = e.target.files[0];
@@ -66,6 +69,7 @@ const ApplicationForm = ({ listing_id, onBack }) => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    setSubmitting(true);
     const formPayload = new FormData();
     formPayload.append("listing_id", formData.listing_id);
     formPayload.append("full_name", formData.fullName);
@@ -83,18 +87,40 @@ const ApplicationForm = ({ listing_id, onBack }) => {
 
     console.log(formPayload);
     try {
-      const response = await submitApplication(formPayload, localStorage.getItem("accessToken"));
+      const response = await submitApplication(
+        formPayload,
+        localStorage.getItem("accessToken")
+      );
       console.log("Response:", response);
-      
+
       alert("Application submitted successfully!");
+      setSubmitting(false);
+      navigate("/myApplications"); // Redirect after successful submission
     } catch (error) {
-      console.error(error);
-      alert(error.response.data.error);
+      setSubmitting(false);
+      if (error.code === "ECONNABORTED") {
+        alert(
+          "Submission timed out, but your application might still be processed. Please check 'My Applications' for confirmation."
+        );
+      } else {
+        alert(
+          "Submission failed: " +
+            (error.response?.data?.error || "Unknown error")
+        );
+      }
     }
   };
 
   return (
     <div className="min-h-screen bg-gray-50 p-8 flex flex-col items-center">
+      {submitting && (
+        <div className="fixed inset-0 bg-gray-700 bg-opacity-50 flex items-center justify-center z-50">
+          <div className="spinner-border animate-spin inline-block w-8 h-8 border-4 rounded-full text-blue-500" />
+          <span className="ml-4 text-white font-semibold">
+            Submitting your application...
+          </span>
+        </div>
+      )}
       <h1 className="text-3xl font-bold text-gray-800 mb-6">
         Application Form
       </h1>
