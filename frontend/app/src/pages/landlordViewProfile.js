@@ -60,10 +60,10 @@ const LandlordViewProfile = () => {
         <div className="space-y-4">
           {/* Profile Picture */}
           <div className="flex justify-center mb-4">
-            {profile?.profile_picture_id ? (
+            {profile?.Media ? (
               <img
-                src={profile.profile_picture_id}
-                alt="Profile"
+              src={`https://fulda-student-hub.s3.eu-north-1.amazonaws.com/public/uploads/images/${profile.Media[0]?.mediaUrl}`}
+              alt="Profile"
                 className="w-24 h-24 rounded-full object-cover shadow-md"
               />
             ) : (
