@@ -1,3 +1,4 @@
+/* Deleting a property */
 import React, { useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import LandlordNavbar from '../../components/LandlordNavbar';
@@ -14,7 +15,7 @@ const DeleteProperty = () => {
       setError(null);
       
       const token = localStorage.getItem('accessToken');
-      const response = await fetch(`http://localhost:8000/api/v1/propertiesModule/${id}`, {
+      const response = await fetch(`http://localhost:8000/v1/propertiesModule/${id}`, {
         method: 'DELETE',
         headers: {
           'Authorization': `Bearer ${token}`
