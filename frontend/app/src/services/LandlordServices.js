@@ -1,83 +1,76 @@
-import axios from 'axios';
-// const BASE_URL = 'http://localhost:8000/api/v1';
-const BASE_URL = "http://localhost:8000/v1";
-//const BASE_URL = 'https://localhost:8000/api/v1/propertiesModule';
-
-//const BASE_URL = 'https://16.171.165.15/api/v1';
+import apiClient from "./apiClient";
 
 export const getProfileByUsername = async (userName) => {
   try {
-    const response = await axios.get(`/api/v1/profile/${userName}`, {
-      headers: {
-        Authorization: `Bearer ${localStorage.getItem('accessToken')}`,
-      },
+    const response = await apiClient.get(`/profile/${userName}`, {
+      requireToken: true,
     });
     return response.data;
   } catch (error) {
-    console.error('Error fetching profile by username:', error);
+    console.error("Error fetching profile by username:", error);
     throw error;
   }
 };
 
-export const fetchAllProperties = async (token) => {
-  const response = await fetch(`${BASE_URL}/propertiesModule/`, {
-    headers: { 
-      'Authorization': `Bearer ${token}`,
-      'Content-Type': 'application/json'
-    }
-  });
-  const data = await response.json();
-  return data;
-};
-
-
-
-export const fetchPropertyById = async (propertyId, token) => {
-  const response = await fetch(`${BASE_URL}/propertiesModule/${propertyId}`, {
-    headers: { 'Authorization': `Bearer ${token}` }
-  });
-  return response.json();
-};
-
-
-export const createProperty = async (formData, token) => {
+export const fetchAllProperties = async () => {
   try {
-    const response = await fetch(`${BASE_URL}/propertiesModule`, {
-      method: 'POST',
-      headers: {
-        'Authorization': `Bearer ${token}`
-      },
-      body: formData
+    const response = await apiClient.get("/propertiesModule/", {
+      requireToken: true,
     });
-    
-    if (!response.ok) {
-      const errorData = await response.json();
-      throw new Error(errorData.error || 'Failed to create property');
-    }
-    
-    return await response.json();
+    return response.data;
   } catch (error) {
-    console.error('Error creating property:', error);
+    console.error("Error fetching all properties:", error);
     throw error;
   }
 };
 
-export const updateProperty = async (propertyId, propertyData, token) => {
-  const response = await fetch(`${BASE_URL}/${propertyId}`, {
-    method: 'PUT',
-    headers: {
-      'Content-Type': 'application/json',
-      'Authorization': `Bearer ${token}`
-    },
-    body: JSON.stringify(propertyData)
-  });
-  return response.json();
+export const fetchPropertyById = async (propertyId) => {
+  try {
+    const response = await apiClient.get(`/propertiesModule/${propertyId}`, {
+      requireToken: true,
+    });
+    return response.data;
+  } catch (error) {
+    console.error("Error fetching property by ID:", error);
+    throw error;
+  }
 };
 
-export const deleteProperty = async (propertyId, token) => {
-  const response = await fetch(`${BASE_URL}/${propertyId}`, {
-    method: 'DELETE',
-    headers: { 'Authorization': `Bearer ${token}` }
-  });
-  return response.json();
+export const createProperty = async (formData) => {
+  try {
+    const response = await apiClient.post("/propertiesModule", formData, {
+      headers: {
+        "Content-Type": "multipart/form-data",
+      },
+      requireToken: true,
+    });
+    return response.data;
+  } catch (error) {
+    console.error("Error creating property:", error);
+    throw error;
+  }
+};
+
+export const updateProperty = async (propertyId, propertyData) => {
+  try {
+    const response = await apiClient.put(`/propertiesModule/${propertyId}`, propertyData, {
+      requireToken: true,
+    });
+    return response.data;
+  } catch (error) {
+    console.error("Error updating property:", error);
+    throw error;
+  }
+};
+
+export const deleteProperty = async (propertyId) => {
+  try {
+    const response = await apiClient.delete(`/propertiesModule/${propertyId}`, {
+      requireToken: true,
+    });
+    return response.data;
+  } catch (error) {
+    console.error("Error deleting property:", error);
+    throw error;
+  }
 };

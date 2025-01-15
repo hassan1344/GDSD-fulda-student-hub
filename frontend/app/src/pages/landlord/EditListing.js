@@ -1,11 +1,15 @@
+/* Edit Lisitng */
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import LandlordNavbar from '../../components/LandlordNavbar';
 import { fetchListingById, updateListing } from '../../services/ListingServices';
 
 const EditListing = () => {
-  const { id } = useParams();
-  const navigate = useNavigate();
+  const { id } = useParams();  //get listing id from url param
+  const navigate = useNavigate(); //navigation hook
+
+
+// State for listing data, form inputs, and UI feedback  
   const [listing, setListing] = useState(null);
   const [formData, setFormData] = useState({
     title: '',
@@ -21,6 +25,7 @@ const EditListing = () => {
   const [error, setError] = useState(null);
   const [visibleMedia, setVisibleMedia] = useState([]);
 
+// Fetch listing details on component mount
   useEffect(() => {
     const fetchListing = async () => {
       try {
@@ -46,7 +51,7 @@ const EditListing = () => {
     };
     fetchListing();
   }, [id]);
-
+// Handle input field changes
   const handleInputChange = (e) => {
     const { name, value } = e.target;
     setFormData((prev) => ({
@@ -54,11 +59,12 @@ const EditListing = () => {
       [name]: value
     }));
   };
-
+ // Handle file selection for new images
   const handleFileChange = (e) => {
     setFiles(Array.from(e.target.files));
   };
 
+  // Handle image deletion
   const handleImageDelete = async (mediaId) => {
     try {
       const token = localStorage.getItem('accessToken');
@@ -88,7 +94,8 @@ const EditListing = () => {
       setError('Failed to delete image');
     }
   };
-
+  
+  // Handle form submission
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {

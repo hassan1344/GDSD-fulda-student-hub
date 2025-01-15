@@ -1,14 +1,17 @@
+/* View Property */
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import LandlordNavbar from '../../components/LandlordNavbar';
 import { fetchAllProperties, fetchPropertyById } from '../../services/LandlordServices';
 
+/*  State to manage the properties list, loading status, and error messages */
 const ViewProperties = () => {
   const [properties, setProperties] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState(null);
   const navigate = useNavigate();
 
+/* Function to view a property by ID and navigate to the details page */
   const viewPropertyById = async (propertyId) => {
     try {
       const token = localStorage.getItem('accessToken');
@@ -23,14 +26,16 @@ const ViewProperties = () => {
     }
   };
 
+/* Function to handle deleting a property by ID  */
   const handleDelete = async (propertyId) => {
     if (window.confirm('Are you sure you want to delete this property?')) {
       try {
         const token = localStorage.getItem('accessToken');
-        const response = await fetch(`http://localhost:8000/api/v1/propertiesModule/${propertyId}`, {
+/* API call to delete the property from DB*/
+        const response = await fetch(`http://localhost:8000/v1/propertiesModule/${propertyId}`, {
           method: 'DELETE',
           headers: {
-            'Authorization': `Bearer ${token}`
+            'Authorization': `Bearer ${token}`   //Token for authorization
           }
         });
 
@@ -46,11 +51,12 @@ const ViewProperties = () => {
     }
   };
 
+  /* useEffect hook to fetch all properties when the component is mounted */
   useEffect(() => {
     const fetchProperties = async () => {
-      const token = localStorage.getItem('accessToken');
+      const token = localStorage.getItem('accessToken');  //got access token
       try {
-        const data = await fetchAllProperties(token);
+        const data = await fetchAllProperties(token);  //will get properties on success
         if (data.success) {
           setProperties(data.data);
         } else {
@@ -59,7 +65,7 @@ const ViewProperties = () => {
       } catch (error) {
         setError('Error fetching properties. Please try again later.');
       } finally {
-        setIsLoading(false);
+        setIsLoading(false);    //break loading process
       }
     };
     fetchProperties();

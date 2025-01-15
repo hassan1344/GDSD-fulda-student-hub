@@ -1,11 +1,15 @@
+/* Edit Property Page "View Property" > "Edit Property" OR "Delete Property" */
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import LandlordNavbar from '../../components/LandlordNavbar';
 import { fetchPropertyById, updateProperty } from '../../services/LandlordServices';
 
+
 const EditProperty = () => {
+/* Extract property ID from URL parameters using useParams hook  */
   const { id } = useParams();
   const navigate = useNavigate();
+/* Local state variables to hold property data, loading state, and error messages */
   const [property, setProperty] = useState(null);
   const [address, setAddress] = useState('');
   const [amenities, setAmenities] = useState([]);
@@ -16,6 +20,8 @@ const EditProperty = () => {
   const [newAmenity, setNewAmenity] = useState({ name: '', value: '' });
   const [displayedImages, setDisplayedImages] = useState([]);
 
+
+ /* Fetch property details when the component mounts or when 'id' changes */
   useEffect(() => {
     const fetchProperty = async () => {
       const token = localStorage.getItem('accessToken');
@@ -36,8 +42,9 @@ const EditProperty = () => {
       }
     };
     fetchProperty();
-  }, [id]);
+  }, [id]);   // Dependency on 'id' ensures it fetches data whenever the ID changes
 
+/* Add a new amenity to the amenities list */
   const handleAddAmenity = () => {
     if (newAmenity.name && newAmenity.value) {
       setAmenities([...amenities, {
@@ -47,7 +54,7 @@ const EditProperty = () => {
       setNewAmenity({ name: '', value: '' });
     }
   };
-
+/* Remove an amenity from the amenities list */
   const handleRemoveAmenity = (index) => {
     setAmenities(amenities.filter((_, i) => i !== index));
   };
@@ -61,22 +68,22 @@ const EditProperty = () => {
       setIsLoading(true);
       const token = localStorage.getItem('accessToken');
       
-      // Create FormData with all required fields
+      // Create FormData with all required fields to delete image
       const formData = new FormData();
       formData.append('address', address);
       formData.append('amenities', JSON.stringify(amenities));
-      formData.append('imagesToDelete[]', mediaId); // Changed from JSON string to direct value
+      formData.append('imagesToDelete[]', mediaId); //  add mediaId to formdata.
   
-      const response = await fetch(`http://localhost:8000/api/v1/propertiesModule/${id}`, {
+      const response = await fetch(`http://localhost:8000/v1/propertiesModule/${id}`, {
         method: 'PUT',
         headers: {
           'Authorization': `Bearer ${token}`
         },
-        body: formData
+        body: formData   // Send FormData as the request body
       });
   
-      const data = await response.json();
-      
+      const data = await response.json();  // Parse the response
+       
       if (data.success) {
         // Update the UI only after successful deletion
         setDisplayedImages(prev => prev.filter(img => img.media_id !== mediaId));
@@ -96,29 +103,30 @@ const EditProperty = () => {
     }
   };
   
-
+  /* Handle form submission to update property details */
   const handleSubmit = async (e) => {
     e.preventDefault();
     setIsLoading(true);
     setError(null);
 
     try {
+/* Prepare FormData with the updated property details */      
       const formData = new FormData();
       formData.append('address', address);
       formData.append('amenities', JSON.stringify(amenities));
-      
+// delete image, if any      
       if (imagesToDelete.length > 0) {
         formData.append('imagesToDelete', JSON.stringify(imagesToDelete));
       }
-
+// images append, if any
       if (newMedia.length > 0) {
         newMedia.forEach((file) => {
           formData.append('media[]', file);
         });
       }
-
+// Retrieve token yes
       const token = localStorage.getItem('accessToken');
-      const response = await fetch(`http://localhost:8000/api/v1/propertiesModule/${id}`, {
+      const response = await fetch(`http://localhost:8000/v1/propertiesModule/${id}`, {
         method: 'PUT',
         headers: {
           'Authorization': `Bearer ${token}`
@@ -131,17 +139,17 @@ const EditProperty = () => {
       if (data.success) {
         navigate('/landlord/my-listings');
       } else {
-        setError(data.error || 'Failed to update property');
+        setError(data.error || 'Failed to update property');   //set error if update fails
       }
     } catch (err) {
       console.error('Update error:', err);
-      setError('Failed to update property');
+      setError('Failed to update property');    //error state
     } finally {
       setIsLoading(false);
     }
   };
 
-  if (!property) {
+  if (!property) {  //if property data is not available (solved)
     return <div className="text-center mt-8">Loading...</div>;
   }
 

@@ -1,97 +1,76 @@
-const BASE_URL = 'http://localhost:8000/api/v1/listingsModule';
+import apiClient from "./apiClient";
 
-
-export const fetchLandlordDetails = async (userName) => {
+export const fetchLandlordDetails = async () => {
   try {
-    const token = localStorage.getItem('accessToken');
-    const response = await fetch(`http://localhost:8000/api/v1/landlordModule/profile`, {
-      headers: { 
-        'Authorization': `Bearer ${token}`,
-        'Content-Type': 'application/json'
-      }
+    const response = await apiClient.get("/landlordModule/profile", {
+      requireToken: true,
     });
-    
-    if (!response.ok) {
-      throw new Error('Failed to fetch landlord details');
-    }
-    
-    return await response.json();
+    return response.data;
   } catch (error) {
-    console.error('Error in fetchLandlordDetails:', error);
+    console.error("Error in fetchLandlordDetails:", error);
     throw error;
   }
 };
 
-
-export const fetchAllListings = async (token) => {
-  const response = await fetch(`${BASE_URL}/`, {
-    headers: { 
-      'Authorization': `Bearer ${token}`,
-      'Content-Type': 'application/json'
-    }
-  });
-  return response.json();
-};
-
-
-export const fetchListingById = async (listingId, token) => {
-  const response = await fetch(`${BASE_URL}/${listingId}`, {
-    headers: { 'Authorization': `Bearer ${token}` }
-  });
-  return response.json();
-};
-
-export const createListing = async (formData, token) => {
+export const fetchAllListings = async () => {
   try {
-    const response = await fetch(BASE_URL, {
-      method: 'POST',
+    const response = await apiClient.get("/listingsModule/", {
+      requireToken: true,
+    });
+    return response.data;
+  } catch (error) {
+    console.error("Error fetching all listings:", error);
+    throw error;
+  }
+};
+
+export const fetchListingById = async (listingId) => {
+  try {
+    const response = await apiClient.get(`/listingsModule/${listingId}`, {
+      requireToken: true,
+    });
+    return response.data;
+  } catch (error) {
+    console.error("Error fetching listing by ID:", error);
+    throw error;
+  }
+};
+
+export const createListing = async (formData) => {
+  try {
+    const response = await apiClient.post("/listingsModule", formData, {
       headers: {
-        'Authorization': `Bearer ${token}`
+        "Content-Type": "multipart/form-data",
       },
-      body: formData
+      requireToken: true,
     });
-    
-    if (!response.ok) {
-      const errorData = await response.json();
-      throw new Error(errorData.error || 'Failed to create listing');
-    }
-    
-    return await response.json();
+    return response.data;
   } catch (error) {
-    console.error('Error creating listing:', error);
+    console.error("Error creating listing:", error);
     throw error;
   }
 };
 
-export const updateListing = async (listingId, listingData, token) => {
+export const updateListing = async (listingId, listingData) => {
   try {
-    const response = await fetch(`${BASE_URL}/${listingId}`, {
-      method: 'PUT',
-      headers: {
-        'Authorization': `Bearer ${token}`
-        // Don't set Content-Type for FormData
-      },
-      body: listingData
+    const response = await apiClient.put(`/listingsModule/${listingId}`, listingData, {
+      requireToken: true,
     });
-
-    if (!response.ok) {
-      const errorData = await response.json();
-      throw new Error(errorData.message || `HTTP error! status: ${response.status}`);
-    }
-
-    const result = await response.json();
-    console.log('Update response:', result);
-    return result;
+    return response.data;
   } catch (error) {
-    console.error('Error in updateListing:', error);
+    console.error("Error updating listing:", error);
     throw error;
   }
 };
 
-export const deleteListing = async (listingId, token) => {
-  const response = await fetch(`${BASE_URL}/${listingId}`, {
-    method: 'DELETE',
-    headers: { 'Authorization': `Bearer ${token}` }
-  });
-  return response.json();
+export const deleteListing = async (listingId) => {
+  try {
+    const response = await apiClient.delete(`/listingsModule/${listingId}`, {
+      requireToken: true,
+    });
+    return response.data;
+  } catch (error) {
+    console.error("Error deleting listing:", error);
+    throw error;
+  }
 };
