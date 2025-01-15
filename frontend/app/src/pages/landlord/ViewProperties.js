@@ -32,7 +32,7 @@ const ViewProperties = () => {
       try {
         const token = localStorage.getItem('accessToken');
 /* API call to delete the property from DB*/
-        const response = await fetch(`http://localhost:8000/v1/propertiesModule/${propertyId}`, {
+        const response = await fetch(`https://fulda-student-hub.publicvm.com/api/v1/propertiesModule/${propertyId}`, {
           method: 'DELETE',
           headers: {
             'Authorization': `Bearer ${token}`   //Token for authorization

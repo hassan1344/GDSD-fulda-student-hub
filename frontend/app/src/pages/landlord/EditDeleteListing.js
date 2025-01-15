@@ -74,7 +74,7 @@ const EditProperty = () => {
       formData.append('amenities', JSON.stringify(amenities));
       formData.append('imagesToDelete[]', mediaId); //  add mediaId to formdata.
   
-      const response = await fetch(`http://localhost:8000/v1/propertiesModule/${id}`, {
+      const response = await fetch(`https://fulda-student-hub.publicvm.com/api/v1/propertiesModule/${id}`, {
         method: 'PUT',
         headers: {
           'Authorization': `Bearer ${token}`
@@ -126,7 +126,7 @@ const EditProperty = () => {
       }
 // Retrieve token yes
       const token = localStorage.getItem('accessToken');
-      const response = await fetch(`http://localhost:8000/v1/propertiesModule/${id}`, {
+      const response = await fetch(`https://fulda-student-hub.publicvm.com/api/v1/propertiesModule/${id}`, {
         method: 'PUT',
         headers: {
           'Authorization': `Bearer ${token}`

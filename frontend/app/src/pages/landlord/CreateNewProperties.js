@@ -58,7 +58,7 @@ try {
     }}
 
     const token = localStorage.getItem('accessToken');
-    const response = await fetch('http://localhost:8000/v1/propertiesModule', {
+    const response = await fetch('https://fulda-student-hub.publicvm.com/api/v1/propertiesModule', {
         method: 'POST',
         headers: {
           'Authorization': `Bearer ${token}`
