@@ -1,63 +1,64 @@
+/* Create New Property Page */
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import LandlordNavbar from '../../components/LandlordNavbar';
 import { createProperty } from '../../services/LandlordServices';
 
+/* State management for form inputs and UI feedback  */
 const CreateNewProperties = () => {
-  const [address, setAddress] = useState('');
-  const [amenities, setAmenities] = useState([]);
-  const [media, setMedia] = useState([]);
-  const [acceptedTerms, setAcceptedTerms] = useState(false);
-  const [isLoading, setIsLoading] = useState(false);
-  const [error, setError] = useState(null);
-  const [success, setSuccess] = useState(false);
-  const [newAmenity, setNewAmenity] = useState({ name: '', value: '' });
-  const navigate = useNavigate();
+    const [address, setAddress] = useState('');
+    const [amenities, setAmenities] = useState([]);
+    const [media, setMedia] = useState([]);
+    const [acceptedTerms, setAcceptedTerms] = useState(false);
+    const [isLoading, setIsLoading] = useState(false);
+    const [error, setError] = useState(null);
+    const [success, setSuccess] = useState(false);
+    const [newAmenity, setNewAmenity] = useState({ name: '', value: '' });
+    const navigate = useNavigate();
 
-  const handleAddAmenity = () => {
-    if (newAmenity.name && newAmenity.value) {
-      setAmenities([...amenities, {
-        amenity_name: newAmenity.name,
-        amenity_value: newAmenity.value
-      }]);
-      setNewAmenity({ name: '', value: '' });
-    }
-  };
+/* Add new amenity to the amenities list */    
+const handleAddAmenity = () => {
+if (newAmenity.name && newAmenity.value) {
+  setAmenities([...amenities, {
+  amenity_name: newAmenity.name,
+  amenity_value: newAmenity.value
+  }]);
+  setNewAmenity({ name: '', value: '' });
+  }};
 
+/* Remove amenity by index */  
   const handleRemoveAmenity = (index) => {
     setAmenities(amenities.filter((_, i) => i !== index));
   };
-
+/*  Handle file input for property images */
   const handleMediaChange = (e) => {
     const files = Array.from(e.target.files);
     setMedia(files);
   };
-
+/*----------------------------------*/  
+/* Handle form submission */
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (!acceptedTerms) {
       setError('Please accept the Terms and Conditions');
       return;
     }
-  
     setIsLoading(true);
     setError(null);
     setSuccess(false);
   
-    try {
-      const formData = new FormData();
-      formData.append('address', address);
-      formData.append('amenities', JSON.stringify(amenities));
-      
-      // Append files with 'media[]' as per multer configuration
-      if (media && media.length > 0) {
-        for (let i = 0; i < media.length; i++) {
-          formData.append('media[]', media[i]);
-        }
-      }
-  
-      const token = localStorage.getItem('accessToken');
-      const response = await fetch('http://localhost:8000/api/v1/propertiesModule', {
+try {
+    const formData = new FormData();
+    formData.append('address', address);
+    formData.append('amenities', JSON.stringify(amenities));
+
+    if (media && media.length > 0) {
+    for (let i = 0; i < media.length; i++) {
+      formData.append('media[]', media[i]);
+    }}
+
+    const token = localStorage.getItem('accessToken');
+    const response = await fetch('http://localhost:8000/v1/propertiesModule', {
         method: 'POST',
         headers: {
           'Authorization': `Bearer ${token}`
@@ -65,13 +66,10 @@ const CreateNewProperties = () => {
         body: formData
       });
   
-      const data = await response.json();
-      
+    const data = await response.json();
       if (data.success) {
         setSuccess(true);
-        setTimeout(() => {
-          navigate('/landlord/my-listings');
-        }, 2000);
+        setTimeout(() => { navigate('/landlord/my-listings');}, 2000);
       } else {
         throw new Error(data.error || 'Failed to create property');
       }
@@ -93,7 +91,8 @@ const CreateNewProperties = () => {
         <form onSubmit={handleSubmit} className="bg-white shadow-lg rounded-lg p-8 max-w-2xl mx-auto">
           {error && <div className="text-red-500 mb-4 text-center">{error}</div>}
           {success && <div className="text-green-500 mb-4 font-bold text-center">Property created successfully! Redirecting...</div>}
-          
+
+ {/* Property Address Input */}         
           <div className="mb-6">
             <label className="block text-gray-700 text-sm font-bold mb-2">Property Address *</label>
             <input
@@ -106,6 +105,7 @@ const CreateNewProperties = () => {
             />
           </div>
 
+{/* Amenities Input Section */}
           <div className="mb-6">
             <label className="block text-gray-700 text-sm font-bold mb-2">Add Amenities</label>
             <div className="flex gap-2 mb-2">
@@ -128,10 +128,9 @@ const CreateNewProperties = () => {
                 onClick={handleAddAmenity}
                 className="bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700"
               >
-                Add
+              Add
               </button>
             </div>
-
             <div className="space-y-2">
               {amenities.map((amenity, index) => (
                 <div key={index} className="flex items-center justify-between bg-gray-50 p-2 rounded">
@@ -141,13 +140,14 @@ const CreateNewProperties = () => {
                     onClick={() => handleRemoveAmenity(index)}
                     className="text-red-500 hover:text-red-700"
                   >
-                    Remove
+                  Remove
                   </button>
                 </div>
               ))}
             </div>
           </div>
 
+{/* Media Upload Section */}
           <div className="mb-6">
             <label className="block text-gray-700 text-sm font-bold mb-2">Property Images</label>
             <input
@@ -176,6 +176,7 @@ const CreateNewProperties = () => {
             </label>
           </div>
 
+{/* Submit Button */}
           <button
             type="submit"
             disabled={isLoading}

@@ -1,10 +1,13 @@
+/* Create a New listing  "My Listing" > "Create New Listing" */
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import LandlordNavbar from '../../components/LandlordNavbar';
 import { createListing } from '../../services/ListingServices';
 
-const CreateListing = () => {
+  const CreateListing = () => {
   const navigate = useNavigate();
+
+/*state to manage form inputs */
   const [formData, setFormData] = useState({
     title: '',
     description: '',
@@ -13,13 +16,13 @@ const CreateListing = () => {
     room_type_id: '',
     property_id: ''
   });
+// State variables  
   const [files, setFiles] = useState([]);
   const [properties, setProperties] = useState([]);
   const [error, setError] = useState(null);
   const [isLoading, setIsLoading] = useState(false);
 
-  // take fro-----------------------------------
-  
+// Room type : static   
   const roomTypes = [
     { id: '4d5e6f7g-8h9i-0j1k-2l3m-4n5o6p7q8r9s', name: 'Loft' },
     { id: '1a2b3c4d-5e6f-7g8h-9i0j-1k2l3m4n5o6p', name: 'Studio Apartment'},
@@ -29,11 +32,12 @@ const CreateListing = () => {
     { id: '5e6f7g8h-9i0j-1k2l-3m4n-5o6p7q8r9s0t', name: 'Penthouse'}
   ];
 
+// Fetch available properties from the backend
   useEffect(() => {
     const fetchProperties = async () => {
       try {
         const token = localStorage.getItem('accessToken');
-        const response = await fetch('http://localhost:8000/api/v1/propertiesModule/', {
+        const response = await fetch('http://localhost:8000/v1/propertiesModule/', {
           headers: {
             'Authorization': `Bearer ${token}`,
             'Content-Type': 'application/json'
@@ -50,6 +54,7 @@ const CreateListing = () => {
     fetchProperties();
   }, []);
 
+// Handle changes in form inputs
   const handleInputChange = (e) => {
     const { name, value } = e.target;
     setFormData(prev => ({
@@ -57,11 +62,11 @@ const CreateListing = () => {
       [name]: value
     }));
   };
-
+ // Handle file input changes
   const handleFileChange = (e) => {
     setFiles(Array.from(e.target.files));
   };
-
+// Handle form submission
   const handleSubmit = async (e) => {
     e.preventDefault();
     setIsLoading(true);
@@ -76,11 +81,11 @@ const CreateListing = () => {
     try {
       const token = localStorage.getItem('accessToken');
       const submitData = new FormData();
-
+// Append form data to FormData object
       Object.keys(formData).forEach(key => {
         if (formData[key]) submitData.append(key, formData[key]);
       });
-
+// Append selected images
       files.forEach(file => {
         submitData.append('media[]', file);
       });
