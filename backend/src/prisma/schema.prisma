@@ -8,40 +8,35 @@ datasource db {
 }
 
 model Landlord {
-  landlord_id        String     @id @default(uuid())
-  trust_score        Int        @default(0)
-  created_at         DateTime   @default(now())
-  updated_at         DateTime   @updatedAt
-  user_id            String     @unique
-  address            String
-  first_name         String
-  last_name          String
-  phone_number       String     @unique
-  profile_picture_id String?
-  user               User       @relation(fields: [user_id], references: [user_name])
-  Property           Property[]
-
-  profile_picture Media? @relation(fields: [profile_picture_id], references: [media_id])
+  landlord_id  String     @id @default(uuid())
+  trust_score  Int        @default(0)
+  created_at   DateTime   @default(now())
+  updated_at   DateTime   @updatedAt
+  user_id      String     @unique
+  address      String
+  first_name   String
+  last_name    String
+  phone_number String     @unique
+  user         User       @relation(fields: [user_id], references: [user_name])
+  Property     Property[]
 
   @@index([user_id], map: "landlord_user_id_fkey")
   @@map("landlord")
 }
 
 model Student {
-  student_id         String   @id @default(uuid())
-  first_name         String
-  last_name          String
-  university         String
-  email_verified     Boolean  @default(false)
-  profile_picture_id String?
-  student_id_number  String
-  phone_number       String
-  created_at         DateTime @default(now())
-  updated_at         DateTime @updatedAt
-  user_id            String   @unique
+  student_id        String   @id @default(uuid())
+  first_name        String
+  last_name         String
+  university        String
+  email_verified    Boolean  @default(false)
+  student_id_number String
+  phone_number      String
+  created_at        DateTime @default(now())
+  updated_at        DateTime @updatedAt
+  user_id           String   @unique
 
-  user            User   @relation(fields: [user_id], references: [user_name])
-  profile_picture Media? @relation(fields: [profile_picture_id], references: [media_id])
+  user User @relation(fields: [user_id], references: [user_name])
 
   @@map("student")
 }
@@ -110,17 +105,15 @@ model RoomType {
 }
 
 model Media {
-  media_id       String     @id @default(uuid())
+  media_id       String   @id @default(uuid())
   model_name     String
   model_id       String
   media_url      String
   media_type     String
   media_category String //  (profile_picture, property_image, document, etc.)
   identifier     String? //  (government_id, enrolment_certificate)
-  created_at     DateTime   @default(now())
-  updated_at     DateTime   @updatedAt
-  Landlord       Landlord[]
-  Student        Student[]
+  created_at     DateTime @default(now())
+  updated_at     DateTime @updatedAt
 
   @@map("media")
 }

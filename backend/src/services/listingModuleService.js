@@ -141,6 +141,49 @@ export const createListing = async (req, res) => {
     }
   };
   
+  export const getListingsForAllUsers = async (req, res) => {
+    try {
+      const listings = await prisma.listing.findMany({
+        include: {
+          property: {
+            include: {
+              landlord: true, // Include landlord details
+            },
+          },
+          room_type: true, // Include room_type details
+        },
+      });
+
+      const listingsWithMedia = await Promise.all(
+        listings.map(async (listing) => {
+          const listingMedia = await prisma.media.findMany({
+            where: {
+              model_name: 'listing',
+              model_id: listing.listing_id,
+            },
+          });
+          const propertyWithMedia = await prisma.media.findMany({
+            where: {
+              model_name: 'property',
+              model_id: listing.property.property_id
+            }
+          })
+          listing.property = {...listing.property, media: propertyWithMedia}
+          return { ...listing, media: listingMedia };
+        })
+      );
+  
+      return res.status(200).json({
+        success: true,
+        message: "Listings retrieved successfully",
+        data: listingsWithMedia,
+      });
+    } catch (error) {
+      console.error("Error retrieving listings:", error);
+      res.status(500).json({ success: false, error: "An unexpected error occurred while retrieving listings" });
+    }
+  }
+
   export const getListingById = async (req, res) => {
     try {
       if (!req.user || !req.user.userName) {

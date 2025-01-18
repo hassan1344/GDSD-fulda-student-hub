@@ -35,11 +35,27 @@ export const getProfile = async (req, res) => {
   }
 };
 
+export const getAllProfiles = async (req, res) => {
+  try {
+    const users = await prisma.user.findMany({
+      include: {
+        Landlord: true, // Include Landlord details (if available)
+        Student: true,  // Include Student details (if available)
+      },
+    });
+
+    return res.json(users);
+  } catch (error) {
+    console.error('Error fetching users:', error);
+    throw error;
+  }
+}
+
 // Create user details
 export const createProfile = async (req, res) => {
   try {
     const { userName, userType } = req.user;
-    const { firstName, lastName, phoneNumber, address, profilePicture, university, studentIdNumber, emailVerified, trustScore } = req.body;
+    const { firstName, lastName, phoneNumber, address, university, studentIdNumber, emailVerified, trustScore } = req.body;
 
     const mediaEntries = [];
     let modelId, newProfile;
@@ -50,7 +66,6 @@ export const createProfile = async (req, res) => {
           first_name: firstName,
           last_name: lastName,
           phone_number: phoneNumber,
-          profile_picture_id: profilePicture,
           university,
           student_id_number: studentIdNumber,
           email_verified: emailVerified === "true" ? true : false,
@@ -66,7 +81,6 @@ export const createProfile = async (req, res) => {
           last_name: lastName,
           phone_number: phoneNumber,
           address,
-          profile_picture_id: profilePicture,
           trust_score: parseInt(trustScore)
         },
       });
@@ -95,7 +109,6 @@ export const updateProfile = async (req, res) => {
     lastName && (updates.last_name = lastName);
     phoneNumber && (updates.phone_number = phoneNumber);
     address && (updates.address = address);
-    profilePicture && (updates.profile_picture_id = profilePicture);
     university && (updates.university = university);
     studentIdNumber && (updates.student_id_number = studentIdNumber);
     emailVerified && (updates.email_verified = emailVerified);

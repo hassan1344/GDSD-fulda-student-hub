@@ -62,6 +62,41 @@ export const getAllProperties = async (req, res) => {
   }
 };
 
+export const getPropertiesForAllUsers = async (req, res) => {
+  try {
+    const properties = await prisma.property.findMany({
+      include: {
+        landlord: true
+      }
+    });
+
+    const propertiesWithMedia = await Promise.all(
+      properties.map(async (property) => {
+        const media = await prisma.media.findMany({
+          where: {
+            model_id: property.property_id,
+            model_name: "property", // Ensure it is related to a property
+          },
+        });
+
+        return {
+          ...property,
+          Media: media.map((media) => ({
+            mediaUrl: media.media_url,
+            mediaType: media.media_type,
+          })),
+        };
+      })
+    );
+    return res.status(200).json(propertiesWithMedia);
+  } catch(error) {
+    res.status(500).json({ 
+      success: false, 
+      error: "An unexpected error occurred while retrieving properties" 
+    });
+  }
+}
+
 export const getPropertyById = async (req, res) => {
   const { id } = req.params;
   try {

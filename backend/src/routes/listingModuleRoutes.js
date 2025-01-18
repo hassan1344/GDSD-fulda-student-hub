@@ -7,7 +7,8 @@ import {
     getListingById,
     updateListing,
     deleteListing,
-    getRoomTypes
+    getRoomTypes,
+    getListingsForAllUsers
   } from '../services/listingModuleService.js';
 
 const router = Router();
@@ -24,6 +25,7 @@ const upload = multer({
 // Route for creating a listing with file uploads
 router.post("/", authenticateLandlord, upload.array("media[]", 5), createListing);
 router.get('/', authenticateLandlord, getAllListings);
+router.get('/all', getListingsForAllUsers);
 router.get('/room-types', getRoomTypes);
 router.get('/:id', authenticateLandlord, getListingById);
 router.put('/:id', authenticateLandlord, upload.array("media[]", 5), updateListing);
