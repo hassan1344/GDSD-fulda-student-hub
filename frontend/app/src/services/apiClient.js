@@ -3,9 +3,9 @@ import { jwtDecode } from "jwt-decode";
 import { logoutUser } from "./authServices";
 
 const apiClient = axios.create({
-  // baseURL: "http://localhost:8000/api/v1",
-  baseURL: "http://localhost:8000/v1",
-  timeout: 10000,
+   baseURL: "http://localhost:8000/v1/",
+ // baseURL: "https://fulda-student-hub.publicvm.com/api/v1",
+  timeout: 30000,
 });
 
 let isRefreshing = false; // Tracks ongoing refresh requests
@@ -48,12 +48,10 @@ apiClient.interceptors.response.use(
             throw new Error("No refresh token available.");
           }
 
-          const response = await apiClient.post("/auth/refresh-token",
-            {
-              userName,
-              refreshToken,
-            }
-          );
+          const response = await apiClient.post("/auth/refresh-token", {
+            userName,
+            refreshToken,
+          });
 
           const { accessToken: newAccessToken } = response.data;
 

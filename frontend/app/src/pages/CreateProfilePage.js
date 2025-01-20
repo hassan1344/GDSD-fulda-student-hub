@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { createProfile } from "../services/profileServices";
+import Disclaimer from "../components/Disclaimer";
 
 const CreateProfilePage = () => {
   const navigate = useNavigate();
@@ -18,6 +19,7 @@ const CreateProfilePage = () => {
     ...(userType === "STUDENT"
       ? { university: "", studentIdNumber: "" }
       : { address: "" }),
+    profilePic: null,
   });
 
   const [notification, setNotification] = useState({
@@ -37,24 +39,32 @@ const CreateProfilePage = () => {
     setTimeout(() => setNotification({ message: "", visible: false }), 3000);
   };
 
+  const handleFileChange = (e) => {
+    setFormData({ ...formData, profilePic: e.target.files[0] });
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     setLoading(true);
 
     try {
-      const payload = {
-        userName,
-        firstName: formData.firstName,
-        lastName: formData.lastName,
-        phoneNumber: formData.phoneNumber,
-        ...(userType === "STUDENT"
-          ? {
-              university: formData.university,
-              studentIdNumber: formData.studentIdNumber,
-              emailVerified: true,
-            }
-          : { address: formData.address, trustScore: 0 }), // Default trustScore for landlords
-      };
+      const payload = new FormData();
+
+      payload.append("userName", userName);
+      payload.append("firstName", formData.firstName);
+      payload.append("lastName", formData.lastName);
+      payload.append("phoneNumber", formData.phoneNumber);
+      if (userType === "STUDENT") {
+        payload.append("university", formData.university);
+        payload.append("studentIdNumber", formData.studentIdNumber);
+        payload.append("emailVerified", "true");
+      } else {
+        payload.append("address", formData.address);
+        payload.append("trustScore", 0); // Default trustScore for landlords
+      }
+      if (formData.profilePic) {
+        payload.append("profile_pic", formData.profilePic);
+      }
 
       console.log(payload, accessToken);
 
@@ -63,9 +73,9 @@ const CreateProfilePage = () => {
       showNotification("Profile created successfully!");
       setTimeout(() => {
         if (userType === "STUDENT") {
-          navigate("/Home", {replace: true});
+          navigate("/Home", { replace: true });
         } else if (userType === "LANDLORD") {
-          navigate("/landlord", {replace: true});
+          navigate("/landlord", { replace: true });
         }
       }, 2000); // Redirect after success
     } catch (error) {
@@ -99,6 +109,18 @@ const CreateProfilePage = () => {
         )}
 
         <form onSubmit={handleSubmit} className="space-y-4">
+          <div>
+            <label className="block text-gray-700 font-semibold mb-1">
+              Profile Picture
+            </label>
+            <input
+              type="file"
+              accept="image/jpeg,image/jpg,image/png,image/gif,image/avif"
+              onChange={handleFileChange}
+              className="w-full border rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-green-400"
+            />
+          </div>
+
           <div>
             <label className="block text-gray-700 font-semibold mb-1">
               First Name
@@ -205,6 +227,11 @@ const CreateProfilePage = () => {
           </button>
         </form>
       </div>
+
+      <div className="mt-8">
+        <Disclaimer/>
+      </div>
+
     </div>
   );
 };

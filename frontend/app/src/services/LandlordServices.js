@@ -63,6 +63,7 @@ export const updateProperty = async (propertyId, propertyData) => {
   }
 };
 
+
 export const deleteProperty = async (propertyId) => {
   try {
     const response = await apiClient.delete(`/propertiesModule/${propertyId}`, {

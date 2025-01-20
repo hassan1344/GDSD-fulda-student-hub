@@ -2,7 +2,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import LandlordNavbar from '../../components/LandlordNavbar';
-import { createListing } from '../../services/ListingServices';
+import { createListing, fetchAllListings } from '../../services/ListingServices';
 
   const CreateListing = () => {
   const navigate = useNavigate();
@@ -31,28 +31,38 @@ import { createListing } from '../../services/ListingServices';
     { id: '6f7g8h9i-0j1k-2l3m-4n5o-6p7q8r9s0t1u', name: 'Maisonette' },
     { id: '5e6f7g8h-9i0j-1k2l-3m4n-5o6p7q8r9s0t', name: 'Penthouse'}
   ];
-
-// Fetch available properties from the backend
+/*Fetch available properties from the backend
   useEffect(() => {
     const fetchProperties = async () => {
       try {
         const token = localStorage.getItem('accessToken');
-        const response = await fetch('http://localhost:8000/v1/propertiesModule/', {
-          headers: {
-            'Authorization': `Bearer ${token}`,
-            'Content-Type': 'application/json'
-          }
-        });
+        const response = await fetch('http://localhost:8000/v1/propertiesModule', { 
+        const response = await fetch('https://fulda-student-hub.publicvm.com/api/v1/propertiesModule/', {
+          headers: {   'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' }});
         const data = await response.json();
         if (data.success) {
-          setProperties(data.data);
-        }
-      } catch (error) {
+        setProperties(data.data);
+        }} catch (error) {
         setError('Error fetching properties');
-      }
-    };
-    fetchProperties();
-  }, []);
+      }};
+    fetchProperties();},[]);
+*/
+
+/*Fetch available listings from the backend*/ 
+useEffect(() => {
+  const fetchProperties = async () => {
+    try {
+      const propertiesData = await fetchAllListings();
+      setProperties(propertiesData);
+    } catch (error) {
+      setError('Error fetching properties');
+    }
+  };
+  fetchProperties();
+}, []);
+
+//------------------------------
+
 
 // Handle changes in form inputs
   const handleInputChange = (e) => {

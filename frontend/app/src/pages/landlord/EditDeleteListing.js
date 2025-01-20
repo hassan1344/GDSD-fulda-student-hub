@@ -9,6 +9,7 @@ const EditProperty = () => {
 /* Extract property ID from URL parameters using useParams hook  */
   const { id } = useParams();
   const navigate = useNavigate();
+
 /* Local state variables to hold property data, loading state, and error messages */
   const [property, setProperty] = useState(null);
   const [address, setAddress] = useState('');
@@ -35,12 +36,10 @@ const EditProperty = () => {
             amenity_name: pa.Amenity.amenity_name,
             amenity_value: pa.Amenity.amenity_value
           })));
-          setDisplayedImages(data.data.media || []);
-        }
-      } catch (error) {
+        setDisplayedImages(data.data.media || []);
+        }} catch (error) {
         setError('Error fetching property details');
-      }
-    };
+      }};
     fetchProperty();
   }, [id]);   // Dependency on 'id' ensures it fetches data whenever the ID changes
 
@@ -52,55 +51,19 @@ const EditProperty = () => {
         amenity_value: newAmenity.value
       }]);
       setNewAmenity({ name: '', value: '' });
-    }
-  };
+    }};
 /* Remove an amenity from the amenities list */
   const handleRemoveAmenity = (index) => {
     setAmenities(amenities.filter((_, i) => i !== index));
   };
 
   const handleMediaChange = (e) => {
-    setNewMedia(Array.from(e.target.files));
+  setNewMedia(Array.from(e.target.files));
   };
-
-  const handleImageDelete = async (mediaId) => {
-    try {
-      setIsLoading(true);
-      const token = localStorage.getItem('accessToken');
-      
-      // Create FormData with all required fields to delete image
-      const formData = new FormData();
-      formData.append('address', address);
-      formData.append('amenities', JSON.stringify(amenities));
-      formData.append('imagesToDelete[]', mediaId); //  add mediaId to formdata.
-  
-      const response = await fetch(`http://localhost:8000/v1/propertiesModule/${id}`, {
-        method: 'PUT',
-        headers: {
-          'Authorization': `Bearer ${token}`
-        },
-        body: formData   // Send FormData as the request body
-      });
-  
-      const data = await response.json();  // Parse the response
-       
-      if (data.success) {
-        // Update the UI only after successful deletion
-        setDisplayedImages(prev => prev.filter(img => img.media_id !== mediaId));
-        // Update the property state to maintain consistency
-        setProperty(prev => ({
-          ...prev,
-          media: prev.media.filter(img => img.media_id !== mediaId)
-        }));
-      } else {
-        throw new Error(data.error || 'Failed to delete image');
-      }
-    } catch (err) {
-      console.error('Error deleting image:', err);
-      setError('Failed to delete image');
-    } finally {
-      setIsLoading(false);
-    }
+   
+  const handleImageDelete = (mediaId) => {
+  setImagesToDelete([...imagesToDelete, mediaId]);
+  setDisplayedImages((prev) => prev.filter((img) => img.media_id !== mediaId));
   };
   
   /* Handle form submission to update property details */
@@ -124,32 +87,24 @@ const EditProperty = () => {
           formData.append('media[]', file);
         });
       }
-// Retrieve token yes
-      const token = localStorage.getItem('accessToken');
-      const response = await fetch(`http://localhost:8000/v1/propertiesModule/${id}`, {
-        method: 'PUT',
-        headers: {
-          'Authorization': `Bearer ${token}`
-        },
-        body: formData
-      });
 
-      const data = await response.json();
-      
-      if (data.success) {
+
+const response = await updateProperty(id, formData);
+
+      if (response.success) {
         navigate('/landlord/my-listings');
       } else {
-        setError(data.error || 'Failed to update property');   //set error if update fails
+        setError(response.message || 'Failed to update property');
       }
     } catch (err) {
       console.error('Update error:', err);
-      setError('Failed to update property');    //error state
+      setError('Failed to update property');
     } finally {
       setIsLoading(false);
     }
   };
 
-  if (!property) {  //if property data is not available (solved)
+  if (!property) {
     return <div className="text-center mt-8">Loading...</div>;
   }
 

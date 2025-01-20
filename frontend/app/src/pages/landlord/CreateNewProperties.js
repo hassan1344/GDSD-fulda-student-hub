@@ -66,7 +66,7 @@ try {  //prep data to send to server
       formData.append('media[]', media[i]);  //attaches each images
     }}
 
-
+/*XX
     //API call > send data to backend
     const token = localStorage.getItem('accessToken');  //retrieve login token from local storage in browser
     const response = await fetch('http://localhost:8000/v1/propertiesModule', {
@@ -91,8 +91,27 @@ try {  //prep data to send to server
       setIsLoading(false);
     }
   };
-  
-  
+  */
+
+/*--------------*/
+  const response = await createProperty(formData);
+
+  if (response.success) {
+    setSuccess(true);
+    setTimeout(() => {
+      navigate('/landlord/my-listings');
+    }, 2000);
+  } else {
+    throw new Error(response.message || 'Failed to create property');
+  }
+} catch (err) {
+  console.error('Upload error:', err);
+  setError(err.message || 'Failed to create property');
+} finally {
+  setIsLoading(false);
+}
+};
+/*---------------*/  
   
   return (
     <div className="min-h-screen bg-green-50">
