@@ -22,6 +22,9 @@ import Messages from "./pages/message/Messages";
 import MyListings from "./pages/landlord/MyListings";
 import EditListing from "./pages/landlord/EditListing";
 import CreateListing from "./pages/landlord/CreateListing";
+//-----------
+
+
 import './App.css';
 
 
@@ -45,22 +48,20 @@ const App = () => {
         <Route path="/landlord/create-listing" element={<CreateNewProperties />} />
         <Route path="/landlord/view-property/:id" element={<ViewPropertyDetails />} />
         <Route path="/landlord/my-listings" element={<ViewProperties />} />
-        <Route
-          path="/landlord/edit-listing/:id"
-          element={<EditDeleteListing />}
-        />
+        <Route path="/landlord/edit-listing/:id"  element={<EditDeleteListing />}   />
+
+{/* --------------  */}
         <Route path="/landlord/requests" element={<LandlordRequests />} />
-        <Route
-          path="/landlord/select-requests"
-          element={<LandlordSelectRequests />}
-        />
+        <Route path="/landlord/select-requests" element={<LandlordSelectRequests />}  />
+
+{/* --------------  */}
+
+
+
         <Route path="/landlord/tenants" element={<LandlordViewTenants />} />
         <Route path="/landlord/properties" element={<LandlordViewProperties />} />
        
-        <Route
-          path="/landlord/properties"
-          element={<LandlordViewProperties />}
-        />
+        <Route path="/landlord/properties"  element={<LandlordViewProperties />} />
         <Route path="/landlord/viewProfile" element = {<LandlordViewProfile/>}/>
         <Route path="/landlord/messages" element = {<Messages/>}/>
 
