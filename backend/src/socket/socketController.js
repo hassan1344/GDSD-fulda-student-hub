@@ -134,3 +134,80 @@ export const getChats = async (socket, payload) => {
     console.error("Error fetching chats:", error.message);
   }
 };
+
+export const placeBid = async (socket, payload) => {
+  try {
+    const { sessionId, amount } = payload;
+    const { userName } = socket.decoded;
+
+    const session = await prisma.biddingSession.findUnique({
+      where: { session_id: sessionId },
+    });
+
+    if (!session || session.status !== "active") {
+      return socket.emit("error", {
+        message: "Bidding session not found or inactive.",
+      });
+    }
+
+    if (amount <= session.highest_bid) {
+      return socket.emit("error", {
+        message: "Bid must be higher than the current highest bid.",
+      });
+    }
+
+    const updatedSession = await prisma.biddingSession.update({
+      where: { session_id: sessionId },
+      data: {
+        highest_bid: amount,
+        highest_bidder: userName,
+      },
+    });
+
+    await prisma.bid.create({
+      data: {
+        session_id: sessionId,
+        bidder_id: userName,
+        amount,
+        created_at: new Date(),
+      },
+    });
+
+    return {
+      sessionId,
+      highestBid: updatedSession.highest_bid,
+      highestBidder: updatedSession.highest_bidder,
+    };
+  } catch (error) {
+    console.error("Error placing bid: ", error.message);
+  }
+};
+
+export const endBidding = async (socket, payload) => {
+  try {
+    const { sessionId } = payload;
+
+    const session = await prisma.biddingSession.findUnique({
+      where: { session_id: sessionId },
+    });
+
+    if (!session || session.status !== "active") {
+      return socket.emit("error", {
+        message: "Bidding session not found or already ended.",
+      });
+    }
+
+    const endedSession = await prisma.biddingSession.update({
+      where: { session_id: sessionId },
+      data: { status: "ended" },
+    });
+
+    return {
+      sessionId,
+      highestBid: endedSession.highest_bid,
+      highestBidder: endedSession.highest_bidder,
+    };
+  } catch (error) {
+    console.error("Error ending bid: ", error.message);
+  }
+};
