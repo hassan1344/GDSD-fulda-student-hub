@@ -37,7 +37,7 @@ import { createListing } from '../../services/ListingServices';
     const fetchProperties = async () => {
       try {
         const token = localStorage.getItem('accessToken');
-        const response = await fetch('http://localhost:8000/v1/propertiesModule/', {
+        const response = await fetch('https://fulda-student-hub.publicvm.com/api/v1/propertiesModule/', {
           headers: {
             'Authorization': `Bearer ${token}`,
             'Content-Type': 'application/json'

@@ -17,7 +17,7 @@ const ViewListings = () => {
     if (window.confirm('Are you sure you want to delete this listing?')) {
     try {
     const token = localStorage.getItem('accessToken');
-    const response = await fetch(`http://localhost:8000/v1/listingsModule/${listingId}`, {
+    const response = await fetch(`https://fulda-student-hub.publicvm.com/api/v1/listingsModule/${listingId}`, {
       method: 'DELETE',
       headers: {'Authorization': `Bearer ${token}`}});
         

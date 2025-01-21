@@ -1,5 +1,5 @@
 import express from "express";
-import {createProfile, deleteProfile, getProfile, updateProfile} from "../services/profileService.js";
+import {createProfile, deleteProfile, getProfile, updateProfile, getAllProfiles} from "../services/profileService.js";
 import { authenticate } from "../middlewares/auth.js";
 import { handleMultiPartData } from "../utils/handleMultiPart.js";
 
@@ -12,6 +12,12 @@ profileRouter.post(
     { name: "profile_pic", maxCount: 1 },
   ]),
   createProfile
+);
+
+profileRouter.get(
+  "/all",
+  authenticate,
+  getAllProfiles
 );
 
 profileRouter.get(
