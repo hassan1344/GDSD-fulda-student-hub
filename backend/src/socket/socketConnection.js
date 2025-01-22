@@ -5,6 +5,8 @@ import {
   createConversation,
   getChats,
   getConversations,
+  placeBid,
+  endBidding,
 } from "./socketController.js";
 
 export const initiateSocket = (server) => {
@@ -76,6 +78,28 @@ export const initiateSocket = (server) => {
         console.log(socket.decoded, "decoded");
 
         io.to(socket.decoded.userName).emit("getChats", chats);
+      });
+
+      socket.on("placeBid", async (data) => {
+        // data : sessionId, amount
+        const bid = await placeBid(data);
+
+        io.to(data.sessionId).emit("updateBids", {
+          sessionId: bid.sessionId,
+          highestBid: bid.highestBid,
+          highestBidder: bid.highestBidder,
+        });
+      });
+
+      socket.on("endBidding", async (data) => {
+        //data : sessionId
+        const endBid = await endBidding(data);
+
+        io.to(data.sessionId).emit("biddingEnded", {
+          sessionId: endBid.sessionId,
+          highestBid: endBid.highestBid,
+          highestBidder: endBid.highestBidder,
+        });
       });
 
       socket.on("disconnect", () => {
