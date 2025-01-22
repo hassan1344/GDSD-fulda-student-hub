@@ -1,0 +1,179 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Bidding System Test</title>
+  <script src="https://cdn.socket.io/4.5.4/socket.io.min.js"></script>
+</head>
+<body>
+  <h1>Bidding System Test</h1>
+
+  <div>
+    <h2>Test as</h2>
+    <button onclick="setToken(tokenLandlord1,'Landlord1')">Landlord1</button>
+    <button onclick="setToken(tokenLandlord2, 'Landlord2')">Landlord2</button>
+    <button onclick="setToken(tokenLandlord3, 'Landlord3')">Landlord3</button>
+    <button onclick="setToken(tokenStudent1, 'Student1')">Student1</button>
+    <button onclick="setToken(tokenStudent2, 'Student2')">Student2</button>
+    <button onclick="setToken(tokenStudent3, 'Student3')">Student3</button>
+    <button onclick="setToken(tokenStudent4, 'Student4')">Student4</button>
+    <button onclick="setToken(tokenStudent5, 'Student5')">Student5</button>
+    Connected as: <p id="test-as"></p>
+  </div>
+
+  <hr/>
+
+  <div>
+    <h2>Connection</h2>
+    <button onclick="connectSocket()">Connect</button>
+    <button onclick="disconnectSocket()">Disconnect</button>
+    <p id="connection-status">Status: Disconnected</p>
+  </div>
+
+  <hr />
+
+  <div>
+    <h2>Start Bidding (Landlord Only)</h2>
+    <input type="text" id="start-property-id" placeholder="Listing ID" />
+    <button onclick="startBidding()">Start Bidding</button>
+  </div>
+
+  <hr />
+
+  <div>
+    <h2>Join Bidding</h2>
+    <input type="text" id="join-room-id" placeholder="Listing ID" />
+    <button onclick="joinBidding()">Join Bidding</button>
+  </div>
+
+  <hr />
+
+  <div>
+    <h2>Place Bid</h2>
+    <input type="text" id="bid-room-id" placeholder="Listing ID" />
+    <input type="number" id="bid-amount" placeholder="Bid Amount" />
+    <button onclick="placeBid()">Place Bid</button>
+  </div>
+
+  <hr />
+
+  <div>
+    <h2>End Bidding (Landlord Only)</h2>
+    <input type="text" id="end-room-id" placeholder="Listing ID" />
+    <button onclick="endBidding()">End Bidding</button>
+  </div>
+
+  <hr />
+
+  <div>
+    <h2>Leave Bidding</h2>
+    <input type="text" id="leave-room-id" placeholder="Room ID" />
+    <button onclick="leaveBidding()">Leave Bidding</button>
+  </div>
+
+  <hr />
+
+  <div>
+    <h2>Logs</h2>
+    <pre id="logs"></pre>
+  </div>
+
+  <script>
+    let socket;
+    const tokenLandlord1 = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VyTmFtZSI6ImxhbmRsb3JkNSIsImVtYWlsIjoibGFuZDVAZ21haWwuY29tIiwidXNlclR5cGUiOiJMQU5ETE9SRCIsImlhdCI6MTczNzU0NjQ4NCwiZXhwIjoxNzM3NjMyODg0fQ.ZVIc5roKy_tzGK-w0HndMKwW3d3GTR2Ndhds1lyZioU';  // landlord5
+    const tokenLandlord2 = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VyTmFtZSI6ImpvaG5wbGF5ZXIiLCJlbWFpbCI6ImpvaG5wbGF5ZXJAZ21haWwuY29tIiwidXNlclR5cGUiOiJMQU5ETE9SRCIsImlhdCI6MTczNzU0ODU3NywiZXhwIjoxNzM3NjM0OTc3fQ.WSethMnCFxMUbNu7ktRLEZTSy7jJDdK2xdulvMJQ0eM';  // johnplayer
+    const tokenLandlord3 = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VyTmFtZSI6ImxhbmRsb3JkVGVzdDEiLCJlbWFpbCI6ImxhbmRsb3JkVGVzdDFAZ21haWwuY29tIiwidXNlclR5cGUiOiJMQU5ETE9SRCIsImlhdCI6MTczNzU0ODY4MiwiZXhwIjoxNzM3NjM1MDgyfQ.Zr5JgNukwZweyWyvK4wnAoSInWBL-f8CQy9W7NQ4e7w'; // landlordTest1
+    const tokenStudent1 = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VyTmFtZSI6ImRpdnN0dWRlbnQxIiwiZW1haWwiOiJkaXZzdHVkZW50MUBnbWFpbC5jb20iLCJ1c2VyVHlwZSI6IlNUVURFTlQiLCJpYXQiOjE3Mzc1NDg4MzQsImV4cCI6MTczNzYzNTIzNH0.tIaZFehZosww9Jq6-CP3LSZ5Een2isjKl6hYdNIaFNE';  //divstudent1
+    const tokenStudent2 = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VyTmFtZSI6ImFiY2QiLCJlbWFpbCI6ImFiYzFAZ21haWwuY29tIiwidXNlclR5cGUiOiJTVFVERU5UIiwiaWF0IjoxNzM3NTQ4ODkwLCJleHAiOjE3Mzc2MzUyOTB9.SpYdIacgmss757IsSFXalTTFhTTJNrvU_5BC_zmeOLs'; //abcd
+    const tokenStudent3 = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VyTmFtZSI6ImJpZ3Nob3ciLCJlbWFpbCI6ImJpZ3Nob3dAaW5mb3JtYXRpay5ocy1mdWxkYS5kZSIsInVzZXJUeXBlIjoiU1RVREVOVCIsImlhdCI6MTczNzU0ODkzNywiZXhwIjoxNzM3NjM1MzM3fQ.pTrRduTTzCbgfTtltkuZY5siRsSUXvwuKy6yW-hksho'; //bigshow
+    const tokenStudent4 = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VyTmFtZSI6ImpvaG5jZW5hIiwiZW1haWwiOiJqb2huY2VuYUBpbmZvcm1hdGlrLmhzLWZ1bGRhLmRlIiwidXNlclR5cGUiOiJTVFVERU5UIiwiaWF0IjoxNzM3NTQ5MDI2LCJleHAiOjE3Mzc2MzU0MjZ9.ng8MvhZbSCNWKvOQAbpgiJ8RN0-md8PGofdm8xT6Fi8' //johncena
+    const tokenStudent5 = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VyTmFtZSI6Im1hcmtoZW5yeSIsImVtYWlsIjoibWFya2hlbnJ5QGluZm9ybWF0aWsuaHMtZnVsZGEuZGUiLCJ1c2VyVHlwZSI6IlNUVURFTlQiLCJpYXQiOjE3Mzc1NDkwNjgsImV4cCI6MTczNzYzNTQ2OH0.dP_TwJChgjcES9tKsFX4vOf_iL7Hv83lEZ5J5k180Pg' //markhenry
+    var token;
+    var user;
+
+    // Connect to the backend
+    function connectSocket() {
+      socket = io('http://localhost:8000', {
+      query: { token },
+    });
+
+      socket.on('connect', () => {
+        document.getElementById('connection-status').innerText = 'Status: Connected';
+        log('Connected to the server');
+      });
+
+      socket.on('disconnect', () => {
+        document.getElementById('connection-status').innerText = 'Status: Disconnected';
+        log('Disconnected from the server');
+      });
+
+      // Handle events
+      socket.on('biddingStarted', (data) => log(`Bidding started: ${JSON.stringify(data)}`));
+      socket.on('joinedBidding', (data) => log(`Joined bidding: ${JSON.stringify(data)}`));
+      socket.on('updateBids', (data) => log(`Bids updated: ${JSON.stringify(data)}`));
+      socket.on('biddingEnded', (data) => log(`Bidding ended: ${JSON.stringify(data)}`));
+      socket.on('userLeft', (data) => log(`User left: ${JSON.stringify(data)}`));
+      socket.on('error', (message) => log(`Error: ${message}`));
+    }
+
+    // Disconnect from the backend
+    function disconnectSocket() {
+      if (socket) {
+        socket.disconnect();
+        log('Disconnected from the server');
+      }
+    }
+
+    // Utility function to log messages
+    function log(message) {
+      const logs = document.getElementById('logs');
+      logs.innerText += `${message}\n`;
+    }
+
+    // Start Bidding
+    function startBidding() {
+      const tomorrow = new Date();
+      tomorrow.setDate(tomorrow.getDate()+1);
+      const listingId = document.getElementById('start-property-id').value;
+      socket.emit('startBidding', { listingId, startingPrice: 300, endsAt: tomorrow });
+      log(`Start Bidding: Listing ID = ${listingId}`);
+    }
+
+    // Join Bidding
+    function joinBidding() {
+      const listingId = document.getElementById('join-room-id').value;  // get session id from the the listing id which is active
+      socket.emit('joinBidding', { listingId });
+      log(`Join Bidding: Listing ID = ${listingId}, User ID = ${user}`);
+    }
+
+    // Place Bid
+    function placeBid() {
+      const listingId = document.getElementById('bid-room-id').value;
+      const amount = parseFloat(document.getElementById('bid-amount').value);
+      socket.emit('placeBid', { listingId, amount });
+      log(`Place Bid: Room ID = ${listingId}, User ID = ${user}, Amount = ${amount}`);
+    }
+
+    // End Bidding
+    function endBidding() {
+      const listingId = document.getElementById('end-room-id').value;
+      socket.emit('endBidding', { listingId });
+      log(`End Bidding: Room ID = ${listingId}`);
+    }
+
+    // Leave Bidding
+    function leaveBidding() {
+      const listingId = document.getElementById('leave-room-id').value;
+      socket.emit('leaveBidding', { listingId });
+      log(`Leave Bidding: Room ID = ${listingId}, User ID = ${user}`);
+    }
+
+    function setToken(newtoken, newuser) {
+      token = newtoken;
+      document.getElementById('test-as').innerText = newuser;
+      user = newuser;
+    }
+  </script>
+</body>
+</html>
