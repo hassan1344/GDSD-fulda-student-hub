@@ -1,3 +1,4 @@
+import './App.css';
 import React from "react";
 import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
 import Home from "./pages/Home";
@@ -22,7 +23,13 @@ import Messages from "./pages/message/Messages";
 import MyListings from "./pages/landlord/MyListings";
 import EditListing from "./pages/landlord/EditListing";
 import CreateListing from "./pages/landlord/CreateListing";
-import './App.css';
+
+// Admin imports
+import AdminHomepage from "./pages/admin/AdminHomepage";
+import AllListings from "./pages/admin/AllListings";
+import AllProperties from "./pages/admin/AllProperties";
+import AdminViewProfile from './pages/admin/AdminViewProfile';
+
 
 
 const App = () => {
@@ -68,6 +75,15 @@ const App = () => {
        <Route path="/landlord/my-prop-listings" element={<MyListings />} />
        <Route path ="/landlord/edit-prop-listing/:id" element={<EditListing />} />
        <Route path="/landlord/create-prop-listing" element={<CreateListing />} />
+
+       {/* Admin routes */}
+       <Route path="/admin" element={<AdminHomepage />} />
+       <Route path="/admin/listings" element={<AllListings />} />
+       <Route path="/admin/edit-prop-listing/:id" element={<EditListing />} />
+       <Route path="/admin/properties" element={<AllProperties />} />
+       <Route path="/admin/edit-property/:id" element={<EditDeleteListing />} />
+       <Route path="/admin/viewProfile" element = {<AdminViewProfile/>}/>
+
 
       </Routes>
     </Router>

@@ -24,9 +24,33 @@ export const fetchAllProperties = async () => {
   }
 };
 
+export const fetchAllPropertiesAdmin = async () => {
+  try {
+    const response = await apiClient.get("/properties/all", {
+      requireToken: true,
+    });
+    return response.data;
+  } catch (error) {
+    console.error("Error fetching all properties:", error);
+    throw error;
+  }
+};
+
 export const fetchPropertyById = async (propertyId) => {
   try {
     const response = await apiClient.get(`/propertiesModule/${propertyId}`, {
+      requireToken: true,
+    });
+    return response.data;
+  } catch (error) {
+    console.error("Error fetching property by ID:", error);
+    throw error;
+  }
+};
+
+export const fetchPropertyByIdAdmin = async (propertyId) => {
+  try {
+    const response = await apiClient.get(`/properties/${propertyId}`, {
       requireToken: true,
     });
     return response.data;

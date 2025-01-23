@@ -100,6 +100,10 @@ const AuthPage = () => {
                 setTimeout(() => {
                   navigate('/profile', { state: { userType: "LANDLORD", userName: {userName} } });
                 }, 2000);
+              }  else if (userType === "ADMIN") {
+                setTimeout(() => {
+                  navigate('/profile', { state: { userType: "ADMIN", userName: {userName} } });
+                }, 2000);
               } else {
                 showNotification("An error occurred. Please try again.");
               }
@@ -141,6 +145,8 @@ const AuthPage = () => {
           const decodedToken = jwtDecode(accessToken);
           const { userName, userType } = decodedToken;
 
+          console.log("usertype----", userType);
+
           showNotification("Login successful...");
           if (userType === "STUDENT") {
             setTimeout(() => {
@@ -149,6 +155,10 @@ const AuthPage = () => {
           } else if (userType === "LANDLORD") {
             setTimeout(() => {
               navigate("/landlord", { replace: true }); //Add landlord landing page
+            }, 2000);
+          } else if (userType === "ADMIN") {
+            setTimeout(() => {
+              navigate('/admin', { replace: true });
             }, 2000);
           } else {
             showNotification("An error occurred. Please try again.");

@@ -341,13 +341,15 @@ const Messages = () => {
             <div className="flex flex-col items-center">
               {/* Profile Picture */}
               <div className="flex justify-center mb-4">
-                {receiverUser?.profile_picture_id ? (
-                  <img
-                    src={receiverUser?.profile_picture_id}
-                    alt="Profile"
-                    className="w-24 h-24 rounded-full object-cover shadow-md"
-                  />
-                ) : (
+                {
+                // receiverUser?.profile_picture_id ? (
+                //   <img
+                //     src={receiverUser?.profile_picture_id}
+                //     alt="Profile"
+                //     className="w-24 h-24 rounded-full object-cover shadow-md"
+                //   />
+                // ) : 
+                (
                   <div className="w-24 h-24 bg-gray-200 rounded-full flex items-center justify-center shadow-md">
                     <span className="text-gray-500 text-3xl">👤</span>
                   </div>
