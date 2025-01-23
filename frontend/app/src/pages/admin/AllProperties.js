@@ -1,58 +1,43 @@
 /* View Property */
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import LandlordNavbar from '../../components/LandlordNavbar';
-import { fetchAllProperties, deleteProperty, fetchPropertyById } from '../../services/LandlordServices';
+import { fetchAllPropertiesAdmin } from '../../services/LandlordServices';
+import { deletePropertyAdmin } from '../../services/propertyServices';
+import Navbar from '../../components/NavBar';
 
 /*  State to manage the properties list, loading status, and error messages */
-const ViewProperties = () => {
+const AllProperties = () => {
   const [properties, setProperties] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState(null);
   const navigate = useNavigate();
 
-/* Function to view a property by ID and navigate to the details page */
-  const viewPropertyById = async (propertyId) => {
-    try {
-      const token = localStorage.getItem('accessToken');
-      const data = await fetchPropertyById(propertyId, token);
-      if (data.success) {
-        navigate(`/landlord/view-property/${propertyId}`, { state: { property: data.data } });
-      } else {
-        console.error('Error fetching property details:', data.message);
+/* Function to handle deleting a property by ID  */
+  const handleDelete = async (propertyId) => {
+    if (window.confirm('Are you sure you want to delete this property?')) {
+      try {
+        const token = localStorage.getItem('accessToken');
+/* API call to delete the property from DB*/
+        const data = await deletePropertyAdmin(propertyId, token);
+        if (data.success) {
+          setProperties(properties.filter(prop => prop.property_id !== propertyId));
+        } else {
+          setError('Failed to delete property');
+        }
+      } catch (error) {
+        setError('Error deleting property');
       }
-    } catch (error) {
-      console.error('Error fetching property details:', error);
     }
   };
 
-/* Function to handle deleting a property by ID  */
-const handleDelete = async (propertyId) => {
-  if (window.confirm('Are you sure you want to delete this property?')) {
-    try {
-      const response = await deleteProperty(propertyId);
-      if (response.success) {
-        setProperties(properties.filter((prop) => prop.property_id !== propertyId));
-      } else {
-        setError(response.message || 'Failed to delete property');
-      }
-    } catch (error) {
-      console.error('Error deleting property:', error);
-      setError('Error deleting property');
-    }
-  }
-};
-
   /* useEffect hook to fetch all properties when the component is mounted */
-
-  //service calls of api, no direct api call
   useEffect(() => {
     const fetchProperties = async () => {
       const token = localStorage.getItem('accessToken');  //got access token
       try {
-        const data = await fetchAllProperties(token);  //will get properties on success
-        if (data.success) {
-          setProperties(data.data);
+        const data = await fetchAllPropertiesAdmin(token);  //will get properties on success
+        if (data) {
+          setProperties(data);
         } else {
           setError(data.message || 'Failed to fetch properties');
         }
@@ -83,9 +68,9 @@ const handleDelete = async (propertyId) => {
 
   return (
     <div className="min-h-screen bg-green-50">
-      <LandlordNavbar />
+      <Navbar />
       <div className="container mx-auto px-4 py-8">
-        <h1 className="text-4xl font-bold text-center text-green-700 mb-6">My Properties</h1>
+        <h1 className="text-4xl font-bold text-center text-green-700 mb-6">All Properties</h1>
         {properties.length === 0 ? (
           <p className="text-center text-gray-600">No properties available.</p>
         ) : (
@@ -127,7 +112,7 @@ const handleDelete = async (propertyId) => {
 
                   <div className="flex gap-2">
                     <button
-                      onClick={() => navigate(`/landlord/edit-listing/${property.property_id}`)}
+                      onClick={() => navigate(`/admin/edit-property/${property.property_id}`)}
                       className="flex-1 bg-green-600 hover:bg-green-700 text-white font-bold py-2 px-4 rounded transition duration-200"
                     >
                       Edit Property
@@ -148,4 +133,4 @@ const handleDelete = async (propertyId) => {
     </div>
   );};
 
-export default ViewProperties;
+export default AllProperties;

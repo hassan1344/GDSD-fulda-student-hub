@@ -2,13 +2,18 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import LandlordNavbar from '../../components/LandlordNavbar';
-import { fetchPropertyById, updateProperty } from '../../services/LandlordServices';
-
+import { fetchPropertyById, fetchPropertyByIdAdmin, updateProperty } from '../../services/LandlordServices';
+import { jwtDecode } from 'jwt-decode';
+import { updatePropertyAdmin } from '../../services/propertyServices';
 
 const EditProperty = () => {
 /* Extract property ID from URL parameters using useParams hook  */
   const { id } = useParams();
   const navigate = useNavigate();
+  const token = localStorage.getItem('accessToken');
+  const decodedToken = jwtDecode(token);
+  const { userType } = decodedToken;
+
 /* Local state variables to hold property data, loading state, and error messages */
   const [property, setProperty] = useState(null);
   const [address, setAddress] = useState('');
@@ -23,24 +28,28 @@ const EditProperty = () => {
 
  /* Fetch property details when the component mounts or when 'id' changes */
   useEffect(() => {
+    
     const fetchProperty = async () => {
-      const token = localStorage.getItem('accessToken');
       try {
-        const data = await fetchPropertyById(id, token);
-        if (data.success) {
-          console.log("dev", data)
-          setProperty(data.data);
-          setAddress(data.data.address);
-          setAmenities(data.data.PropertyAmenity.map(pa => ({
-            amenity_name: pa.Amenity.amenity_name,
-            amenity_value: pa.Amenity.amenity_value
-          })));
-          setDisplayedImages(data.data.media || []);
+        const data = userType === "ADMIN" ? await fetchPropertyByIdAdmin(id, token) : await fetchPropertyById(id, token);
+        if ((userType === "ADMIN" && data) || data.success) {
+          setProperty(data || data.data);
+          setAddress(data.address || data.data.address);
+
+          // if (data.data.PropertyAmenity != null) {
+          //   let propAmenity = data.data.PropertyAmenity;
+          //   setAmenities(propAmenity.map(pa => ({
+          //     amenity_name: pa.Amenity.amenity_name,
+          //     amenity_value: pa.Amenity.amenity_value
+          //   })));
+          // }
+          
+          setDisplayedImages(data.Media || data.data.media);
         }
       } catch (error) {
+        console.log("error", error)
         setError('Error fetching property details');
-      }
-    };
+      }};
     fetchProperty();
   }, [id]);   // Dependency on 'id' ensures it fetches data whenever the ID changes
 
@@ -52,55 +61,19 @@ const EditProperty = () => {
         amenity_value: newAmenity.value
       }]);
       setNewAmenity({ name: '', value: '' });
-    }
-  };
+    }};
 /* Remove an amenity from the amenities list */
   const handleRemoveAmenity = (index) => {
     setAmenities(amenities.filter((_, i) => i !== index));
   };
 
   const handleMediaChange = (e) => {
-    setNewMedia(Array.from(e.target.files));
+  setNewMedia(Array.from(e.target.files));
   };
-
-  const handleImageDelete = async (mediaId) => {
-    try {
-      setIsLoading(true);
-      const token = localStorage.getItem('accessToken');
-      
-      // Create FormData with all required fields to delete image
-      const formData = new FormData();
-      formData.append('address', address);
-      formData.append('amenities', JSON.stringify(amenities));
-      formData.append('imagesToDelete[]', mediaId); //  add mediaId to formdata.
-  
-      const response = await fetch(`https://fulda-student-hub.publicvm.com/api/v1/propertiesModule/${id}`, {
-        method: 'PUT',
-        headers: {
-          'Authorization': `Bearer ${token}`
-        },
-        body: formData   // Send FormData as the request body
-      });
-  
-      const data = await response.json();  // Parse the response
-       
-      if (data.success) {
-        // Update the UI only after successful deletion
-        setDisplayedImages(prev => prev.filter(img => img.media_id !== mediaId));
-        // Update the property state to maintain consistency
-        setProperty(prev => ({
-          ...prev,
-          media: prev.media.filter(img => img.media_id !== mediaId)
-        }));
-      } else {
-        throw new Error(data.error || 'Failed to delete image');
-      }
-    } catch (err) {
-      console.error('Error deleting image:', err);
-      setError('Failed to delete image');
-    } finally {
-      setIsLoading(false);
-    }
+   
+  const handleImageDelete = (mediaId) => {
+  setImagesToDelete([...imagesToDelete, mediaId]);
+  setDisplayedImages((prev) => prev.filter((img) => img.media_id !== mediaId));
   };
   
   /* Handle form submission to update property details */
@@ -124,32 +97,24 @@ const EditProperty = () => {
           formData.append('media[]', file);
         });
       }
-// Retrieve token yes
-      const token = localStorage.getItem('accessToken');
-      const response = await fetch(`https://fulda-student-hub.publicvm.com/api/v1/propertiesModule/${id}`, {
-        method: 'PUT',
-        headers: {
-          'Authorization': `Bearer ${token}`
-        },
-        body: formData
-      });
-
-      const data = await response.json();
       
-      if (data.success) {
-        navigate('/landlord/my-listings');
+
+    const response = userType === "ADMIN" ? await updatePropertyAdmin(id, formData) : await updateProperty(id, formData);
+
+      if (response.success) {
+        navigate(userType === "ADMIN" ? '/admin/properties' : '/landlord/my-listings');
       } else {
-        setError(data.error || 'Failed to update property');   //set error if update fails
+        setError(response.message || 'Failed to update property');
       }
     } catch (err) {
       console.error('Update error:', err);
-      setError('Failed to update property');    //error state
+      setError('Failed to update property');
     } finally {
       setIsLoading(false);
     }
   };
 
-  if (!property) {  //if property data is not available (solved)
+  if (!property) {
     return <div className="text-center mt-8">Loading...</div>;
   }
 

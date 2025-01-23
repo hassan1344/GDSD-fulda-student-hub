@@ -101,9 +101,6 @@ const ViewApplicationStudent = () => {
         )}
       </div>
 
-      <div className="mt-8">
-        <Disclaimer />
-      </div>
     </div>
   );
 };

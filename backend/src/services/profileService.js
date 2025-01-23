@@ -11,7 +11,7 @@ export const getProfile = async (req, res) => {
     if (user.user_type.toUpperCase() === 'STUDENT') {
       userProfile = await prisma.student.findUnique({ where: { user_id: userName } });
       modelId = userProfile.student_id;
-    } else if (user.user_type.toUpperCase() === 'LANDLORD') {
+    } else if (user.user_type.toUpperCase() === 'LANDLORD' || user.user_type.toUpperCase() === 'ADMIN') {
       userProfile = await prisma.landlord.findUnique({ where: { user_id: userName } });
       modelId = userProfile.landlord_id;
     }

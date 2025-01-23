@@ -227,6 +227,47 @@ export const createListing = async (req, res) => {
       res.status(500).json({ success: false, error: "An unexpected error occurred while retrieving the listing" });
     }
   };
+
+  export const getListingByIdAdmin = async (req, res) => {
+    try {
+      if (!req.user || !req.user.userName) {
+        return res.status(401).json({ success: false, error: "User not authenticated" });
+      }
+  
+      const { id } = req.params;
+  
+      const listing = await prisma.listing.findUnique({
+        where: {
+          listing_id: id
+        },
+        include: {
+          property: true,
+          room_type: true,
+        },
+      });
+  
+      if (!listing) {
+        return res.status(404).json({ success: false, error: "Listing not found or does not belong to you" });
+      }
+  
+      const media = await prisma.media.findMany({
+        where: {
+          model_name: 'listing',
+          model_id: id,
+        },
+      });
+  
+      res.status(200).json({
+        success: true,
+        message: "Listing retrieved successfully",
+        data: { ...listing, media },
+      });
+    } catch (error) {
+      console.error("Error retrieving listing:", error);
+      res.status(500).json({ success: false, error: "An unexpected error occurred while retrieving the listing" });
+    }
+  };
+
   
   export const updateListing = async (req, res) => {
     try {
@@ -321,7 +362,91 @@ export const createListing = async (req, res) => {
     }
   };
   
-
+  export const updateListingAdmin = async (req, res) => {
+    try {
+      if (!req.user || !req.user.userName) {
+        return res.status(401).json({ success: false, error: "User not authenticated" });
+      }
+  
+      const { id } = req.params; // Listing ID
+      const { title, description, status, rent, room_type_id, imagesToDelete } = req.body;
+  
+      // Start a transaction
+      const result = await prisma.$transaction(async (prisma) => {
+        // Find the listing and validate ownership
+        const listing = await prisma.listing.findUnique({
+          where: { listing_id: id },
+          include: { property: true },
+        });
+  
+        // Update listing details
+        const updatedListing = await prisma.listing.update({
+          where: { listing_id: id },
+          data: {
+            title: title || undefined,
+            description: description || undefined,
+            status: status || undefined,
+            rent: rent ? parseFloat(rent) : undefined,
+            room_type_id: room_type_id || undefined,
+          },
+          include: { property: true, room_type: true },
+        });
+  
+        // Handle media deletions
+        if (imagesToDelete) {
+          const imageIdsToDelete = Array.isArray(imagesToDelete) ? imagesToDelete : [imagesToDelete];
+          
+          for (const imageId of imageIdsToDelete) {
+            const media = await prisma.media.findUnique({ where: { media_id: imageId } });
+            
+            if (media && media.model_name === "listing" && media.model_id === id) {
+              // Delete from S3
+              await deleteS3Object(media.media_url);
+              // Delete from database
+              await prisma.media.delete({ where: { media_id: imageId } });
+            }
+          }
+        }
+  
+        // Upload new files if provided
+        if (req.files && req.files.length > 0) {
+          const mediaEntries = await Promise.all(
+            req.files.map(async (file) => {
+              const uniqueFileName = await uploadToS3(file);
+              return {
+                media_id: `med-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
+                model_name: "listing",
+                model_id: id,
+                media_url: uniqueFileName,
+                media_type: file.mimetype,
+                media_category: "listing_image",
+                created_at: new Date(),
+                updated_at: new Date(),
+              };
+            })
+          );
+  
+          await prisma.media.createMany({ data: mediaEntries });
+        }
+  
+        return updatedListing;
+      });
+  
+      // Fetch all associated media for the updated listing
+      const media = await prisma.media.findMany({
+        where: { model_name: "listing", model_id: id },
+      });
+  
+      res.status(200).json({
+        success: true,
+        message: "Listing updated successfully",
+        data: { ...result, media },
+      });
+    } catch (error) {
+      console.error("Error updating listing:", error);
+      res.status(500).json({ success: false, error: "An unexpected error occurred while updating the listing" });
+    }
+  };
   
 
   export const deleteListing = async (req, res) => {
@@ -340,6 +465,75 @@ export const createListing = async (req, res) => {
             property: {
               landlord_id,
             },
+          },
+        });
+  
+        if (!listing) {
+          throw new Error("Listing not found or does not belong to you");
+        }
+  
+        const media = await prisma.media.findMany({
+          where: {
+            model_name: "listing",
+            model_id: id,
+          },
+        });
+  
+        if (media.length > 0) {
+          const deletePromises = media.map(async (mediaFile) => {
+            try {
+              await deleteS3Object(mediaFile.media_url);
+            } catch (error) {
+              console.error(`Error deleting media from S3: ${mediaFile.media_url}`, error);
+              throw error;
+            }
+          });
+          await Promise.all(deletePromises);
+        }
+  
+        await prisma.media.deleteMany({
+          where: {
+            model_name: "listing",
+            model_id: id,
+          },
+        });
+  
+        await prisma.application.deleteMany({
+          where: {
+            listing_id: id,
+          },
+        });
+  
+        const deletedListing = await prisma.listing.delete({
+          where: { listing_id: id },
+        });
+  
+        return deletedListing;
+      });
+  
+      res.status(200).json({
+        success: true,
+        message: "Listing and all associated data deleted successfully",
+        data: result,
+      });
+    } catch (error) {
+      console.error("Error deleting listing:", error);
+      res.status(500).json({ success: false, error: "An unexpected error occurred while deleting the listing" });
+    }
+  };
+
+  export const deleteListingAdmin = async (req, res) => {
+    try {
+      if (!req.user || !req.user.userName) {
+        return res.status(401).json({ success: false, error: "User not authenticated" });
+      }
+  
+      const { id } = req.params;
+  
+      const result = await prisma.$transaction(async (prisma) => {
+        const listing = await prisma.listing.findUnique({
+          where: {
+            listing_id: id
           },
         });
   

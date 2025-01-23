@@ -161,8 +161,6 @@ const SearchResults = () => {
       )}
 
       <div className="pb-16"></div>
-
-      <Disclaimer />
     </div>
   );
 };

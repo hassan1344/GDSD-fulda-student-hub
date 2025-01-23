@@ -1,12 +1,14 @@
 import { Router } from 'express';
 import multer from 'multer';
-import { authenticateLandlord } from "../middlewares/auth.js";
+import { authenticateAdmin, authenticateLandlord } from "../middlewares/auth.js";
 import { 
   createProperty, 
   getAllProperties, 
   getPropertyById, 
-  updateProperty, 
-  deleteProperty 
+  updateProperty,
+  updatePropertyAdmin,
+  deleteProperty,
+  deletePropertyAdmin
 } from '../services/propertyModuleService.js';
 
 const router = Router();
@@ -22,6 +24,8 @@ router.post('/', authenticateLandlord, upload, createProperty);
 router.get('/', authenticateLandlord, getAllProperties);
 router.get('/:id', authenticateLandlord, getPropertyById);
 router.put('/:id', authenticateLandlord, upload, updateProperty);
+router.put('/admin/:id', authenticateAdmin, upload, updatePropertyAdmin);
 router.delete('/:id', authenticateLandlord, deleteProperty);
+router.delete('/admin/:id', authenticateAdmin, deletePropertyAdmin);
 
 export default router;

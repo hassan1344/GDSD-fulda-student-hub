@@ -5,7 +5,7 @@ import LandlordNavbar from '../../components/LandlordNavbar';
 import { createProperty } from '../../services/LandlordServices';
 
 /* State management for form inputs and UI feedback  */
-const CreateNewProperties = () => {
+const CreateNewProperties = () => {     //declare functional react component
     const [address, setAddress] = useState('');
     const [amenities, setAmenities] = useState([]);
     const [media, setMedia] = useState([]);
@@ -13,32 +13,40 @@ const CreateNewProperties = () => {
     const [isLoading, setIsLoading] = useState(false);
     const [error, setError] = useState(null);
     const [success, setSuccess] = useState(false);
-    const [newAmenity, setNewAmenity] = useState({ name: '', value: '' });
+    const [newAmenity, setNewAmenity] = useState({ name: '', value: '' });  
+    //stores temp. input before adding to main backend list.
+    
     const navigate = useNavigate();
 
 /* Add new amenity to the amenities list */    
 const handleAddAmenity = () => {
 if (newAmenity.name && newAmenity.value) {
-  setAmenities([...amenities, {
+  setAmenities([...amenities, {  //spread op.  clone arrays for reuse.
   amenity_name: newAmenity.name,
   amenity_value: newAmenity.value
   }]);
-  setNewAmenity({ name: '', value: '' });
+  setNewAmenity({ name: '', value: '' });    // resets the input field after adding
   }};
 
 /* Remove amenity by index */  
   const handleRemoveAmenity = (index) => {
-    setAmenities(amenities.filter((_, i) => i !== index));
+    setAmenities(amenities.filter((_, i) => i !== index));    //keeps all items except the one with the matching index
+//UP: filter(...) Method: create a new array
+// ' _ ' throwaway var. ignores the item (tbrem) and use index i for comparision
   };
+
+
 /*  Handle file input for property images */
-  const handleMediaChange = (e) => {
-    const files = Array.from(e.target.files);
-    setMedia(files);
+  const handleMediaChange = (e) => {   // e is event object
+    const files = Array.from(e.target.files);   //convert selected filelist to array for easy hand.
+    setMedia(files);  
   };
 /*----------------------------------*/  
 /* Handle form submission */
-  const handleSubmit = async (e) => {
-    e.preventDefault();
+
+  const handleSubmit = async (e) => {      //async ops
+    e.preventDefault();       
+     //prevent from refreshing page , js will handle form now not browser, beocz react is SPA it loose data on refreshing           
     if (!acceptedTerms) {
       setError('Please accept the Terms and Conditions');
       return;
@@ -47,41 +55,63 @@ if (newAmenity.name && newAmenity.value) {
     setError(null);
     setSuccess(false);
   
-try {
+try {  //prep data to send to server
     const formData = new FormData();
     formData.append('address', address);
-    formData.append('amenities', JSON.stringify(amenities));
+    formData.append('amenities', JSON.stringify(amenities));   
+ //convert JS object to json string/text, used to exch. data to/from server, becoz string is easy text to store
 
     if (media && media.length > 0) {
     for (let i = 0; i < media.length; i++) {
-      formData.append('media[]', media[i]);
+      formData.append('media[]', media[i]);  //attaches each images
     }}
 
-    const token = localStorage.getItem('accessToken');
-    const response = await fetch('https://fulda-student-hub.publicvm.com/api/v1/propertiesModule', {
+/*XX
+    //API call > send data to backend
+    const token = localStorage.getItem('accessToken');  //retrieve login token from local storage in browser
+    const response = await fetch('http://localhost:8000/v1/propertiesModule', {
         method: 'POST',
         headers: {
           'Authorization': `Bearer ${token}`
         },
         body: formData
       });
-  
-    const data = await response.json();
+  // wait for server resp
+    const data = await response.json();   //convert response to json  await() tells js to wait for the action to finish before further
       if (data.success) {
         setSuccess(true);
-        setTimeout(() => { navigate('/landlord/my-listings');}, 2000);
+        setTimeout(() => { navigate('/landlord/my-listings');}, 2000);  //redirectes to anotherpage 2 sec
       } else {
         throw new Error(data.error || 'Failed to create property');
       }
     } catch (err) {
       console.error('Upload error:', err);
       setError(err.message || 'Failed to create property');
-    } finally {
+    } finally {   //finally will execute even if try is failed.  here it stops loading indicator
       setIsLoading(false);
     }
   };
-  
-  
+  */
+
+/*--------------*/
+  const response = await createProperty(formData);
+
+  if (response.success) {
+    setSuccess(true);
+    setTimeout(() => {
+      navigate('/landlord/my-listings');
+    }, 2000);
+  } else {
+    throw new Error(response.message || 'Failed to create property');
+  }
+} catch (err) {
+  console.error('Upload error:', err);
+  setError(err.message || 'Failed to create property');
+} finally {
+  setIsLoading(false);
+}
+};
+/*---------------*/  
   
   return (
     <div className="min-h-screen bg-green-50">
