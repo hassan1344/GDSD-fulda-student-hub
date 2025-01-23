@@ -2,7 +2,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import LandlordNavbar from '../../components/LandlordNavbar';
-import { fetchAllProperties, fetchPropertyById } from '../../services/LandlordServices';
+import { fetchAllProperties, deleteProperty, fetchPropertyById } from '../../services/LandlordServices';
 
 /*  State to manage the properties list, loading status, and error messages */
 const ViewProperties = () => {
@@ -27,31 +27,25 @@ const ViewProperties = () => {
   };
 
 /* Function to handle deleting a property by ID  */
-  const handleDelete = async (propertyId) => {
-    if (window.confirm('Are you sure you want to delete this property?')) {
-      try {
-        const token = localStorage.getItem('accessToken');
-/* API call to delete the property from DB*/
-        const response = await fetch(`https://fulda-student-hub.publicvm.com/api/v1/propertiesModule/${propertyId}`, {
-          method: 'DELETE',
-          headers: {
-            'Authorization': `Bearer ${token}`   //Token for authorization
-          }
-        });
-
-        const data = await response.json();
-        if (data.success) {
-          setProperties(properties.filter(prop => prop.property_id !== propertyId));
-        } else {
-          setError('Failed to delete property');
-        }
-      } catch (error) {
-        setError('Error deleting property');
+const handleDelete = async (propertyId) => {
+  if (window.confirm('Are you sure you want to delete this property?')) {
+    try {
+      const response = await deleteProperty(propertyId);
+      if (response.success) {
+        setProperties(properties.filter((prop) => prop.property_id !== propertyId));
+      } else {
+        setError(response.message || 'Failed to delete property');
       }
+    } catch (error) {
+      console.error('Error deleting property:', error);
+      setError('Error deleting property');
     }
-  };
+  }
+};
 
   /* useEffect hook to fetch all properties when the component is mounted */
+
+  //service calls of api, no direct api call
   useEffect(() => {
     const fetchProperties = async () => {
       const token = localStorage.getItem('accessToken');  //got access token

@@ -19,6 +19,17 @@ model Landlord {
   phone_number String     @unique
   user         User       @relation(fields: [user_id], references: [user_name])
   Property     Property[]
+  landlord_id  String     @id @default(uuid())
+  trust_score  Int        @default(0)
+  created_at   DateTime   @default(now())
+  updated_at   DateTime   @updatedAt
+  user_id      String     @unique
+  address      String
+  first_name   String
+  last_name    String
+  phone_number String     @unique
+  user         User       @relation(fields: [user_id], references: [user_name])
+  Property     Property[]
 
   @@index([user_id], map: "landlord_user_id_fkey")
   @@map("landlord")
@@ -109,6 +120,7 @@ model RoomType {
 
 model Media {
   media_id       String   @id @default(uuid())
+  media_id       String   @id @default(uuid())
   model_name     String
   model_id       String
   media_url      String
@@ -125,30 +137,30 @@ model Application {
   application_id     String            @id @default(uuid())
   listing_id         String
   student_id         String
-  student_card_id    String
-  full_name          String
-  contact_number     String
-  current_address    String
   application_status ApplicationStatus @default(PENDING)
   applied_at         DateTime          @default(now())
   reviewed_at        DateTime?
   remarks            String?
   created_at         DateTime          @default(now())
   updated_at         DateTime          @updatedAt
+  contact_number     String
+  current_address    String
+  full_name          String
+  student_card_id    String
+  listing            Listing           @relation(fields: [listing_id], references: [listing_id])
+  user               User              @relation(fields: [student_id], references: [user_name])
 
-  listing Listing @relation(fields: [listing_id], references: [listing_id])
-  user    User    @relation(fields: [student_id], references: [user_name])
-
+  @@index([listing_id], map: "application_listing_id_fkey")
+  @@index([student_id], map: "application_student_id_fkey")
   @@map("application")
 }
 
 model Amenity {
-  amenity_id    String   @id @default(uuid())
-  created_at    DateTime @default(now())
-  updated_at    DateTime @updatedAt
-  amenity_name  String
-  amenity_value String
-
+  amenity_id        String            @id @default(uuid())
+  created_at        DateTime          @default(now())
+  updated_at        DateTime          @updatedAt
+  amenity_name      String
+  amenity_value     String
   PropertyAmenities PropertyAmenity[]
 
   @@map("amenity")
@@ -160,11 +172,11 @@ model PropertyAmenity {
   amenity_id          String
   created_at          DateTime @default(now())
   updated_at          DateTime @updatedAt
-
-  Amenity  Amenity  @relation(fields: [amenity_id], references: [amenity_id])
-  Property Property @relation(fields: [property_id], references: [property_id])
+  Amenity             Amenity  @relation(fields: [amenity_id], references: [amenity_id])
+  Property            Property @relation(fields: [property_id], references: [property_id])
 
   @@unique([property_id, amenity_id])
+  @@index([amenity_id], map: "property_amenity_amenity_id_fkey")
   @@map("property_amenity")
 }
 
@@ -175,24 +187,26 @@ model Conversation {
   last_message    String?
   created_at      DateTime @default(now())
   updated_at      DateTime @updatedAt
+  Chats           Chat[]
+  receiver        User     @relation("ReceiverConversations", fields: [receiver_id], references: [user_name])
+  sender          User     @relation("SenderConversations", fields: [sender_id], references: [user_name])
 
-  sender   User   @relation("SenderConversations", fields: [sender_id], references: [user_name])
-  receiver User   @relation("ReceiverConversations", fields: [receiver_id], references: [user_name])
-  Chats    Chat[]
-
+  @@index([receiver_id], map: "conversation_receiver_id_fkey")
+  @@index([sender_id], map: "conversation_sender_id_fkey")
   @@map("conversation")
 }
 
 model Chat {
-  chat_id         String   @id @default(uuid())
+  chat_id         String       @id @default(uuid())
   sender_id       String
   message         String
   conversation_id String
-  created_at      DateTime @default(now())
+  created_at      DateTime     @default(now())
+  Conversation    Conversation @relation(fields: [conversation_id], references: [conversation_id])
+  sender          User         @relation("SenderChats", fields: [sender_id], references: [user_name])
 
-  sender       User         @relation("SenderChats", fields: [sender_id], references: [user_name])
-  Conversation Conversation @relation(fields: [conversation_id], references: [conversation_id])
-
+  @@index([conversation_id], map: "chat_conversation_id_fkey")
+  @@index([sender_id], map: "chat_sender_id_fkey")
   @@map("chat")
 }
 

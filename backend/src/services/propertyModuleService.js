@@ -163,11 +163,8 @@ export const getAllProperties = async (req, res) => {
         landlord_id 
       },
       include: {
-        landlord: {
-          include: {
-            profile_picture: true
-          }
-        },
+        landlord: true
+        ,
         PropertyAmenity: {
           include: {
             Amenity: true
@@ -231,11 +228,8 @@ export const getPropertyById = async (req, res) => {
     const property = await prisma.property.findUnique({
       where: { property_id: id, landlord_id },
       include: {
-        landlord: {
-          include: {
-            profile_picture: true
-          }
-        },
+        landlord: true 
+        ,
         PropertyAmenity: {
           include: {
             Amenity:true

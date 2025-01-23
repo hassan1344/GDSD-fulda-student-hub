@@ -2,6 +2,7 @@
 import React, { useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import LandlordNavbar from '../../components/LandlordNavbar';
+import { deleteProperty } from '../../services/LandlordServices';
 
 const DeleteProperty = () => {
   const { id } = useParams();
@@ -13,21 +14,14 @@ const DeleteProperty = () => {
     try {
       setIsLoading(true);
       setError(null);
-      
-      const token = localStorage.getItem('accessToken');
-      const response = await fetch(`https://fulda-student-hub.publicvm.com/api/v1/propertiesModule/${id}`, {
-        method: 'DELETE',
-        headers: {
-          'Authorization': `Bearer ${token}`
-        }
-      });
 
-      const data = await response.json();
+      // Call the deleteProperty service
+      const response = await deleteProperty(id);
 
-      if (data.success) {
+      if (response.success) {
         navigate('/landlord/my-listings');
       } else {
-        setError(data.error || 'Failed to delete property');
+        setError(response.message || 'Failed to delete property');
       }
     } catch (err) {
       console.error('Delete error:', err);
