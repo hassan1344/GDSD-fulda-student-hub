@@ -6,14 +6,13 @@ import { fetchPropertyById, fetchPropertyByIdAdmin, updateProperty } from '../..
 import { jwtDecode } from 'jwt-decode';
 import { updatePropertyAdmin } from '../../services/propertyServices';
 
-const token = localStorage.getItem('accessToken');
-const decodedToken = jwtDecode(token);
-const { userType } = decodedToken;
-
 const EditProperty = () => {
 /* Extract property ID from URL parameters using useParams hook  */
   const { id } = useParams();
   const navigate = useNavigate();
+  const token = localStorage.getItem('accessToken');
+  const decodedToken = jwtDecode(token);
+  const { userType } = decodedToken;
 
 /* Local state variables to hold property data, loading state, and error messages */
   const [property, setProperty] = useState(null);
@@ -29,6 +28,7 @@ const EditProperty = () => {
 
  /* Fetch property details when the component mounts or when 'id' changes */
   useEffect(() => {
+    
     const fetchProperty = async () => {
       try {
         const data = userType === "ADMIN" ? await fetchPropertyByIdAdmin(id, token) : await fetchPropertyById(id, token);
@@ -97,7 +97,7 @@ const EditProperty = () => {
           formData.append('media[]', file);
         });
       }
-
+      
 
     const response = userType === "ADMIN" ? await updatePropertyAdmin(id, formData) : await updateProperty(id, formData);
 
