@@ -367,8 +367,6 @@ const AuthPage = () => {
       </div>
 
       <div className="pb-16"></div>
-
-      <Disclaimer />
     </div>
   );
 };

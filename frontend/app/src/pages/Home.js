@@ -210,7 +210,6 @@ const Home = () => {
 
       <div className="pb-16"></div>
 
-      <Disclaimer />
     </div>
   );
 };

@@ -103,10 +103,6 @@ const LandlordViewProfile = () => {
         </div>
       </div>
 
-      {/* Disclaimer */}
-      <div className="mt-8">
-        <Disclaimer />
-      </div>
     </div>
   );
 };

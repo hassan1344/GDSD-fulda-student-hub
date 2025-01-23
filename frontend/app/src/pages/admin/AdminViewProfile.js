@@ -102,11 +102,6 @@ const AdminViewProfile = () => {
           </div>
         </div>
       </div>
-
-      {/* Disclaimer */}
-      <div className="mt-8">
-        <Disclaimer />
-      </div>
     </div>
   );
 };
