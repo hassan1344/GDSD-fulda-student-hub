@@ -2,7 +2,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import LandlordNavbar from '../../components/LandlordNavbar';
-import { fetchAllListings, fetchListingById } from '../../services/ListingServices';
+import { fetchAllListings, deleteListing } from '../../services/ListingServices';
 
 const ViewListings = () => {
 // State variables
@@ -13,23 +13,23 @@ const ViewListings = () => {
 
 
  /* Deletes a listing by ID after user confirmation */
-  const handleDelete = async (listingId) => {
-    if (window.confirm('Are you sure you want to delete this listing?')) {
+ const handleDelete = async (listingId) => {
+  if (window.confirm('Are you sure you want to delete this listing?')) {
     try {
-    const token = localStorage.getItem('accessToken');
-    const response = await fetch(`https://fulda-student-hub.publicvm.com/api/v1/listingsModule/${listingId}`, {
-      method: 'DELETE',
-      headers: {'Authorization': `Bearer ${token}`}});
-        
-    const data = await response.json();
-// Remove deleted listing from the state
-    if (data.success) {
-      setListings(listings.filter(listing => listing.listing_id !== listingId));
-    } else {
-      setError('Failed to delete listing');
-    }} catch (error) {
+      const response = await deleteListing(listingId);
+      if (response.success) {
+        setListings(listings.filter((listing) => listing.listing_id !== listingId));
+      } else {
+        setError(response.message || 'Failed to delete listing');
+      }
+    } catch (error) {
+      console.error('Error deleting listing:', error);
       setError('Error deleting listing');
-    }}};
+    }
+  }
+};
+
+
 /* Fetches all listings when the component mounts */
   useEffect(() => {
     const fetchListings = async () => {

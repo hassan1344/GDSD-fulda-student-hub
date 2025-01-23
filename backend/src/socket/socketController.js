@@ -134,3 +134,49 @@ export const getChats = async (socket, payload) => {
     console.error("Error fetching chats:", error.message);
   }
 };
+
+// Create a new bidding session
+export async function createBiddingSession(listingId, startingPrice, endsAt) {
+  return await prisma.biddingSession.create({
+    data: {
+      listing_id: listingId,
+      starting_price: startingPrice,
+      ends_at: new Date(endsAt),
+      status: 'active',
+    },
+  });
+}
+
+// Find an active bidding session by listing ID
+export async function findActiveBiddingSession(listingId) {
+  return await prisma.biddingSession.findFirst({
+    where: { listing_id: listingId, status: 'active' },
+  });
+}
+
+// Update a bidding session
+export async function updateBiddingSession(sessionId, data) {
+  return await prisma.biddingSession.update({
+    where: { session_id: sessionId },
+    data,
+  });
+}
+
+// Save a new bid
+export async function saveBid(sessionId, userId, amount) {
+  return await prisma.bid.create({
+    data: {
+      session_id: sessionId,
+      bidder_id: userId,
+      amount,
+    },
+  });
+}
+
+// Retrieve all bids for a session
+export async function getBidsForSession(sessionId) {
+  return await prisma.bid.findMany({
+    where: { session_id: sessionId },
+    orderBy: { amount: 'desc' },
+  });
+}

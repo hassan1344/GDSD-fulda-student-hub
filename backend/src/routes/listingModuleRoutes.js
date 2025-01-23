@@ -1,13 +1,17 @@
 import { Router } from "express";
 import multer from "multer";
-import { authenticateLandlord } from "../middlewares/auth.js";
+import { authenticateLandlord, authenticateAdmin } from "../middlewares/auth.js";
 import {
     createListing,
     getAllListings,
     getListingById,
+    getListingByIdAdmin,
     updateListing,
+    updateListingAdmin,
     deleteListing,
-    getRoomTypes
+    deleteListingAdmin,
+    getRoomTypes,
+    getListingsForAllUsers
   } from '../services/listingModuleService.js';
 
 const router = Router();
@@ -24,9 +28,13 @@ const upload = multer({
 // Route for creating a listing with file uploads
 router.post("/", authenticateLandlord, upload.array("media[]", 5), createListing);
 router.get('/', authenticateLandlord, getAllListings);
+router.get('/all', authenticateAdmin, getListingsForAllUsers);
 router.get('/room-types', getRoomTypes);
 router.get('/:id', authenticateLandlord, getListingById);
+router.get('/admin/:id', authenticateAdmin, getListingByIdAdmin);
 router.put('/:id', authenticateLandlord, upload.array("media[]", 5), updateListing);
+router.put('/admin/:id', authenticateAdmin, upload.array("media[]", 5), updateListingAdmin);
 router.delete('/:id', authenticateLandlord, deleteListing);
+router.delete('/admin/:id', authenticateAdmin, deleteListingAdmin);
 
 export default router;
