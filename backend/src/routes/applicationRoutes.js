@@ -33,6 +33,9 @@ applicationRouter.get(
 applicationRouter.post(
   "/generate-lease/",
   authenticateLandlord,
+  handleMultiPartData.fields([
+    { name: "landlord_signature", maxCount: 1 },
+  ]),
   generateLeaseAgreement
 );
 
