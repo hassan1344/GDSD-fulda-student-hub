@@ -8,21 +8,26 @@ const Navbar = () => {
   const location = useLocation();
   const navigate = useNavigate();
   const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const accessToken = localStorage.getItem("accessToken");
+  const decodedToken = jwtDecode(accessToken);
+  const { userName, userType } = decodedToken;
 
-  const navLinks = [
-    { path: "/home", name: "Home" },
-    { path: "/myApplications", name: "My Applications" },
-    { path: "/messages", name: "Messages" },
-    { path: "/viewProfile", name: "Profile" },
+  const allNavLinks = [
+    { path: "/home", name: "Home", roles: ["STUDENT"] },
+    { path: "/admin", name: "Home", roles: ["ADMIN"] },
+    { path: "/myApplications", name: "My Applications", roles: ["STUDENT"] },
+    { path: "/messages", name: "Messages", roles: ["STUDENT"] },
+    { path: "/viewProfile", name: "Profile", roles: ["STUDENT"] },
+    { path: "/admin/viewProfile", name: "Profile", roles: ["ADMIN"] },
   ];
+
+  const navLinks = allNavLinks.filter(link =>
+    link.roles.includes(userType)
+  );
 
   const logoutHandler = async () => {
     try {
       const refreshToken = localStorage.getItem("refreshToken");
-      const accessToken = localStorage.getItem("accessToken");
-
-      const decodedToken = jwtDecode(accessToken);
-      const { userName } = decodedToken;
 
       if (!refreshToken) {
         console.error("No refresh token found.");
@@ -32,11 +37,8 @@ const Navbar = () => {
       // Call the logout API
       const response = await logoutUser({ userName });
 
-      console.log(response.message); // Logs: "Logged out successfully"
-
       // Clear tokens from local storage
-      localStorage.removeItem("accessToken");
-      localStorage.removeItem("refreshToken");
+      localStorage.clear();
 
       // Redirect the user to the login page
       navigate("/", { replace: true });

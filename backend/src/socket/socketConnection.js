@@ -5,13 +5,15 @@ import {
   createConversation,
   getChats,
   getConversations,
-  placeBid,
-  endBidding,
+  createBiddingSession,
+  findActiveBiddingSession,
+  updateBiddingSession,
+  saveBid,
 } from "./socketController.js";
 
 export const initiateSocket = (server) => {
   try {
-    const connectedUsers = {};
+    const connectedUsers = {}, biddingRooms = {};
     const io = new Server(server, {
       cors: {
         // origin: config.CLIENT_URL,
@@ -24,11 +26,13 @@ export const initiateSocket = (server) => {
       authenticateSocket(socket, next);
     }).on("connection", (socket) => {
       const userName = socket.decoded?.userName;
-      if (userName) {
-        socket.join(userName);
-        connectedUsers[userName] = socket.id;
-        console.log(`User ${userName} joined room ${userName}`);
+      if(socket.handshake.query?.endpoint === 'chat') {
+        if (userName) {
+          socket.join(userName);
+          connectedUsers[userName] = socket.id;
+        }
       }
+      console.log(`User ${userName} joined room ${userName}`);
       console.log(`A client has connected : ${socket.id}`);
 
       socket.on("createConversation", async (data) => {
@@ -80,35 +84,151 @@ export const initiateSocket = (server) => {
         io.to(socket.decoded.userName).emit("getChats", chats);
       });
 
-      socket.on("placeBid", async (data) => {
-        // data : sessionId, amount
-        const bid = await placeBid(data);
-
-        io.to(data.sessionId).emit("updateBids", {
-          sessionId: bid.sessionId,
-          highestBid: bid.highestBid,
-          highestBidder: bid.highestBidder,
-        });
-      });
-
-      socket.on("endBidding", async (data) => {
-        //data : sessionId
-        const endBid = await endBidding(data);
-
-        io.to(data.sessionId).emit("biddingEnded", {
-          sessionId: endBid.sessionId,
-          highestBid: endBid.highestBid,
-          highestBidder: endBid.highestBidder,
-        });
-      });
-
       socket.on("disconnect", () => {
         if (userName && connectedUsers[userName] === socket.id) {
           delete connectedUsers[userName];
         }
         console.log(`A client has disconnected : ${socket.id}`);
       });
+
+      // 1. Start Bidding
+    socket.on('startBidding', async ({ listingId, startingPrice, endsAt }) => {
+      try {
+        if(socket.decoded?.userType !== 'LANDLORD') {
+          socket.emit('error', 'Only Landlord can start bidding');
+          return;
+        }
+        const existingSession = await findActiveBiddingSession(listingId);
+        if (existingSession) {
+          socket.emit('error', 'Bidding already started for this listing.');
+          return;
+        }
+
+        const session = await createBiddingSession(listingId, startingPrice, endsAt);
+        const roomId = session.session_id;
+        biddingRooms[roomId] = { listingId, bids: [], isActive: true };
+
+        socket.join(roomId);
+        console.log(`Bidding started for room: ${roomId}, listing: ${listingId}`);
+        io.to(roomId).emit('biddingStarted', { roomId, listingId, startingPrice, endsAt });
+      } catch (error) {
+        console.error('Error starting bidding:', error.message);
+        socket.emit('error', 'Failed to start bidding.');
+      }
     });
+
+    // 2. Join Bidding
+    socket.on('joinBidding', async ({ listingId }) => {
+      try {
+        const session = await findActiveBiddingSession(listingId);
+        if (!session) {
+          socket.emit('error', 'Bidding session not found.');
+          return;
+        }
+        const roomId = session.session_id;
+        if (biddingRooms[roomId]?.isActive) {
+          socket.join(roomId);
+          console.log(`User ${userName} joined bidding for room: ${roomId}`);
+          socket.emit('joinedBidding', { roomId, listingId: session.listing_id });
+        } else {
+          socket.emit('error', 'Bidding is not active for this room.');
+        }
+      } catch (error) {
+        console.error('Error joining bidding:', error.message);
+        socket.emit('error', 'Failed to join bidding.');
+      }
+    });
+
+    // 3. Place Bid
+    socket.on('placeBid', async ({ listingId, amount }) => {
+      try {
+        if(socket.decoded?.userType !== 'STUDENT') {
+          socket.emit('error', 'Only Students can place bids');
+          return;
+        }
+        const session = await findActiveBiddingSession(listingId);
+        if (!session) {
+          socket.emit('error', 'Bidding session not found.');
+          return;
+        }
+        const roomId = session.session_id;
+        if (biddingRooms[roomId]?.isActive) { 
+          if (amount <= Math.max(session.highest_bid, session.starting_price)) {
+            socket.emit('error', 'Bid amount must be higher than the current highest bid.');
+            return;
+          }
+
+          const bid = await saveBid(session.session_id, userName, amount);
+          await updateBiddingSession(session.session_id, {
+            highest_bid: amount,
+            highest_bidder: userName,
+          });
+
+          biddingRooms[roomId].bids.push({ userName, amount, timestamp: new Date().toISOString() });
+          console.log(`New bid placed by ${userName} in room: ${roomId}`, bid);
+
+          io.to(roomId).emit('updateBids', { roomId, bids: biddingRooms[roomId].bids });
+        } else {
+          socket.emit('error', 'Bidding is not active or room does not exist.');
+        }
+      } catch (error) {
+        console.error('Error placing bid:', error.message);
+        socket.emit('error', 'Failed to place bid.');
+      }
+    });
+
+    // 4. Leave Bidding
+    socket.on('leaveBidding', async ({ listingId }) => {
+      const session = await findActiveBiddingSession(listingId);
+      if (!session) {
+        socket.emit('error', 'Bidding session not found.');
+        return;
+      }
+      const roomId = session.session_id;
+      socket.leave(roomId);
+      console.log(`User ${userName} left bidding for room: ${roomId}`);
+      socket.to(roomId).emit('userLeft', { userName });
+    });
+
+    // 5. End Bidding
+    socket.on('endBidding', async ({ listingId }) => {
+      try {
+        if(socket.decoded?.userType !== 'LANDLORD') {
+          socket.emit('error', 'Only Landlord can end bidding');
+          return;
+        }
+        const session = await findActiveBiddingSession(listingId);
+        if (!session) {
+          socket.emit('error', 'Bidding session not found.');
+          return;
+        }
+        const roomId = session.session_id;
+        if (biddingRooms[roomId]?.isActive) {
+          const bids = biddingRooms[roomId].bids;
+          const winner = bids.length
+            ? bids.reduce((max, bid) => (bid.amount > max.amount ? bid : max))
+            : null;
+
+          await updateBiddingSession(session.session_id, {
+            status: 'ended',
+            highest_bid: winner?.amount || 0,
+            highest_bidder: winner?.userName || null,
+          });
+
+          biddingRooms[roomId].isActive = false;
+          console.log(`Bidding ended for room: ${roomId}. Winner:`, winner);
+
+          io.to(roomId).emit('biddingEnded', { roomId, winner });
+        } else {
+          socket.emit('error', 'Bidding is not active or room does not exist.');
+        }
+      } catch (error) {
+        console.error('Error ending bidding:', error.message);
+        socket.emit('error', 'Failed to end bidding.');
+      }
+    });
+    });
+    
   } catch (error) {
     console.log(error.message);
   }

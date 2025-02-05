@@ -2,11 +2,15 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import LandlordNavbar from '../../components/LandlordNavbar';
-import { fetchListingById, updateListing } from '../../services/ListingServices';
+import { fetchListingById, fetchListingByIdAdmin, updateListing, updateListingAdmin } from '../../services/ListingServices';
+import { jwtDecode } from "jwt-decode"; // Import the library
 
 const EditListing = () => {
   const { id } = useParams();  //get listing id from url param
   const navigate = useNavigate(); //navigation hook
+  const token = localStorage.getItem('accessToken');
+  const decodedToken = jwtDecode(token);
+  const { userType } = decodedToken;
 
 
 // State for listing data, form inputs, and UI feedback  
@@ -29,8 +33,7 @@ const EditListing = () => {
   useEffect(() => {
     const fetchListing = async () => {
       try {
-        const token = localStorage.getItem('accessToken');
-        const response = await fetchListingById(id, token);
+        const response = userType === "ADMIN" ? await fetchListingByIdAdmin(id, token) : await fetchListingById(id, token);
         if (response.success) {
           setListing(response.data);
           setVisibleMedia(response.data.media || []);
@@ -81,7 +84,9 @@ const EditListing = () => {
       updateFormData.append('imagesToDelete[]', mediaId);
 
       // Make an API call to update the listing
-      const response = await updateListing(id, updateFormData, token);
+      const response = await userType === "ADMIN" ? 
+      updateListingAdmin(id, updateFormData, token) : 
+      updateListing(id, updateFormData, token);
 
       if (response.success) {
         // Update frontend UI to reflect the deletion
@@ -124,10 +129,12 @@ const EditListing = () => {
         updateFormData.append('property_id', listing.property_id);
       }
 
-      const response = await updateListing(id, updateFormData, token);
+      const response = userType === "ADMIN" ? 
+      await updateListingAdmin(id, updateFormData, token) : 
+      await updateListing(id, updateFormData, token);
 
       if (response.success) {
-        navigate('/landlord/my-prop-listings');
+        navigate(userType === "ADMIN" ? '/admin/listings' : '/landlord/my-prop-listings');
       } else {
         console.error('Update failed:', response);
         setError(response.message || 'Failed to update listing');
@@ -147,7 +154,7 @@ const EditListing = () => {
       <LandlordNavbar />
       <div className="container mx-auto px-4 py-8">
         <button
-          onClick={() => navigate('/landlord/my-prop-listings')}
+          onClick={() => navigate(userType === "ADMIN" ? '/admin/listings' : '/landlord/my-prop-listings')}
           className="mb-6 flex items-center text-green-700 hover:text-green-800 font-semibold transition duration-200"
         >
           <svg
@@ -258,7 +265,7 @@ const EditListing = () => {
             <div className="flex justify-end space-x-4">
               <button
                 type="button"
-                onClick={() => navigate('/landlord/my-prop-listings')}
+                onClick={() => navigate(userType === "ADMIN" ? '/admin/listings' : '/landlord/my-prop-listings')}
                 className="px-6 py-3 bg-gray-500 text-white rounded-lg hover:bg-gray-600 transition duration-200"
               >
                 Cancel
