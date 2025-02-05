@@ -7,10 +7,9 @@ const ReviewForm = ({ onSubmit }) => {
 
   const handleSubmit = (e) => {
     e.preventDefault();
-    // Pass the rating and review text back to the parent
+
     onSubmit({ rating, reviewText });
 
-    // Optionally reset the form
     setRating(0);
     setHover(0);
     setReviewText("");
@@ -20,7 +19,6 @@ const ReviewForm = ({ onSubmit }) => {
     <div className="p-4 bg-gray-100 rounded-md">
       <h3 className="text-lg font-medium mb-2">Leave a Review</h3>
 
-      {/* Star Rating */}
       <div className="flex items-center mb-2">
         {[...Array(5)].map((_, index) => {
           const ratingValue = index + 1;
@@ -55,7 +53,6 @@ const ReviewForm = ({ onSubmit }) => {
         })}
       </div>
 
-      {/* Rating Text */}
       <textarea
         className="w-full p-2 border border-gray-300 rounded-md mb-2"
         placeholder="Share your experience..."
@@ -63,7 +60,6 @@ const ReviewForm = ({ onSubmit }) => {
         onChange={(e) => setReviewText(e.target.value)}
       />
 
-      {/* Submit Button */}
       <button
         onClick={handleSubmit}
         className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors"

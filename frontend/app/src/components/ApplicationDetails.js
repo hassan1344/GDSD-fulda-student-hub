@@ -199,8 +199,7 @@ const ApplicationDetails = ({ applicationId, onBack }) => {
           </div>
         </div>
         {/* 
-          ONLY SHOW THIS SECTION IF STATUS != "pending".
-          For example: "accepted", "rejected", "closed", etc. 
+          ONLY SHOW THIS SECTION IF STATUS != "pending". 
         */}
         {application.application_status === "PENDING" && (
           <div className="mt-6">
