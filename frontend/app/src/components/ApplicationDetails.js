@@ -2,11 +2,14 @@ import React, { useState, useEffect } from "react";
 import { getApplicationByID } from "../services/applicationServices";
 import Navbar from "../components/NavBar";
 import Disclaimer from "./Disclaimer";
+import ReviewForm from "./ReviewForm";
 
 const ApplicationDetails = ({ applicationId, onBack }) => {
   const [application, setApplication] = useState(null);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState(null);
+
+  const [reviewData, setReviewData] = useState(null);
 
   useEffect(() => {
     const fetchApplications = async () => {
@@ -27,6 +30,7 @@ const ApplicationDetails = ({ applicationId, onBack }) => {
     if (applicationId) fetchApplications();
   }, [applicationId]);
 
+  // console.log(application);
   if (isLoading) {
     return (
       <p className="text-center text-gray-600 mt-6">
@@ -46,6 +50,13 @@ const ApplicationDetails = ({ applicationId, onBack }) => {
       </p>
     );
   }
+
+  const handleReviewSubmit = (review) => {
+    console.log("Received review data:", review);
+    // Here you can call an API to save the review to your database.
+    // e.g., await submitReview(applicationId, review)
+    setReviewData(review);
+  };
 
   return (
     <div className="background-container">
@@ -187,6 +198,15 @@ const ApplicationDetails = ({ applicationId, onBack }) => {
             )}
           </div>
         </div>
+        {/* 
+          ONLY SHOW THIS SECTION IF STATUS != "pending".
+          For example: "accepted", "rejected", "closed", etc. 
+        */}
+        {application.application_status === "PENDING" && (
+          <div className="mt-6">
+            <ReviewForm onSubmit={handleReviewSubmit} />
+          </div>
+        )}
 
         <div className="mt-8">
           <Disclaimer />
