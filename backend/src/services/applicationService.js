@@ -14,13 +14,8 @@ export const createApplication = async (req, res) => {
     } = req.body;
     const { userName } = req.user;
 
-    if (
-      !listing_id ||
-      !full_name ||
-      !student_card_id ||
-      !contact_number ||
-      !current_address
-    ) {
+    const requiredFields = [listing_id, full_name, student_card_id, contact_number, current_address];
+    if (!requiredFields.every(field => field)) {
       return res
         .status(400)
         .json({ error: "All student details are required" });
@@ -51,7 +46,7 @@ export const createApplication = async (req, res) => {
         contact_number,
         current_address,
         application_status: "PENDING",
-        remarks: remarks || null,
+        remarks: remarks,
       },
     });
 
@@ -62,7 +57,7 @@ export const createApplication = async (req, res) => {
       const file = req.files["government_id"][0];
 
       uploadPromises.push(
-        await uploadToS3(file).then((uploadedFile) => {
+        uploadToS3(file).then((uploadedFile) => {
           mediaEntries.push({
             model_name: "application",
             model_id: application.application_id,
