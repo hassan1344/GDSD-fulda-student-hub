@@ -4,7 +4,7 @@ import io from "socket.io-client";
 import { getBiddingStatus } from "../../services/biddingServices";
 import LandlordNavbar from "../../components/LandlordNavbar";
 
-const BIDDING_SERVER_URL = "https://fulda-student-hub.publicvm.com/api/v1";
+const BIDDING_SERVER_URL = "https://fulda-student-hub.publicvm.com";
 
 const BiddingLandlord = () => {
   const { listingId } = useParams();
@@ -298,12 +298,12 @@ const BiddingLandlord = () => {
           )}
           {biddingStatus === "active" && (
             <div className="mt-6 flex flex-wrap justify-center gap-4">
-            <button
-              onClick={handleEndBidding}
-              className="px-6 py-3 bg-red-600 text-white rounded-lg hover:bg-red-700 transition duration-200"
-            >
-              End Bidding
-            </button>
+              <button
+                onClick={handleEndBidding}
+                className="px-6 py-3 bg-red-600 text-white rounded-lg hover:bg-red-700 transition duration-200"
+              >
+                End Bidding
+              </button>
             </div>
           )}
         </div>
