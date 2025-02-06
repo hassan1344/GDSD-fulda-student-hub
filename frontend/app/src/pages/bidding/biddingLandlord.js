@@ -4,7 +4,7 @@ import io from "socket.io-client";
 import { getBiddingStatus } from "../../services/biddingServices";
 import LandlordNavbar from "../../components/LandlordNavbar";
 
-const BIDDING_SERVER_URL = "http://localhost:8000";
+const BIDDING_SERVER_URL = "https://fulda-student-hub.publicvm.com/api/v1";
 
 const BiddingLandlord = () => {
   const { listingId } = useParams();
