@@ -164,7 +164,11 @@ const Messages = () => {
 
         if (userName) {
           const profile = await getProfileByUsername(userName);
-          setReceiverUser(profile); // **Old logic for setting receiverUser**
+          if (profile != null) { // Update: Added a null check for profile and setting empty user to not occur any runtime errors
+            setReceiverUser(profile);
+          } else {
+            setReceiverUser(null);
+          }
         } else {
           console.error("No username found in the current conversation.");
         }
@@ -199,6 +203,19 @@ const Messages = () => {
   const sendMessage = () => {
     if (!messageInput || !currentConversation) {
       alert("Please enter a message.");
+      return;
+    }
+
+    // Input sanitization
+    let sanitizedMessage = messageInput.trim(); // Remove leading/trailing spaces
+
+    // Prevent empty or excessively long messages
+    if (sanitizedMessage.length === 0) {
+      alert("Message cannot be empty.");
+      return;
+    }
+    if (sanitizedMessage.length > 100) {
+      alert("Message is too long. Limit is 100 characters.");
       return;
     }
 
