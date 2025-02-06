@@ -141,6 +141,15 @@ const ViewListings = () => {
             Delete Listing
           </button>
         </div>
+
+        <div className="md:w-2/3 p-8">
+        <button
+            onClick={() => navigate(`/bidding/BiddingLandlord/${listing.listing_id}`)}
+            className="flex-1 px-8 py-4 bg-green-600 hover:bg-green-700 text-white text-xl font-semibold rounded-lg transition duration-200 shadow-md hover:shadow-lg"
+          >
+            Start Bidding
+          </button>
+        </div>
       </div>
     </div>
   </div>

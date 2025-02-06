@@ -1,0 +1,48 @@
+import apiClient from "./apiClient";
+
+export const getAllActiveBiddings = async () => {
+  try {
+    const response = await apiClient.get("/bidding/active-biddings", {
+      requireToken: true,
+    });
+
+    return response.data; // Return the data from the API
+  } catch (error) {
+    console.error("Error fetching active Biddings:", error);
+    return [];
+  }
+};
+
+export const getBiddingStatus = async (listingId) => {
+    try {
+      const response = await apiClient.get(`/bidding/status?listingId=${listingId}`, {
+        requireToken: true,
+      });
+  
+      return response.data; // Return the data from the API
+    } catch (error) {
+      console.error("Error fetching listing status", error);
+      return [];
+    }
+  };
+
+export const getListingsByIds = async (listingIds) => {
+  if (!Array.isArray(listingIds) || listingIds.length === 0) {
+    console.error("Invalid or empty listing IDs array");
+    return [];
+  }
+  try {
+    const response = await apiClient.post(
+      "/searchListing/search",
+      { ids: listingIds },
+      {
+        requireToken: true,
+      }
+    );
+
+    return response.data;
+  } catch (error) {
+    console.error("Error fetching listings by IDs:", error);
+    return [];
+  }
+};
