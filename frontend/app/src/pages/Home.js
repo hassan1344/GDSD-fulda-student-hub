@@ -7,6 +7,10 @@ import SearchCard from "../components/SearchCard";
 import PropertyDetails from "../components/PropertyDetails";
 import { getAllAmenities } from "../services/utilServices";
 import { fetchListings } from "../services/searchListingServices";
+import {
+  getAllActiveBiddings,
+  getListingsByIds,
+} from "../services/biddingServices";
 
 const Home = () => {
   const [location, setLocation] = useState("");
@@ -18,18 +22,30 @@ const Home = () => {
   const [listings, setListings] = useState([]);
   const [amenities, setAmenities] = useState([]);
   const [uniqueAmenities, setUniqueAmenities] = useState([]);
+  const [activeBiddings, setActiveBiddings] = useState([]);
 
   const navigate = useNavigate();
 
   useEffect(() => {
     const fetchInitialData = async () => {
       try {
-        const [fetchedListings, fetchedAmenities] = await Promise.all([
-          fetchListings({}),
-          getAllAmenities(),
-        ]);
+        const [fetchedListings, fetchedAmenities, fetchedBiddings] =
+          await Promise.all([
+            fetchListings({}),
+            getAllAmenities(),
+            getAllActiveBiddings(),
+          ]);
         setListings(fetchedListings.slice(0, 5));
         setAmenities(fetchedAmenities);
+
+        const listingIds =
+          fetchedBiddings.length > 0
+            ? fetchedBiddings.map((bid) => bid.listing_id)
+            : [];
+
+        getListingsByIds(listingIds).then((bidListings) => {
+          setActiveBiddings(bidListings);
+        });
 
         // Normalize amenities to lowercase and replace underscores with spaces
         const normalizedAmenities = [];
@@ -93,8 +109,12 @@ const Home = () => {
     });
   };
 
-  const handleSelectProperty = (property) => {
-    setSelectedProperty(property);
+  const handleViewMore = () => {
+    navigate("/searchresults");
+  };
+
+  const handleSelectProperty = (property, isBidding = false) => {
+    setSelectedProperty({...property, isBidding});
   };
 
   const handleBackToResults = () => {
@@ -147,14 +167,21 @@ const Home = () => {
                       >
                         <input
                           type="checkbox"
-                          checked={advancedFilters[filter.amenity_name] || false}
-                          onChange={() => handleToggleFilter(filter.amenity_name)}
+                          checked={
+                            advancedFilters[filter.amenity_name] || false
+                          }
+                          onChange={() =>
+                            handleToggleFilter(filter.amenity_name)
+                          }
                           className="w-5 h-5 text-blue-500 focus:ring-blue-400 rounded"
                         />
                         <span>
                           {filter.amenity_name
                             .replace(/_/g, " ") // Display without underscores
-                            .replace(/\b\w/g, (char) => char.toUpperCase())} {/* Capitalize first letter */}
+                            .replace(/\b\w/g, (char) =>
+                              char.toUpperCase()
+                            )}{" "}
+                          {/* Capitalize first letter */}
                         </span>
                       </label>
                     ))
@@ -176,40 +203,80 @@ const Home = () => {
               <h2 className="text-lg font-semibold text-gray-800 mb-4">
                 Featured Listings
               </h2>
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                {listings.length > 0 ? (
-                  listings.map((listing) => (
-                    <SearchCard
-                      key={listing.listing_id}
-                      image={
-                        `https://fulda-student-hub.s3.eu-north-1.amazonaws.com/public/uploads/images/${listing.Media[0]?.mediaUrl}` ||
-                        "/default.jpg"
-                      }
-                      description={listing.description}
-                      price={`€${listing.rent}`}
-                      poster={`${listing.property.landlord.first_name} ${listing.property.landlord.last_name}`}
-                      onClick={() => handleSelectProperty(listing)}
-                    />
-                  ))
-                ) : (
-                  <p className="text-gray-600 text-center">
-                    Loading featured listings...
-                  </p>
-                )}
-              </div>
 
-              <div className="mt-4 text-center">
-                <button className="bg-blue-500 text-white px-4 py-2 rounded-lg hover:bg-blue-600 transition duration-200">
-                  View More
-                </button>
-              </div>
+              {activeBiddings.length === 0 ? (
+                <p className="text-gray-600 text-center mb-4">
+                  No current active biddings.
+                </p>
+              ) : (
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                  {/* Left Column - Featured Listings */}
+                  <div>
+                    <h3 className="text-md font-semibold text-gray-700 mb-2">
+                      Featured Listings
+                    </h3>
+                    <div className="grid grid-cols-1 lg:grid-cols-1 gap-4">
+                      {listings.length > 0 ? (
+                        listings.map((listing) => (
+                          <SearchCard
+                            key={listing.listing_id}
+                            image={
+                              `https://fulda-student-hub.s3.eu-north-1.amazonaws.com/public/uploads/images/${listing.Media[0]?.mediaUrl}` ||
+                              "/default.jpg"
+                            }
+                            description={listing.description}
+                            price={`€${listing.rent}`}
+                            poster={`${listing.property.landlord.first_name} ${listing.property.landlord.last_name}`}
+                            onClick={() => handleSelectProperty(listing, false)}
+                          />
+                        ))
+                      ) : (
+                        <p className="text-gray-600 text-center">
+                          Loading featured listings...
+                        </p>
+                      )}
+                    </div>
+                    <div className="mt-4 text-center">
+                      <button
+                        className="bg-blue-500 text-white px-4 py-2 rounded-lg hover:bg-blue-600 transition duration-200"
+                        onClick={handleViewMore}
+                      >
+                        View More
+                      </button>
+                    </div>
+                  </div>
+
+                  {/* Right Column - Active Biddings */}
+                  <div>
+                    <h3 className="text-md font-semibold text-gray-700 mb-2">
+                      Active Biddings
+                    </h3>
+                    <div className="grid grid-cols-1 lg:grid-cols-1 gap-4">
+                      {activeBiddings.map((bidding) => (
+                        <SearchCard
+                          key={bidding.listing_id}
+                          image={
+                            `https://fulda-student-hub.s3.eu-north-1.amazonaws.com/public/uploads/images/${bidding.Media[0]?.mediaUrl}` ||
+                            "/default.jpg"
+                          }
+                          description={bidding.description}
+                          price={`Current Bid: €${
+                            bidding.rent // || bidding.starting_price
+                          }`}
+                          poster={`${bidding.property.landlord.first_name} ${bidding.property.landlord.last_name}`}
+                          onClick={() => handleSelectProperty(bidding, true)}
+                        />
+                      ))}
+                    </div>
+                  </div>
+                </div>
+              )}
             </div>
           </div>
         </div>
       )}
 
       <div className="pb-16"></div>
-
     </div>
   );
 };

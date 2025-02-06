@@ -1,9 +1,14 @@
 import React, { useState } from "react";
+import { useLocation, useNavigate } from "react-router-dom";
 import ApplicationForm from "./ApplicationForm";
 
-const PropertyDetails = ({ listing, onBack }) => {
+const PropertyDetails = ({ listing, onBack}) => {
   const [activeTab, setActiveTab] = useState("about");
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
+
+  const navigate = useNavigate();
+  const location = useLocation(); // ✅ Correct way to get the current location
+
 
   if (!listing) {
     return (
@@ -83,6 +88,23 @@ const PropertyDetails = ({ listing, onBack }) => {
             <ApplicationForm listing_id={listing.listing_id} />
           </div>
         );
+      case "bid":
+        return (
+          <div>
+            <h3 className="text-lg font-semibold mb-4">Bid Now</h3>
+            <button
+              className={`px-6 py-2 text-white font-semibold rounded-md shadow`}
+              onClick={
+                navigate(`/bidding/BiddingStudent/${listing.listing_id}`, {
+                  state: { from: location.pathname }, // Store previous path
+                })
+              }
+            >
+              Bid Now
+            </button>
+          </div>
+        );
+
       default:
         return null;
     }
@@ -201,9 +223,23 @@ const PropertyDetails = ({ listing, onBack }) => {
               ? "border-b-2 border-blue-600 font-bold text-blue-600"
               : "text-gray-600 hover:text-blue-600 hover:font-medium"
           }`}
+          style={{ display: !listing.isBidding ? "block" : "none" }} // Hide if not from bidding list
         >
           Apply Now
         </button>
+
+        <button
+          onClick={() => setActiveTab("bid")}
+          className={`py-2 px-4 transition-all duration-200 ${
+            activeTab === "bid"
+              ? "border-b-2 border-blue-600 font-bold text-blue-600"
+              : "text-gray-600 hover:text-blue-600 hover:font-medium"
+          }`}
+          style={{ display: listing.isBidding ? "block" : "none" }} // Hide if not from bidding list
+        >
+          Bid Now
+        </button>
+
       </div>
 
       {/* Tab Content */}
