@@ -12,6 +12,7 @@ import propertyModuleRouter from "./routes/propertyModuleRoutes.js";
 import utilRouter from "./routes/utilRoutes.js";
 import searchListingRouter from "./routes/searchListingRoute.js";
 import listingModuleRouter from "./routes/listingModuleRoutes.js";
+import biddingRouter from "./routes/biddingRoutes.js";
 
 const app = express();
 
@@ -40,6 +41,7 @@ app.use("/v1/propertiesModule", propertyModuleRouter);
 app.use("/v1/utils", utilRouter);
 app.use("/v1/searchListing", searchListingRouter);
 app.use("/v1/listingsModule", listingModuleRouter);
+app.use("/v1/bidding", biddingRouter);
 
 // app.use(ResHandler);
 

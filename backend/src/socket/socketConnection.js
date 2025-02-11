@@ -9,6 +9,7 @@ import {
   findActiveBiddingSession,
   updateBiddingSession,
   saveBid,
+  getBidsForSession,
 } from "./socketController.js";
 
 export const initiateSocket = (server) => {
@@ -120,16 +121,20 @@ export const initiateSocket = (server) => {
     // 2. Join Bidding
     socket.on('joinBidding', async ({ listingId }) => {
       try {
+        console.log("first");
         const session = await findActiveBiddingSession(listingId);
         if (!session) {
           socket.emit('error', 'Bidding session not found.');
           return;
         }
         const roomId = session.session_id;
+        biddingRooms[roomId] = { listingId, bids: [], isActive: true };
         if (biddingRooms[roomId]?.isActive) {
           socket.join(roomId);
           console.log(`User ${userName} joined bidding for room: ${roomId}`);
-          socket.emit('joinedBidding', { roomId, listingId: session.listing_id });
+          const bids = await getBidsForSession(roomId);
+
+          socket.emit('joinedBidding', { roomId, listingId: session.listing_id, bids: bids});
         } else {
           socket.emit('error', 'Bidding is not active for this room.');
         }
@@ -167,7 +172,9 @@ export const initiateSocket = (server) => {
           biddingRooms[roomId].bids.push({ userName, amount, timestamp: new Date().toISOString() });
           console.log(`New bid placed by ${userName} in room: ${roomId}`, bid);
 
-          io.to(roomId).emit('updateBids', { roomId, bids: biddingRooms[roomId].bids });
+
+          const bids = await getBidsForSession(roomId);
+          io.to(roomId).emit('updateBids', { roomId, bids: bids });
         } else {
           socket.emit('error', 'Bidding is not active or room does not exist.');
         }
@@ -187,7 +194,8 @@ export const initiateSocket = (server) => {
       const roomId = session.session_id;
       socket.leave(roomId);
       console.log(`User ${userName} left bidding for room: ${roomId}`);
-      socket.to(roomId).emit('userLeft', { userName });
+      const bids = await getBidsForSession(roomId);
+      socket.to(roomId).emit('userLeft', { userName, bids:bids });
     });
 
     // 5. End Bidding
