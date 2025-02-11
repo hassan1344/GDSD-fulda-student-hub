@@ -8,16 +8,22 @@ export const getNearestServices = async (req, res) => {
     if (!address) return res.status(400).json({ error: "Address required" });
 
     const coords = await geocodeAddress(address);
+    if (!coords) return res.json({});
+
     const services = await fetchAllServices(coords);
     
     res.json({
       ...services,
+      location: {
+        latitude: coords.lat,
+        longitude: coords.lon
+      },
       distanceFromUniversity: calculateUniversityDistance(coords)
     });
 
   } catch (error) {
     console.error("Service Error:", error.message);
-    res.status(500).json({ error: error.message });
+    res.json({});
   }
 };
 
@@ -26,7 +32,7 @@ const geocodeAddress = async (address) => {
   const response = await axios.get(
     `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(address)}`
   );
-  if (!response.data.length) throw new Error("Address not found");
+  if (!response.data.length) return null;
   return { lat: parseFloat(response.data[0].lat), lon: parseFloat(response.data[0].lon) };
 };
 
@@ -42,7 +48,11 @@ const fetchAllServices = async ({ lat, lon }) => {
     supermarket: formatResult(supermarket, "Unknown Supermarket"),
     hospital: formatResult(hospital, "Unknown Hospital"),
     busStop: formatResult(busStop, "Unnamed Bus Stop"),
-    railwayStation: formatResult(railwayStation, "Unnamed Railway Station")
+    railwayStation: formatResult(railwayStation, "Unnamed Railway Station"),
+    location: {
+      latitude: lat,
+      longitude: lon
+    }
   };
 };
 
@@ -97,3 +107,12 @@ const formatResult = (result, defaultName) =>
     lon: result.lon,
     distance: `${result.distance.toFixed(2)} meters`
   } : `No ${defaultName.toLowerCase()} found nearby`;
+
+import express from "express";
+import * as nearestServices from "../services/nearestServicesService.js";
+
+const router = express.Router();
+
+router.get("/nearest-services", nearestServices.getNearestServices);
+
+export default router;
