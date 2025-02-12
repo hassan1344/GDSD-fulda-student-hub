@@ -38,8 +38,11 @@ const Messages = () => {
       return;
     }
 
-    socketRef.current = io("https://fulda-student-hub.publicvm.com", {
-      query: { token },
+    socketRef.current = io("http://localhost:8000", {
+      query: { 
+        token,
+        endpoint: "chat"
+      },
     });
 
     socketRef.current.on("connect", () => {
@@ -52,7 +55,6 @@ const Messages = () => {
         console.error("Failed to create or receive conversation.");
         return;
       }
-      setConversations((prev) => [...prev, conversation]);
       if (
         conversation.receiver_id === localStorage.getItem("receiverId") &&
         conversation.conversation_id
@@ -63,24 +65,12 @@ const Messages = () => {
       }
     });
 
-    socketRef.current.on("newConversation", (conversation) => {
-      if (!conversation) return;
-
-   
-      setConversations((prev) => [...prev, conversation]);
-
-     
-      // setCurrentConversation(conversation);
-      // fetchChats(conversation.conversation_id);
-
- 
-    });
-
     socketRef.current.on("sendMessage", (message) => {
       if (message.conversation_id === currentConversation?.conversation_id) {
         setMessages((prev) => [...prev, message]);
       }
       updateLastMessageInConversation(message);
+      fetchConversations();
     });
 
     socketRef.current.on("disconnect", () => {
@@ -93,9 +83,12 @@ const Messages = () => {
     setLoadingConversations(true);
     socketRef.current.emit("getConversations");
     socketRef.current.on("getConversations", async (fetchedConversations) => {
-      // console.log("FETCCHED CONVERSATIONSSSSSS!!!", fetchedConversations);
+      
+      // Filter out empty conversations
+      const validConversations = fetchedConversations.filter(convo => convo.last_message && convo.last_message.length > 0);
+      setConversations(validConversations);
+      
       setLoadingConversations(false);
-      setConversations(fetchedConversations);
 
       const receiverId = localStorage.getItem("receiverId");
       if (receiverId) {
@@ -104,6 +97,8 @@ const Messages = () => {
             conv.sender_id === receiverId || conv.receiver_id === receiverId
         );
 
+        console.log("Existing conversation:", existingConversation);
+        
         if (existingConversation) {
           handleChatClick(existingConversation);
           localStorage.removeItem("receiverId");
@@ -125,7 +120,6 @@ const Messages = () => {
         const profilePromises = fetchedConversations.map(
           async (conversation) => {
             if (conversation.sender_id === currentUserName) {
-              // console.log("Condition passed on first go!!!!!");
               // Use optional chaining to avoid errors if properties are missing
               return await getProfileByUsername(
                 conversation.receiver?.user_name
@@ -139,7 +133,6 @@ const Messages = () => {
         // Wait for all profile fetches to complete
         const updatedReceiverUsers = await Promise.all(profilePromises);
         setReceiverUsers(updatedReceiverUsers);
-        // console.log("Updated receiverUsers:", updatedReceiverUsers);
       } catch (error) {
         console.error("Error fetching profiles:", error);
       }
@@ -176,8 +169,6 @@ const Messages = () => {
     });
   };
 
-  // console.log("receiverUser", receiverUser);
-
   // Update Last Message in Conversation
   const updateLastMessageInConversation = (message) => {
     setConversations((prev) =>
@@ -191,7 +182,6 @@ const Messages = () => {
 
   // Handle Chat Click
   const handleChatClick = (conversation) => {
-    // console.log("conversation in handle chat click", conversation);
     if (currentConversation?.conversation_id === conversation.conversation_id)
       return;
 
@@ -384,10 +374,6 @@ const Messages = () => {
             <div className="text-center text-gray-500">No user selected</div>
           )}
         </div>
-      </div>
-
-      <div className="mt-8">
-        <Disclaimer />
       </div>
     </div>
   );
