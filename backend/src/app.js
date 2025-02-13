@@ -14,6 +14,9 @@ import searchListingRouter from "./routes/searchListingRoute.js";
 import listingModuleRouter from "./routes/listingModuleRoutes.js";
 import biddingRouter from "./routes/biddingRoutes.js";
 
+//Calendar
+import calendarRouter from "./routes/calendarRoutes.js";
+
 const app = express();
 
 app.use(bodyParser.json());
@@ -44,5 +47,8 @@ app.use("/v1/listingsModule", listingModuleRouter);
 app.use("/v1/bidding", biddingRouter);
 
 // app.use(ResHandler);
+
+//Calendar
+app.use("/v1/calendar", calendarRouter);
 
 export { app };

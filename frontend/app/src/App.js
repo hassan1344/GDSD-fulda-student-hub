@@ -36,6 +36,11 @@ import AdminViewProfile from './pages/admin/AdminViewProfile';
 import LeaseAgreement from './pages/landlord/LeaseAgreement';
 
 
+//Calendar Imports
+import CalendarPage from './pages/landlord/CalendarPage';
+import MeetingForm from './pages/landlord/MeetingForm';
+import MeetingList from './pages/landlord/MeetingList';
+
 
 const App = () => {
   console.log("App rendered");
@@ -87,6 +92,8 @@ const App = () => {
        <Route path="/admin/edit-property/:id" element={<EditDeleteListing />} />
        <Route path="/admin/viewProfile" element = {<AdminViewProfile/>}/>
 
+        {/* Calendar routes */}
+        <Route path="/landlord/calendar" element={<CalendarPage/>} />
 
       </Routes>
     </Router>

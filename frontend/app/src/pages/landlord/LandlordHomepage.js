@@ -54,6 +54,7 @@ const LandlordHomepage = () => {
     { title: 'View Past Tenants', path: '/past-tenants', icon: '👥' },
     { title: 'Documents', path: '/documents', icon: '📁' },
     { title: 'Raise an Issue', path: '/raise-issue', icon: '⚠️' },
+    { title: 'Calendar', path: '/landlord/calendar', icon: '⚠️' },
   ];
 
   return (
