@@ -11,7 +11,9 @@ export const getAllListings = async (req, res) => {
 
     // Base filters object
     const filters = {
-      where: {},
+      where: {
+        status: "Available"
+      },
       include: {
         property: {
           include: {

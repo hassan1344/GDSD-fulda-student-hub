@@ -1,18 +1,32 @@
-import { PrismaClient, Prisma } from "@prisma/client";
+import { PrismaClient} from "@prisma/client";
 import { uploadToS3, deleteS3Object } from "../utils/uploadToS3.js";
 
 const prisma = new PrismaClient({ log: ['query', 'info', 'warn', 'error'] });
 
-async function getLandlordId(user_name) {
-  const dbUser = await prisma.user.findUnique({
-    where: { user_name },
-    include: { Landlord: true },
+// Error handler utility
+const handleListingError = (res, error, context = "") => {
+  console.error(`Error ${context}:`, error);
+  res.status(500).json({ 
+    success: false, 
+    error: `An unexpected error occurred while ${context}` 
   });
-  if (!dbUser || !dbUser.Landlord) {
-    throw new Error("Associated landlord profile not found");
+};
+
+async function getLandlordId(user_name) {
+  try {
+    const dbUser = await prisma.user.findUnique({
+      where: { user_name },
+      include: { Landlord: true },
+    });
+    if (!dbUser || !dbUser.Landlord) {
+      throw new Error("Landlord profile not found");
+    }
+    return dbUser.Landlord.landlord_id;
+  } catch (error) {
+    handleListingError(res, error, "retrieving landlord ID");
   }
-  return dbUser.Landlord.landlord_id;
 }
+
 
 export const createListing = async (req, res) => {
     try {
@@ -21,6 +35,12 @@ export const createListing = async (req, res) => {
       }
   
       const { property_id, title, description, status, rent, room_type_id } = req.body;
+      if (!property_id || !title || !description || !status || !rent || !room_type_id) {
+        return res.status(400).json({ 
+            success: false, 
+            error: "All fields are required" 
+        });
+    }    
   
       // Validate landlord ownership of the property
       const landlord = await prisma.user.findUnique({
@@ -93,8 +113,8 @@ export const createListing = async (req, res) => {
         data: result,
       });
     } catch (error) {
-      console.error("Error creating listing:", error);
-      res.status(500).json({ success: false, error: "An unexpected error occurred" });
+      // console.error("Error creating listing:", error); // uncommnet only for debugging purpose
+      handleListingError(res, error, "creating the listing");
     }
   };
 
@@ -136,8 +156,8 @@ export const createListing = async (req, res) => {
         data: listingsWithMedia,
       });
     } catch (error) {
-      console.error("Error retrieving listings:", error);
-      res.status(500).json({ success: false, error: "An unexpected error occurred while retrieving listings" });
+      // console.error("Error retrieving listings:", error);
+      handleListingError(res, error, "retrieving listings");
     }
   };
   
@@ -179,8 +199,8 @@ export const createListing = async (req, res) => {
         data: listingsWithMedia,
       });
     } catch (error) {
-      console.error("Error retrieving listings:", error);
-      res.status(500).json({ success: false, error: "An unexpected error occurred while retrieving listings" });
+      // console.error("Error retrieving listings:", error);
+      handleListingError(res, error, "retrieving the listing");
     }
   }
 
@@ -223,8 +243,8 @@ export const createListing = async (req, res) => {
         data: { ...listing, media },
       });
     } catch (error) {
-      console.error("Error retrieving listing:", error);
-      res.status(500).json({ success: false, error: "An unexpected error occurred while retrieving the listing" });
+      // console.error("Error retrieving listing:", error);
+      handleListingError(res, error, "retrieving the listing");  
     }
   };
 
@@ -263,8 +283,8 @@ export const createListing = async (req, res) => {
         data: { ...listing, media },
       });
     } catch (error) {
-      console.error("Error retrieving listing:", error);
-      res.status(500).json({ success: false, error: "An unexpected error occurred while retrieving the listing" });
+      // console.error("Error retrieving listing:", error);
+      handleListingError(res, error, "Error retrieving listing");
     }
   };
 
@@ -357,8 +377,8 @@ export const createListing = async (req, res) => {
         data: { ...result, media },
       });
     } catch (error) {
-      console.error("Error updating listing:", error);
-      res.status(500).json({ success: false, error: "An unexpected error occurred while updating the listing" });
+      // console.error("Error updating listing:", error);
+      handleListingError(res, error, "updating the listing");
     }
   };
   
@@ -443,8 +463,8 @@ export const createListing = async (req, res) => {
         data: { ...result, media },
       });
     } catch (error) {
-      console.error("Error updating listing:", error);
-      res.status(500).json({ success: false, error: "An unexpected error occurred while updating the listing" });
+      // console.error("Error updating listing:", error);
+      handleListingError(res, error, "updating the listing");
     }
   };
   
@@ -517,8 +537,8 @@ export const createListing = async (req, res) => {
         data: result,
       });
     } catch (error) {
-      console.error("Error deleting listing:", error);
-      res.status(500).json({ success: false, error: "An unexpected error occurred while deleting the listing" });
+      // console.error("Error deleting listing:", error);
+      handleListingError(res, error, "deleting the listing");  
     }
   };
 
@@ -586,8 +606,8 @@ export const createListing = async (req, res) => {
         data: result,
       });
     } catch (error) {
-      console.error("Error deleting listing:", error);
-      res.status(500).json({ success: false, error: "An unexpected error occurred while deleting the listing" });
+      // console.error("Error deleting listing:", error);
+      handleListingError(res, error, "deleting the listing");  
     }
   };
   
@@ -600,7 +620,7 @@ export const createListing = async (req, res) => {
         data: roomTypes,
       });
     } catch (error) {
-      console.error("Error retrieving room types:", error);
-      res.status(500).json({ success: false, error: "An unexpected error occurred while retrieving room types" });
+      // console.error("Error retrieving room types:", error);
+      handleListingError(res, error, "retrieving room types");  
     }
   };
