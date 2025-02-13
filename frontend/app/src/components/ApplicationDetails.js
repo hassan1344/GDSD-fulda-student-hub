@@ -1,12 +1,38 @@
 import React, { useState, useEffect } from "react";
-import { getApplicationByID } from "../services/applicationServices";
+import { getApplicationByID, updateApplicationStatus } from "../services/applicationServices";
 import Navbar from "../components/NavBar";
 import Disclaimer from "./Disclaimer";
+import { jwtDecode } from "jwt-decode";
+import { useNavigate } from "react-router-dom";
 
 const ApplicationDetails = ({ applicationId, onBack }) => {
   const [application, setApplication] = useState(null);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState(null);
+
+  const accessToken = localStorage.getItem("accessToken");
+  const decodedToken = jwtDecode(accessToken);
+  const { userType } = decodedToken;
+  const navigate = useNavigate();
+
+  // Handle request action (approve/reject)
+  const handleRequestAction = async (status) => {
+    const body = { application_status: status };
+    try {
+      await updateApplicationStatus(applicationId, body);
+      // After successful update, refetch or update the application status
+      setApplication((prevApplication) => ({
+        ...prevApplication,
+        application_status: status,
+      }));
+      alert(`Application ${status} successfully!`);
+
+      // Redirect to 'select-requests' page after success
+      window.location.reload();
+    } catch (error) {
+      setError("Failed to update application status.");
+    }
+  };
 
   useEffect(() => {
     const fetchApplications = async () => {
@@ -14,7 +40,7 @@ const ApplicationDetails = ({ applicationId, onBack }) => {
       setError(null);
 
       try {
-        const data = await getApplicationByID(applicationId);
+        const data = await getApplicationByID(applicationId, userType);
         setApplication(data);
       } catch (error) {
         console.error("Error loading applications:", error);
@@ -49,7 +75,7 @@ const ApplicationDetails = ({ applicationId, onBack }) => {
 
   return (
     <div className="background-container">
-      <Navbar />
+      {userType === "STUDENT" && <Navbar />}
       <div className="max-w-4xl mx-auto p-6 bg-white shadow-md rounded-lg mt-8">
         <div className="flex justify-between">
           <button
@@ -58,11 +84,30 @@ const ApplicationDetails = ({ applicationId, onBack }) => {
           >
             Back to Applications
           </button>
+          {userType === "LANDLORD" && application.application_status === "PENDING" &&
+          <div className="space-x-4">
+            <button
+              onClick={() => handleRequestAction("APPROVED")}
+              className="bg-green-500 text-white px-4 py-2 rounded hover:bg-green-600"
+            >
+              Approve
+            </button>
+            <button
+              onClick={() => handleRequestAction("REJECTED")}
+              className="bg-red-500 text-white px-4 py-2 rounded hover:bg-red-600"
+            >
+              Reject
+            </button>
+          </div>
+          }
         </div>
+        <br></br>
 
         <h2 className="text-2xl font-semibold text-gray-800 mb-4">
           Application Details
         </h2>
+
+        
 
         <div className="mb-6">
           <h3 className="text-lg font-medium text-gray-700">
@@ -186,10 +231,6 @@ const ApplicationDetails = ({ applicationId, onBack }) => {
               <p className="text-sm text-gray-500">No media available</p>
             )}
           </div>
-        </div>
-
-        <div className="mt-8">
-          <Disclaimer />
         </div>
       </div>
     </div>

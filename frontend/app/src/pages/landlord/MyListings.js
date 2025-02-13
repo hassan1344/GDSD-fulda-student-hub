@@ -35,7 +35,7 @@ const ViewListings = () => {
     const fetchListings = async () => {
       const token = localStorage.getItem('accessToken');
       try {
-        const data = await fetchAllListings(token);
+        const data = await fetchAllListings();
         if (data.success) {
           setListings(data.data);
         } else {
