@@ -1,12 +1,46 @@
 import React, { useState, useEffect } from "react";
-import { getApplicationByID } from "../services/applicationServices";
+import { getApplicationByID, updateApplicationStatus } from "../services/applicationServices";
 import Navbar from "../components/NavBar";
 import Disclaimer from "./Disclaimer";
+import { jwtDecode } from "jwt-decode";
+import { ToastContainer, toast } from "react-toastify";
+import "react-toastify/dist/ReactToastify.css";
 
 const ApplicationDetails = ({ applicationId, onBack }) => {
   const [application, setApplication] = useState(null);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState(null);
+
+  const accessToken = localStorage.getItem("accessToken");
+  const decodedToken = jwtDecode(accessToken);
+  const { userType } = decodedToken;
+
+  // Handle request action (approve/reject)
+  const handleRequestAction = async (status) => {
+    const body = { application_status: status };
+    try {
+      await updateApplicationStatus(applicationId, body);
+      // After successful update, refetch or update the application status
+      setApplication((prevApplication) => ({
+        ...prevApplication,
+        application_status: status,
+      }));
+
+      // Show success toast notification
+      toast.success(`Application updated successfully!`, {
+        autoClose: 2000,
+        position: "top-right",
+      });
+
+    } catch (error) {
+      setError("Failed to update application status.");
+      // Show error toast notification
+      toast.error("Failed to update application status.", {
+        autoClose: 2000,
+        position: "top-right",
+      });
+    }
+  };
 
   useEffect(() => {
     const fetchApplications = async () => {
@@ -14,7 +48,7 @@ const ApplicationDetails = ({ applicationId, onBack }) => {
       setError(null);
 
       try {
-        const data = await getApplicationByID(applicationId);
+        const data = await getApplicationByID(applicationId, userType);
         setApplication(data);
       } catch (error) {
         console.error("Error loading applications:", error);
@@ -49,7 +83,7 @@ const ApplicationDetails = ({ applicationId, onBack }) => {
 
   return (
     <div className="background-container">
-      <Navbar />
+      {userType === "STUDENT" && <Navbar />}
       <div className="max-w-4xl mx-auto p-6 bg-white shadow-md rounded-lg mt-8">
         <div className="flex justify-between">
           <button
@@ -58,11 +92,33 @@ const ApplicationDetails = ({ applicationId, onBack }) => {
           >
             Back to Applications
           </button>
+          {userType === "LANDLORD" && application.application_status === "PENDING" &&
+            <div className="space-x-4">
+              <button
+                onClick={() => handleRequestAction("APPROVED")}
+                className="bg-green-500 text-white px-4 py-2 rounded hover:bg-green-600"
+              >
+                Approve
+              </button>
+              <button
+                onClick={() => handleRequestAction("REJECTED")}
+                className="bg-red-500 text-white px-4 py-2 rounded hover:bg-red-600"
+              >
+                Reject
+              </button>
+            </div>
+          }
         </div>
+        <br></br>
 
-        <h2 className="text-2xl font-semibold text-gray-800 mb-4">
+        <h2 className="text-2xl font-semibold text-gray-800 mb-4 flex justify-between items-center">
           Application Details
+          <span className="text-3xl font-bold text-gray-700">
+            Status: {application.application_status || "N/A"}
+          </span>
         </h2>
+
+
 
         <div className="mb-6">
           <h3 className="text-lg font-medium text-gray-700">
@@ -84,10 +140,6 @@ const ApplicationDetails = ({ applicationId, onBack }) => {
             <p>
               <span className="font-semibold">Address:</span>{" "}
               {application.current_address || "N/A"}
-            </p>
-            <p>
-              <span className="font-semibold">Application Status:</span>{" "}
-              {application.application_status || "N/A"}
             </p>
             <p>
               <span className="font-semibold">Applied At:</span>{" "}
@@ -186,10 +238,6 @@ const ApplicationDetails = ({ applicationId, onBack }) => {
               <p className="text-sm text-gray-500">No media available</p>
             )}
           </div>
-        </div>
-
-        <div className="mt-8">
-          <Disclaimer />
         </div>
       </div>
     </div>

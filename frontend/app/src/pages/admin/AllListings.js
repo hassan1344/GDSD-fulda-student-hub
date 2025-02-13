@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import LandlordNavbar from '../../components/LandlordNavbar';
-import { deleteListingAdmin, fetchAllListingsAdmin } from '../../services/ListingServices';
+import { deleteListingAdmin, fetchAllListingsAdmin, updateListingAdmin } from '../../services/ListingServices';
 import Navbar from '../../components/NavBar';
 
 const AllListings = () => {
@@ -9,6 +9,23 @@ const AllListings = () => {
     const [isLoading, setIsLoading] = useState(true);
     const [error, setError] = useState(null);
     const navigate = useNavigate();
+
+    const fetchListings = async () => {
+        const token = localStorage.getItem('accessToken');
+        try {
+            const data = await fetchAllListingsAdmin(token);
+            if (data.success) {
+                console.log("Listings", data.data);
+                setListings(data.data);
+            } else {
+                setError(data.message || 'Failed to fetch listings');
+            }
+        } catch (error) {
+            setError('Error fetching listings. Please try again later.');
+        } finally {
+            setIsLoading(false);
+        }
+    };
 
     const handleDelete = async (listingId) => {
         if (window.confirm('Are you sure you want to delete this listing?')) {
@@ -26,23 +43,33 @@ const AllListings = () => {
             }
         }
     };
-    /* Fetches all listings when the component mounts */
-    useEffect(() => {
-        const fetchListings = async () => {
-            const token = localStorage.getItem('accessToken');
+
+    /* Function to handle approval of a property by ID  */
+    const handleApprove = async (listingId) => {
+        if (window.confirm('Are you sure you want to approve this property?')) {
             try {
-                const data = await fetchAllListingsAdmin(token);
+                const token = localStorage.getItem('accessToken');
+                // Get selected listing
+                let selectedListing = listings.find(listing => listing.listing_id == listingId);
+
+                // Update status
+                selectedListing.status = "Available";
+                /* API call to approve the property from DB*/
+                console.log("Selected Listing", selectedListing);
+                const data = await updateListingAdmin(listingId, selectedListing);
                 if (data.success) {
-                    setListings(data.data);
+                    fetchListings();
                 } else {
-                    setError(data.message || 'Failed to fetch listings');
+                    setError('Failed to delete property');
                 }
             } catch (error) {
-                setError('Error fetching listings. Please try again later.');
-            } finally {
-                setIsLoading(false);
+                setError('Error deleting property');
             }
-        };
+        }
+    };
+
+    /* Fetches all listings when the component mounts */
+    useEffect(() => {
         fetchListings();
     }, []);
 
@@ -118,19 +145,29 @@ const AllListings = () => {
                                         <p className="text-xl text-gray-600 mb-8 leading-relaxed">
                                             {listing.description}
                                         </p>
-                                        <div className="flex gap-6 mt-auto">
+                                        <div className="flex flex-wrap gap-3 mt-auto justify-center">
                                             <button
                                                 onClick={() => navigate(`/admin/edit-prop-listing/${listing.listing_id}`)}
-                                                className="flex-1 px-8 py-4 bg-green-600 hover:bg-green-700 text-white text-xl font-semibold rounded-lg transition duration-200 shadow-md hover:shadow-lg"
+                                                className="flex-1 min-w-[130px] px-5 py-2.5 bg-green-600 hover:bg-green-700 text-white text-base font-semibold rounded-lg transition duration-200 shadow-md hover:shadow-lg"
                                             >
                                                 Edit Listing
                                             </button>
+
                                             <button
                                                 onClick={() => handleDelete(listing.listing_id)}
-                                                className="flex-1 px-8 py-4 bg-red-600 hover:bg-red-700 text-white text-xl font-semibold rounded-lg transition duration-200 shadow-md hover:shadow-lg"
+                                                className="flex-1 min-w-[130px] px-5 py-2.5 bg-red-600 hover:bg-red-700 text-white text-base font-semibold rounded-lg transition duration-200 shadow-md hover:shadow-lg"
                                             >
                                                 Delete Listing
                                             </button>
+
+                                            {listing.status === "Pending" && (
+                                                <button
+                                                    onClick={() => handleApprove(listing.listing_id)}
+                                                    className="flex-1 min-w-[130px] px-5 py-2.5 bg-blue-600 hover:bg-blue-700 text-white text-base font-semibold rounded-lg transition duration-200 shadow-md hover:shadow-lg"
+                                                >
+                                                    Approve Listing
+                                                </button>
+                                            )}
                                         </div>
                                     </div>
                                 </div>
