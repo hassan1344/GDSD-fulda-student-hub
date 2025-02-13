@@ -17,6 +17,19 @@ export const fetchProperties = async (location, priceRange, advancedFilters) => 
   return Array.isArray(response.data) ? response.data : [];
 };
 
+export const fetchAllProperties = async () => {
+  try {
+    const response = await apiClient.get("/propertiesModule/", {
+      requireToken: true,
+    });
+    return response.data;
+  } catch (error) {
+    console.error("Error fetching all properties:", error);
+    throw error;
+  }
+};
+
+
 export const updatePropertyAdmin = async (listingId, listingData) => {
   try {
     const response = await apiClient.put(`/propertiesModule/admin/${listingId}`, listingData, {

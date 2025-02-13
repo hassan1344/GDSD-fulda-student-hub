@@ -15,6 +15,7 @@
     "@aws-sdk/lib-storage": "^3.709.0",
     "@prisma/client": "^6.2.1",
     "aws-sdk": "^2.1692.0",
+    "axios": "^1.7.9",
     "bcrypt": "^5.1.1",
     "body-parser": "^1.20.3",
     "cors": "^2.8.5",
@@ -28,6 +29,7 @@
     "multer-s3": "^3.0.1",
     "pino": "^9.5.0",
     "pino-pretty": "^13.0.0",
+    "puppeteer": "^24.1.1",
     "socket.io": "^4.8.1"
   },
   "devDependencies": {

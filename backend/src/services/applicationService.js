@@ -175,6 +175,44 @@ export const getAllApplications = async (req, res) => {
   }
 };
 
+export const getApplicationsByLandlord = async (req, res) => {
+  try {
+      if (!req.user || !req.user.userName) {
+          return res.status(401).json({ success: false, error: "User not authenticated" });
+      }
+
+      // Fetch all applications based on listing IDs
+      const applications = await prisma.application.findMany({
+          where: {
+              listing: {
+                  property: {
+                    landlord: {
+                      user_id: {
+                        equals: req.user.userName
+                      }
+                    }
+                  }
+              }
+          },
+          include: {
+              listing: true
+          }
+      });
+
+      res.status(200).json({
+          success: true,
+          message: "Applications retrieved successfully",
+          data: applications,
+      });
+  } catch (error) {
+    console.error(error);
+    return res
+      .status(500)
+      .json({ error: "An error occurred while fetching the application" });
+  }
+};
+
+
 export const getApplicationById = async (req, res) => {
   try {
     const { id } = req.params;
@@ -208,40 +246,70 @@ export const getApplicationById = async (req, res) => {
   }
 };
 
-// export const updateApplicationById = async (req, res) => {
-//   try {
-//     const { id } = req.params;
-//     const { application_status, remarks } = req.body;
-//     const { userName } = req.user;
+export const getApplicationByIdLandlord = async (req, res) => {
+  try {
+    const { id } = req.params;
 
-//     const application = await prisma.application.findUnique({
-//       where: { application_id: id, student_id: userName },
-//     });
+    const application = await prisma.application.findUnique({
+      where: { application_id: id },
+      include: {
+        listing: true,
+        user: true,
+      },
+    });
 
-//     if (!application) {
-//       return res.status(404).json({ error: "Application not found" });
-//     }
+    if (!application) {
+      return res.status(404).json({ error: "Application not found" });
+    }
 
-//     const updatedApplication = await prisma.application.update({
-//       where: { application_id: id, student_id: userName },
-//       data: {
-//         application_status:
-//           application_status || application.application_status,
-//         remarks: remarks || application.remarks,
-//       },
-//     });
+    const media = await prisma.media.findMany({
+      where: {
+        model_id: application.application_id,
+        model_name: "application",
+      },
+    });
 
-//     return res.status(200).json({
-//       message: "Application updated successfully",
-//       updatedApplication,
-//     });
-//   } catch (error) {
-//     console.error(error);
-//     return res
-//       .status(500)
-//       .json({ error: "An error occurred while updating the application" });
-//   }
-// };
+    return res.status(200).json({ ...application, media });
+  } catch (error) {
+    console.error(error);
+    return res
+      .status(500)
+      .json({ error: "An error occurred while fetching the application" });
+  }
+};
+
+export const updateApplicationStatusById = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { application_status } = req.body;
+
+    const application = await prisma.application.findUnique({
+      where: { application_id: id },
+    });
+
+    if (!application) {
+      return res.status(404).json({ error: "Application not found" });
+    }
+
+    const updatedApplication = await prisma.application.update({
+      where: { application_id: id },
+      data: {
+        application_status:
+          application_status || application.application_status
+      },
+    });
+
+    return res.status(200).json({
+      message: "Application updated successfully",
+      updatedApplication,
+    });
+  } catch (error) {
+    console.error(error);
+    return res
+      .status(500)
+      .json({ error: "An error occurred while updating the application" });
+  }
+};
 
 export const deleteApplicationById = async (req, res) => {
   try {

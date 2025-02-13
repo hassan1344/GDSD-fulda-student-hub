@@ -11,7 +11,9 @@ export const getAllListings = async (req, res) => {
 
     // Base filters object
     const filters = {
-      where: {},
+      where: {
+        status: "Available"
+      },
       include: {
         property: {
           include: {
@@ -115,20 +117,25 @@ export const getAllListings = async (req, res) => {
 /**
  * Get a single listing by ID with all related details.
  */
-export const getListingById = async (req, res) => {
-  const { id } = req.params;
+export const getListingsByIds = async (req, res) => {
+  const { ids } = req.body; // Expecting an array of listing IDs in the request body
+
+  if (!Array.isArray(ids) || ids.length === 0) {
+    return res.status(400).json({ error: "Invalid or empty listing IDs array" });
+  }
+
   try {
-    const listing = await prisma.listing.findUnique({
+    const listings = await prisma.listing.findMany({
       where: {
-        listing_id: id,
+        listing_id: { in: ids }, // Fetch multiple listings
       },
       include: {
         property: {
           include: {
-            landlord: true, // Include the landlord through the property relation
+            landlord: true,
             PropertyAmenity: {
               include: {
-                amenity: true,
+                Amenity: true,
               },
             },
           },
@@ -137,31 +144,33 @@ export const getListingById = async (req, res) => {
       },
     });
 
-    if (!listing) {
-      return res.status(404).json({ error: "Listing not found" });
+    if (!listings.length) {
+      return res.status(404).json({ error: "No listings found" });
     }
 
-    // Fetch media for the associated property
+    // Fetch media for all properties
+    const propertyIds = listings.map((listing) => listing.property_id);
     const media = await prisma.media.findMany({
       where: {
-        model_id: listing.property_id,
+        model_id: { in: propertyIds },
         model_name: "property",
       },
     });
 
-    const listingWithMedia = {
+    // Map media to corresponding properties
+    const listingsWithMedia = listings.map((listing) => ({
       ...listing,
-      Media: media.map((media) => ({
-        mediaUrl: media.media_url,
-        mediaType: media.media_type,
-      })),
-    };
+      Media: media
+        .filter((mediaItem) => mediaItem.model_id === listing.property_id)
+        .map((mediaItem) => ({
+          mediaUrl: mediaItem.media_url,
+          mediaType: mediaItem.media_type,
+        })),
+    }));
 
-    res.status(200).json(listingWithMedia);
+    res.status(200).json(listingsWithMedia);
   } catch (error) {
-    console.error("Error fetching listing:", error);
-    res
-      .status(500)
-      .json({ error: "An error occurred while fetching the listing" });
+    console.error("Error fetching listings:", error);
+    res.status(500).json({ error: "An error occurred while fetching listings" });
   }
 };

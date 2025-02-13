@@ -1,7 +1,8 @@
 import express from "express";
 import * as applicationService from "../services/applicationService.js";
-import { authenticateStudent } from "../middlewares/auth.js";
+import { authenticateLandlord, authenticateStudent } from "../middlewares/auth.js";
 import { handleMultiPartData } from "../utils/handleMultiPart.js";
+import {generateLeaseAgreement} from '../services/leaseService.js';
 
 const applicationRouter = express.Router();
 
@@ -29,11 +30,32 @@ applicationRouter.get(
   applicationService.getApplicationById
 );
 
-// applicationRouter.put(
-//   "/update-application-by-id/:id",
-//   authenticateStudent,
-//   applicationService.updateApplicationById
-// );
+applicationRouter.get(
+  "/get-all-applications-l",
+  authenticateLandlord,
+  applicationService.getApplicationsByLandlord
+);
+
+applicationRouter.get(
+  "/get-application-by-id-l/:id",
+  authenticateLandlord,
+  applicationService.getApplicationByIdLandlord
+);
+
+applicationRouter.post(
+  "/generate-lease/",
+  authenticateLandlord,
+  handleMultiPartData.fields([
+    { name: "landlord_signature", maxCount: 1 },
+  ]),
+  generateLeaseAgreement
+);
+
+applicationRouter.put(
+  "/update-application-by-id-l/:id",
+  authenticateLandlord,
+  applicationService.updateApplicationStatusById
+);
 
 applicationRouter.delete(
   "/delete-application-by-id/:id",
