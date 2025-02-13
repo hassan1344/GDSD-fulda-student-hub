@@ -3,7 +3,8 @@ import { getApplicationByID, updateApplicationStatus } from "../services/applica
 import Navbar from "../components/NavBar";
 import Disclaimer from "./Disclaimer";
 import { jwtDecode } from "jwt-decode";
-import { useNavigate } from "react-router-dom";
+import { ToastContainer, toast } from "react-toastify";
+import "react-toastify/dist/ReactToastify.css";
 
 const ApplicationDetails = ({ applicationId, onBack }) => {
   const [application, setApplication] = useState(null);
@@ -13,7 +14,6 @@ const ApplicationDetails = ({ applicationId, onBack }) => {
   const accessToken = localStorage.getItem("accessToken");
   const decodedToken = jwtDecode(accessToken);
   const { userType } = decodedToken;
-  const navigate = useNavigate();
 
   // Handle request action (approve/reject)
   const handleRequestAction = async (status) => {
@@ -25,12 +25,20 @@ const ApplicationDetails = ({ applicationId, onBack }) => {
         ...prevApplication,
         application_status: status,
       }));
-      alert(`Application ${status} successfully!`);
 
-      // Redirect to 'select-requests' page after success
-      window.location.reload();
+      // Show success toast notification
+      toast.success(`Application updated successfully!`, {
+        autoClose: 2000,
+        position: "top-right",
+      });
+
     } catch (error) {
       setError("Failed to update application status.");
+      // Show error toast notification
+      toast.error("Failed to update application status.", {
+        autoClose: 2000,
+        position: "top-right",
+      });
     }
   };
 
@@ -85,29 +93,32 @@ const ApplicationDetails = ({ applicationId, onBack }) => {
             Back to Applications
           </button>
           {userType === "LANDLORD" && application.application_status === "PENDING" &&
-          <div className="space-x-4">
-            <button
-              onClick={() => handleRequestAction("APPROVED")}
-              className="bg-green-500 text-white px-4 py-2 rounded hover:bg-green-600"
-            >
-              Approve
-            </button>
-            <button
-              onClick={() => handleRequestAction("REJECTED")}
-              className="bg-red-500 text-white px-4 py-2 rounded hover:bg-red-600"
-            >
-              Reject
-            </button>
-          </div>
+            <div className="space-x-4">
+              <button
+                onClick={() => handleRequestAction("APPROVED")}
+                className="bg-green-500 text-white px-4 py-2 rounded hover:bg-green-600"
+              >
+                Approve
+              </button>
+              <button
+                onClick={() => handleRequestAction("REJECTED")}
+                className="bg-red-500 text-white px-4 py-2 rounded hover:bg-red-600"
+              >
+                Reject
+              </button>
+            </div>
           }
         </div>
         <br></br>
 
-        <h2 className="text-2xl font-semibold text-gray-800 mb-4">
+        <h2 className="text-2xl font-semibold text-gray-800 mb-4 flex justify-between items-center">
           Application Details
+          <span className="text-3xl font-bold text-gray-700">
+            Status: {application.application_status || "N/A"}
+          </span>
         </h2>
 
-        
+
 
         <div className="mb-6">
           <h3 className="text-lg font-medium text-gray-700">
@@ -129,10 +140,6 @@ const ApplicationDetails = ({ applicationId, onBack }) => {
             <p>
               <span className="font-semibold">Address:</span>{" "}
               {application.current_address || "N/A"}
-            </p>
-            <p>
-              <span className="font-semibold">Application Status:</span>{" "}
-              {application.application_status || "N/A"}
             </p>
             <p>
               <span className="font-semibold">Applied At:</span>{" "}

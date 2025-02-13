@@ -53,11 +53,16 @@ const LandlordSelectRequests = () => {
       });
     }
   };
-  
+
 
   useEffect(() => {
     fetchApplications();
   }, []);
+
+  const handleBack = () => {
+    setSelectedApplicationId(null);
+    fetchApplications(); // Refresh the applications list when navigating back
+  };
 
   if (isLoading) {
     return (
@@ -80,7 +85,9 @@ const LandlordSelectRequests = () => {
       <LandlordNavbar />
       <div className="p-8">
         {selectedApplicationId ? (
-          <ApplicationDetails applicationId={selectedApplicationId} onBack={() => setSelectedApplicationId(null)} />
+          <ApplicationDetails
+            applicationId={selectedApplicationId}
+            onBack={handleBack} />
         ) : (
           <>
             <h2 className="text-2xl font-semibold text-gray-800 mb-4">Select Suitable Requests</h2>
