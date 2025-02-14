@@ -1,5 +1,10 @@
 import React, { useState, useEffect } from "react";
-import { getApplicationByID, updateApplicationStatus } from "../services/applicationServices";
+import {
+  getApplicationByID,
+  updateApplicationStatus,
+} from "../services/applicationServices";
+import { getStudentReviews } from "../services/reviewServices";
+import { addReviewForLandlord } from "../services/reviewServices";
 import Navbar from "../components/NavBar";
 import Disclaimer from "./Disclaimer";
 import ReviewForm from "./ReviewForm";
@@ -33,7 +38,6 @@ const ApplicationDetails = ({ applicationId, onBack }) => {
         autoClose: 2000,
         position: "top-right",
       });
-
     } catch (error) {
       setError("Failed to update application status.");
       // Show error toast notification
@@ -60,7 +64,20 @@ const ApplicationDetails = ({ applicationId, onBack }) => {
       }
     };
 
-    if (applicationId) fetchApplications();
+    const fetchReviews = async () => {
+      try {
+        const data = await getStudentReviews(applicationId);
+        setReviewData(data);
+      } catch (error) {
+        setReviewData(null);
+        console.error("Error loading review:", error);
+      }
+    };
+
+    if (applicationId) {
+      fetchApplications();
+      fetchReviews();
+    }
   }, [applicationId]);
 
   // console.log(application);
@@ -84,15 +101,32 @@ const ApplicationDetails = ({ applicationId, onBack }) => {
     );
   }
 
-  const handleReviewSubmit = (review) => {
-    console.log("Received review data:", review);
-    // Here you can call an API to save the review to your database.
-    // e.g., await submitReview(applicationId, review)
-    setReviewData(review);
+  const handleReviewSubmit = async (review) => {
+    try {
+      console.log("Received review data:", review);
+      await addReviewForLandlord({
+        application_id: application.application_id,
+        reviewText: review.reviewText,
+        rating: review.rating,
+      });
+      setReviewData(review);
+
+      toast.success(`Review added successfully!`, {
+        autoClose: 2000,
+        position: "top-right",
+      });
+    } catch (error) {
+      console.error("Error adding review:", error);
+      toast.error(error.response.data.message, {
+        autoClose: 2000,
+        position: "top-right",
+      });
+    }
   };
 
   return (
     <div className="background-container">
+      <ToastContainer />
       {userType === "STUDENT" && <Navbar />}
       <div className="max-w-4xl mx-auto p-6 bg-white shadow-md rounded-lg mt-8">
         <div className="flex justify-between">
@@ -102,22 +136,23 @@ const ApplicationDetails = ({ applicationId, onBack }) => {
           >
             Back to Applications
           </button>
-          {userType === "LANDLORD" && application.application_status === "PENDING" &&
-            <div className="space-x-4">
-              <button
-                onClick={() => handleRequestAction("APPROVED")}
-                className="bg-green-500 text-white px-4 py-2 rounded hover:bg-green-600"
-              >
-                Approve
-              </button>
-              <button
-                onClick={() => handleRequestAction("REJECTED")}
-                className="bg-red-500 text-white px-4 py-2 rounded hover:bg-red-600"
-              >
-                Reject
-              </button>
-            </div>
-          }
+          {userType === "LANDLORD" &&
+            application.application_status === "PENDING" && (
+              <div className="space-x-4">
+                <button
+                  onClick={() => handleRequestAction("APPROVED")}
+                  className="bg-green-500 text-white px-4 py-2 rounded hover:bg-green-600"
+                >
+                  Approve
+                </button>
+                <button
+                  onClick={() => handleRequestAction("REJECTED")}
+                  className="bg-red-500 text-white px-4 py-2 rounded hover:bg-red-600"
+                >
+                  Reject
+                </button>
+              </div>
+            )}
         </div>
         <br></br>
 
@@ -127,8 +162,6 @@ const ApplicationDetails = ({ applicationId, onBack }) => {
             Status: {application.application_status || "N/A"}
           </span>
         </h2>
-
-
 
         <div className="mb-6">
           <h3 className="text-lg font-medium text-gray-700">
@@ -252,9 +285,28 @@ const ApplicationDetails = ({ applicationId, onBack }) => {
         {/* 
           ONLY SHOW THIS SECTION IF STATUS != "pending". 
         */}
-        {application.application_status === "PENDING" && (
+        {reviewData === null ? (
+          // If no review exists, show the form
+          userType === "STUDENT" &&
+          application.application_status !== "PENDING" && (
+            <div className="mt-6">
+              <ReviewForm
+                onSubmit={(newReview) => {
+                  handleReviewSubmit(newReview); // Submit review and update state
+                }}
+              />
+            </div>
+          )
+        ) : (
+          // If the review exists, display the review
           <div className="mt-6">
-            <ReviewForm onSubmit={handleReviewSubmit} />
+            <div className="p-4 bg-white rounded-lg shadow-sm">
+              <p className="font-medium text-gray-700">Your Review:</p>
+              <p className="text-yellow-500">{reviewData.rating} ⭐</p>
+              <p className="text-sm text-gray-600">
+                {reviewData.comment || reviewData.reviewText}
+              </p>
+            </div>
           </div>
         )}
 
