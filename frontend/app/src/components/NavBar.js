@@ -1,13 +1,18 @@
 import React, { useState } from "react";
+import { AppBar, Toolbar, Typography, Button, IconButton, Drawer, List, ListItem, ListItemText, Box } from "@mui/material";
 import { NavLink, useLocation, useNavigate } from "react-router-dom";
-import logoFHB from "./assets/images/logoFHB.png";
+import MenuIcon from "@mui/icons-material/Menu";
+import logoFHB from "../assets/images/logoFHB-Nav-Light.png";
 import { logoutUser } from "../services/authServices";
-import { jwtDecode } from "jwt-decode"; // Import the library
+import { jwtDecode } from "jwt-decode";
+import { useTheme } from "@mui/material/styles";
 
 const Navbar = () => {
+  const theme = useTheme(); // Get Theme Colors
   const location = useLocation();
   const navigate = useNavigate();
-  const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const [isDrawerOpen, setIsDrawerOpen] = useState(false);
+
   const accessToken = localStorage.getItem("accessToken");
   const decodedToken = jwtDecode(accessToken);
   const { userName, userType } = decodedToken;
@@ -21,26 +26,15 @@ const Navbar = () => {
     { path: "/admin/viewProfile", name: "Profile", roles: ["ADMIN"] },
   ];
 
-  const navLinks = allNavLinks.filter(link =>
-    link.roles.includes(userType)
-  );
+  const navLinks = allNavLinks.filter(link => link.roles.includes(userType));
 
   const logoutHandler = async () => {
     try {
       const refreshToken = localStorage.getItem("refreshToken");
+      if (!refreshToken) return;
 
-      if (!refreshToken) {
-        console.error("No refresh token found.");
-        return;
-      }
-
-      // Call the logout API
-      const response = await logoutUser({ userName });
-
-      // Clear tokens from local storage
+      await logoutUser({ userName });
       localStorage.clear();
-
-      // Redirect the user to the login page
       navigate("/", { replace: true });
     } catch (error) {
       console.error("Error during logout:", error.message);
@@ -48,79 +42,64 @@ const Navbar = () => {
   };
 
   return (
-    <nav className="bg-white shadow-md">
-      <div className="flex justify-between items-center px-8 py-5">
-        {/* Logo */}
-        <div className="flex items-center">
-          <img
-            src={logoFHB}
-            alt="Fulda Student Hub Logo"
-            className="w-12 h-12 object-contain"
-          />
-          <h1 className="text-2xl md:text-3xl font-bold ml-3">Fulda Student Hub</h1>
-        </div>
+    <>
+      {/* Navbar */}
+      <AppBar position="fixed" sx={{ backgroundColor: theme.palette.primary.main }}>
+        <Toolbar sx={{ maxWidth: "1200px", mx: "auto", width: "100%", px: 2 }}>
+          
+          {/* Left Side: Logo & Title */}
+          <Box sx={{ display: "flex", alignItems: "center", flexGrow: 1 }}>
+            <img src={logoFHB} alt="Fulda Student Hub" width={50} style={{ marginRight: "10px" }} />
+            <Typography variant="h6" color="inherit" fontWeight="bold">
+              Fulda Student Hub
+            </Typography>
+          </Box>
 
-        {/* Hamburger Icon (for small screens) */}
-        <button
-          className="block md:hidden text-gray-600 focus:outline-none"
-          onClick={() => setIsMenuOpen(!isMenuOpen)}
-        >
-          <svg
-            className="w-6 h-6"
-            fill="none"
-            stroke="currentColor"
-            viewBox="0 0 24 24"
-            xmlns="http://www.w3.org/2000/svg"
-          >
-            {isMenuOpen ? (
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-                d="M6 18L18 6M6 6l12 12"
-              />
-            ) : (
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-                d="M4 6h16M4 12h16M4 18h16"
-              />
-            )}
-          </svg>
-        </button>
+          {/* Right Side: Links (Desktop) */}
+          <Box sx={{ display: { xs: "none", md: "flex" }, gap: 3 }}>
+            {navLinks.map((link) => (
+              <Button
+                key={link.path}
+                component={NavLink}
+                to={link.path}
+                sx={{
+                  color: location.pathname === link.path ? theme.palette.secondary.main : "white",
+                  fontWeight: "500",
+                  textTransform: "none",
+                  borderBottom: location.pathname === link.path ? "2px solid white" : "none",
+                }}
+              >
+                {link.name}
+              </Button>
+            ))}
+            <Button onClick={logoutHandler} sx={{ color: "white", fontWeight: "bold" }}>
+              Logout
+            </Button>
+          </Box>
 
-        {/* Nav Links */}
-        <div
-          className={`flex flex-col md:flex-row md:space-x-8 text-lg items-center absolute md:static bg-white w-full md:w-auto left-0 top-[70px] md:top-auto transition-all duration-300 ease-in-out ${
-            isMenuOpen ? "block" : "hidden md:flex"
-          }`}
-        >
-          {navLinks.map((link) => (
-            <NavLink
-              key={link.path}
-              to={link.path}
-              className={`transition duration-200 px-4 py-2 md:py-0 rounded ${
-                location.pathname === link.path
-                  ? "text-blue-600 font-semibold border-b-2 md:border-none border-blue-600"
-                  : "text-gray-600 hover:text-blue-600 hover:border-b-2 md:hover:border-none hover:border-blue-600"
-              }`}
-              onClick={() => setIsMenuOpen(false)} // Close menu on link click
-            >
-              {link.name}
-            </NavLink>
-          ))}
+          {/* Mobile Menu Button */}
+          <IconButton edge="end" color="inherit" sx={{ display: { md: "none" } }} onClick={() => setIsDrawerOpen(true)}>
+            <MenuIcon />
+          </IconButton>
+        </Toolbar>
+      </AppBar>
 
-          {/* Logout Button */}
-          <button
-            onClick={logoutHandler}
-            className="text-gray-600 hover:text-red-600 transition duration-200 px-4 py-2 md:py-0 rounded font-semibold"
-          >
-            Logout
-          </button>
-        </div>
-      </div>
-    </nav>
+      {/* Mobile Drawer */}
+      <Drawer anchor="right" open={isDrawerOpen} onClose={() => setIsDrawerOpen(false)}>
+        <Box sx={{ width: 250, backgroundColor: theme.palette.primary.main, height: "100vh", color: "white", p: 2 }}>
+          <List>
+            {navLinks.map((link) => (
+              <ListItem button key={link.path} component={NavLink} to={link.path} onClick={() => setIsDrawerOpen(false)}>
+                <ListItemText primary={link.name} sx={{ color: "white" }} />
+              </ListItem>
+            ))}
+            <ListItem button onClick={logoutHandler}>
+              <ListItemText primary="Logout" sx={{ color: "white" }} />
+            </ListItem>
+          </List>
+        </Box>
+      </Drawer>
+    </>
   );
 };
 

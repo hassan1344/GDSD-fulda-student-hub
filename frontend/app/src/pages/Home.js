@@ -2,7 +2,6 @@ import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import Navbar from "../components/NavBar";
 import SearchBar from "../components/SearchBar";
-import Disclaimer from "../components/Disclaimer";
 import SearchCard from "../components/SearchCard";
 import PropertyDetails from "../components/PropertyDetails";
 import { getAllAmenities } from "../services/utilServices";

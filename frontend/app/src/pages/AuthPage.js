@@ -1,9 +1,9 @@
 import React, { useState } from "react";
-import { replace, useNavigate } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
+import { Box, Button, Container, Paper, TextField, Typography, CircularProgress, Alert, MenuItem } from "@mui/material";
 import logoFHB from "../assets/images/logoFHB.png";
 import { registerUser, loginUser } from "../services/authServices";
-import Disclaimer from "../components/Disclaimer";
-import { jwtDecode } from "jwt-decode"; // Import the library
+import { jwtDecode } from "jwt-decode";
 
 const AuthPage = () => {
   const navigate = useNavigate();
@@ -18,50 +18,45 @@ const AuthPage = () => {
 
   const [fieldErrors, setFieldErrors] = useState({});
   const [loading, setLoading] = useState(false);
-  const [notification, setNotification] = useState({
-    message: "",
-    visible: false,
-  });
+  const [notification, setNotification] = useState("");
 
-  const toggleForm = () => setIsRegister((prev) => !prev);
-
-  const handleInputChange = (e) => {
-    const { name, value } = e.target;
-    setFormData({ ...formData, [name]: value });
+  const toggleForm = () => {
+    setIsRegister((prev) => !prev);
+    setFieldErrors({});  // Clear errors when toggling forms
+    setFormData({
+      email: "",
+      password: "",
+      confirmPassword: "",
+      userType: "STUDENT",
+      userName: "",
+    });  // Optionally reset form fields if needed
   };
+  const handleInputChange = (e) => setFormData({ ...formData, [e.target.name]: e.target.value });
 
   const showNotification = (msg) => {
-    setNotification({ message: msg, visible: true });
-    setTimeout(() => setNotification({ message: "", visible: false }), 3000); // 3-second timer
+    setNotification(msg);
+    setTimeout(() => setNotification(""), 3000);
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     setLoading(true);
-    setFieldErrors({}); // Reset field errors
+    setFieldErrors({});
 
     try {
       if (isRegister) {
-        const { email, password, confirmPassword, userType, userName } =
-          formData;
-
+        const { email, password, confirmPassword, userType, userName } = formData;
         const errors = {};
 
         if (!userName) errors.userName = "Username is required.";
-        if (password !== confirmPassword)
-          errors.confirmPassword = "Passwords do not match.";
-        if (
-          userType === "STUDENT" &&
-          !email.includes("@informatik.hs-fulda.de")
-        )
-          errors.email = "Student email must include @informatik.hs-fulda.de.";
+        if (password !== confirmPassword) errors.confirmPassword = "Passwords do not match.";
+        if (userType === "STUDENT" && !(email.endsWith(".hs-fulda.de") || email.endsWith("hs-fulda.de"))) {
+          errors.email = "Student email must be a valid Fulda University email.";
+        }
 
-        const passwordRegex =
-          /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[!@#$%^&*]).{8,}$/;
-
+        const passwordRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[!@#$%^&*]).{8,}$/;
         if (!passwordRegex.test(password))
-          errors.password =
-            "Password must have at least one number, one special character, one uppercase letter, and one lowercase letter.";
+          errors.password = "Password must have at least one number, one special character, one uppercase and one lowercase letter.";
 
         if (Object.keys(errors).length > 0) {
           setFieldErrors(errors);
@@ -69,59 +64,19 @@ const AuthPage = () => {
           return;
         }
 
-        const response = await registerUser({
-          email,
-          password,
-          userName,
-          userType,
-        });
-
+        const response = await registerUser({ email, password, userName, userType });
         if (response?.message === "User registered successfully") {
           showNotification("Registration successful!");
 
-          try {
-            const responseL = await loginUser({ userName, password });
-
-            if (responseL.tokens) {
-              const { accessToken, refreshToken } = responseL.tokens;
-
-              localStorage.setItem("accessToken", accessToken);
-              localStorage.setItem("refreshToken", refreshToken);
-
-              const decodedToken = jwtDecode(accessToken);
-              const { userName, userType } = decodedToken;
-
-              showNotification("Login successful...");
-              if (userType === "STUDENT") {
-                setTimeout(() => {
-                  navigate('/profile', { state: { userType: "STUDENT", userName: {userName} } });
-                }, 2000);
-              } else if (userType === "LANDLORD") {
-                setTimeout(() => {
-                  navigate('/profile', { state: { userType: "LANDLORD", userName: {userName} } });
-                }, 2000);
-              }  else if (userType === "ADMIN") {
-                setTimeout(() => {
-                  navigate('/profile', { state: { userType: "ADMIN", userName: {userName} } });
-                }, 2000);
-              } else {
-                showNotification("An error occurred. Please try again.");
-              }
-            } else {
-              // Login failed
-              showNotification("Login failed. Please try logging in again.");
-            }
-          } catch (error) {
-            console.error("Login attempt error:", error);
-            showNotification("An unexpected error occurred. Please try again.");
-          }
-        } else {
-          // Registration failed
-          showNotification("Registration failed. Please try again.");
-        }
+          const loginResponse = await loginUser({ userName, password });
+          if (loginResponse.tokens) {
+            localStorage.setItem("accessToken", loginResponse.tokens.accessToken);
+            localStorage.setItem("refreshToken", loginResponse.tokens.refreshToken);
+            navigate("/profile", { state: { userType, userName } });
+          } else showNotification("Login failed. Please try again.");
+        } else showNotification("Registration failed. Please try again.");
       } else {
         const { userName, password } = formData;
-
         const errors = {};
         if (!userName) errors.userName = "Username is required.";
         if (!password) errors.password = "Password is required.";
@@ -133,241 +88,158 @@ const AuthPage = () => {
         }
 
         const response = await loginUser({ userName, password });
-
-        console.log(response);
-
         if (response && response.tokens) {
-          const { accessToken, refreshToken } = response.tokens;
+          localStorage.setItem("accessToken", response.tokens.accessToken);
+          localStorage.setItem("refreshToken", response.tokens.refreshToken);
 
-          localStorage.setItem("accessToken", accessToken);
-          localStorage.setItem("refreshToken", refreshToken);
-
-          const decodedToken = jwtDecode(accessToken);
-          const { userName, userType } = decodedToken;
-
-          console.log("usertype----", userType);
-
-          showNotification("Login successful...");
-          if (userType === "STUDENT") {
-            setTimeout(() => {
-              navigate("/home", { replace: true });
-            }, 2000);
-          } else if (userType === "LANDLORD") {
-            setTimeout(() => {
-              navigate("/landlord", { replace: true }); //Add landlord landing page
-            }, 2000);
-          } else if (userType === "ADMIN") {
-            setTimeout(() => {
-              navigate('/admin', { replace: true });
-            }, 2000);
-          } else {
-            showNotification("An error occurred. Please try again.");
-          }
-        } else if (response?.data.error === "Invalid credentials") {
+          const decodedToken = jwtDecode(response.tokens.accessToken);
+          navigate(decodedToken.userType === "STUDENT" ? "/home" : `/${decodedToken.userType.toLowerCase()}`);
+        } else {
           showNotification("Invalid login credentials!");
-          setFieldErrors({
-            userName: "Invalid username or password.",
-            password: "Invalid username or password.",
-          });
+          setFieldErrors({ userName: "Invalid username or password.", password: "Invalid username or password." });
         }
       }
     } catch (error) {
-      console.error("Login error:", error);
-
-      if (error.response) {
-        // Server responded with an error, like 401 Unauthorized
-        if (
-          error.response.status === 401 &&
-          error.response.data?.error === "Invalid credentials."
-        ) {
-          showNotification("Invalid login credentials!");
-          setFieldErrors({
-            userName: "Invalid username or password.",
-            password: "Invalid username or password.",
-          });
-        } else {
-          showNotification("An error occurred. Please try again.");
-        }
-      } else {
-        // Network or other issues not related to server response
-        showNotification("Network error. Please try again.");
-      }
+      showNotification("An error occurred. Please try again.");
     }
 
     setLoading(false);
   };
 
   return (
-    <div className="flex flex-col justify-center items-center background-container">
-      <div className="text-center mb-6">
+    <Container maxWidth="xs">
+      <Box display="flex" flexDirection="column" alignItems="center" mt={6}>
         <img
           src={logoFHB}
           alt="Fulda Student Hub"
-          className="w-24 mx-auto mb-4"
+          width={200}
+          style={{ marginBottom: "8rem" }}
         />
-        <h1 className="text-3xl font-bold text-gray-800">
+        <Typography variant="h5" fontWeight={600}>
           {isRegister ? "Register" : "Login"}
-        </h1>
-        <p className="text-sm text-gray-500">
+        </Typography>
+        <Typography variant="body2" color="textSecondary" sx={{ mb: 2, textAlign: "center" }}>
           {isRegister
             ? "Create an account to start using Fulda Student Hub"
             : "Welcome back! Please log in to continue."}
-        </p>
-      </div>
-
-      {/* Notification Banner */}
-      {notification.visible && (
-        <div className="fixed top-4 bg-green-500 text-white py-2 px-4 rounded-md shadow-md transition-all duration-300">
-          {notification.message}
-        </div>
-      )}
-
-      <div className="bg-white shadow-lg rounded-lg w-96 p-6 relative">
-        {/* Loading Spinner */}
-        {loading && (
-          <div className="absolute inset-0 flex items-center justify-center bg-white bg-opacity-60 z-50">
-            <div className="animate-spin rounded-full h-8 w-8 border-t-4 border-green-500"></div>
-          </div>
+        </Typography>
+  
+        {notification && (
+          <Alert severity="success" sx={{ width: "100%", mb: 2 }}>
+            {notification}
+          </Alert>
         )}
-
-        <form onSubmit={handleSubmit} className="space-y-4">
-          <div>
-            <label className="block text-gray-700 font-semibold mb-1">
-              Username
-            </label>
-            <input
-              type="text"
+  
+        <Paper
+          elevation={2}
+          sx={{
+            borderRadius: 3,
+            paddingX: 3,
+            paddingY: 2.5,
+            width: "100%",
+            maxWidth: 360,
+          }}
+        >
+          <form onSubmit={handleSubmit}>
+            <TextField
+              fullWidth
+              variant="outlined"
+              size="small"
+              label="Username"
               name="userName"
-              placeholder="Enter your username"
               value={formData.userName}
               onChange={handleInputChange}
-              required
-              className={`w-full border rounded-lg px-4 py-2 focus:outline-none focus:ring-2 ${
-                fieldErrors.userName
-                  ? "border-red-500 ring-red-400"
-                  : "border-gray-300 focus:ring-green-400"
-              }`}
+              error={!!fieldErrors.userName}
+              helperText={fieldErrors.userName}
+              margin="dense"
             />
-            {fieldErrors.userName && (
-              <p className="text-sm text-red-500 mt-1">
-                {fieldErrors.userName}
-              </p>
-            )}
-          </div>
-
-          {isRegister && (
-            <div>
-              <label className="block text-gray-700 font-semibold mb-1">
-                Email Address
-              </label>
-              <input
-                type="email"
+  
+            {isRegister && (
+              <TextField
+                fullWidth
+                variant="outlined"
+                size="small"
+                label="Email Address"
                 name="email"
-                placeholder="Enter your email"
                 value={formData.email}
                 onChange={handleInputChange}
-                required
-                className={`w-full border rounded-lg px-4 py-2 focus:outline-none focus:ring-2 ${
-                  fieldErrors.email
-                    ? "border-red-500 ring-red-400"
-                    : "border-gray-300 focus:ring-green-400"
-                }`}
+                error={!!fieldErrors.email}
+                helperText={fieldErrors.email}
+                margin="dense"
               />
-              {fieldErrors.email && (
-                <p className="text-sm text-red-500 mt-1">{fieldErrors.email}</p>
-              )}
-            </div>
-          )}
-
-          <div>
-            <label className="block text-gray-700 font-semibold mb-1">
-              Password
-            </label>
-            <input
+            )}
+  
+            <TextField
+              fullWidth
+              variant="outlined"
+              size="small"
+              label="Password"
               type="password"
               name="password"
-              placeholder="Enter your password"
               value={formData.password}
               onChange={handleInputChange}
-              required
-              className={`w-full border rounded-lg px-4 py-2 focus:outline-none focus:ring-2 ${
-                fieldErrors.password
-                  ? "border-red-500 ring-red-400"
-                  : "border-gray-300 focus:ring-green-400"
-              }`}
+              error={!!fieldErrors.password}
+              helperText={fieldErrors.password}
+              margin="dense"
             />
-            {fieldErrors.password && (
-              <p className="text-sm text-red-500 mt-1">
-                {fieldErrors.password}
-              </p>
-            )}
-          </div>
-
-          {isRegister && (
-            <div>
-              <label className="block text-gray-700 font-semibold mb-1">
-                Confirm Password
-              </label>
-              <input
+  
+            {isRegister && (
+              <TextField
+                fullWidth
+                variant="outlined"
+                size="small"
+                label="Confirm Password"
                 type="password"
                 name="confirmPassword"
-                placeholder="Re-enter your password"
                 value={formData.confirmPassword}
                 onChange={handleInputChange}
-                required
-                className={`w-full border rounded-lg px-4 py-2 focus:outline-none focus:ring-2 ${
-                  fieldErrors.confirmPassword
-                    ? "border-red-500 ring-red-400"
-                    : "border-gray-300 focus:ring-green-400"
-                }`}
+                error={!!fieldErrors.confirmPassword}
+                helperText={fieldErrors.confirmPassword}
+                margin="dense"
               />
-              {fieldErrors.confirmPassword && (
-                <p className="text-sm text-red-500 mt-1">
-                  {fieldErrors.confirmPassword}
-                </p>
-              )}
-            </div>
-          )}
-
-          {isRegister && (
-            <div>
-              <label className="block text-gray-700 font-semibold mb-1">
-                User Type
-              </label>
-              <select
+            )}
+  
+            {isRegister && (
+              <TextField
+                fullWidth
+                variant="outlined"
+                size="small"
+                select
+                label="User Type"
                 name="userType"
                 value={formData.userType}
                 onChange={handleInputChange}
-                className="w-full border border-gray-300 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-green-400"
+                margin="dense"
               >
-                <option value="STUDENT">Student</option>
-                <option value="LANDLORD">Landlord</option>
-              </select>
-            </div>
-          )}
-
-          <div className="flex items-center justify-between">
-            <button
-              type="submit"
-              className="bg-green-500 hover:bg-green-600 text-white py-2 px-4 rounded-lg font-semibold shadow-md transition-all duration-300"
-            >
-              {isRegister ? "Register" : "Login"}
-            </button>
-            <button
-              type="button"
-              onClick={toggleForm}
-              className="text-sm text-gray-500 underline hover:text-gray-800"
-            >
-              {isRegister
-                ? "Already have an account? Log in"
-                : "Don't have an account? Register"}
-            </button>
-          </div>
-        </form>
-      </div>
-
-      <div className="pb-16"></div>
-    </div>
+                <MenuItem value="STUDENT">Student</MenuItem>
+                <MenuItem value="LANDLORD">Landlord</MenuItem>
+              </TextField>
+            )}
+  
+            <Box display="flex" justifyContent="space-between" mt={2}>
+              <Button
+                variant="contained"
+                color="primary"
+                type="submit"
+                size="small"
+                sx={{ textTransform: "none", borderRadius: 2, paddingX: 3 }}
+                disabled={loading}
+              >
+                {loading ? <CircularProgress size={20} color="inherit" /> : isRegister ? "Register" : "Login"}
+              </Button>
+              <Button
+                color="secondary"
+                onClick={toggleForm}
+                size="small"
+                sx={{ textTransform: "none" }}
+              >
+                {isRegister ? "Already have an account? Log in" : "Don't have an account? Register"}
+              </Button>
+            </Box>
+          </form>
+        </Paper>
+      </Box>
+    </Container>
   );
 };
 

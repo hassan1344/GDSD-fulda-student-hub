@@ -37,23 +37,16 @@
   }
 }
 
-.background-container {
-  @apply min-h-screen bg-gradient-to-br from-green-100 via-green-50 to-white;
-}
-
-.property-card-button {
-  margin: 0rem 1rem 0rem 0rem;
-  @apply inline-block mt-4 bg-green-600 hover:bg-green-700 text-white font-bold py-2 px-4 rounded transition duration-200
-}
-
-.left-panel, .middle-panel, .right-panel {
-  height: 100%; /* Ensure the inner panels expand to fill the container */
-}
-
 .disclaimer {
   position: fixed;
   top: 0;
   left: 0;
   width: 100%;
   z-index: 1000; /* High z-index to keep disclaimer on top */
+}
+
+/* App.css */
+.body-content {
+  margin-top: 60px; /* Adjust this value according to your navbar height */
+  padding: 20px; /* Optional, adjust padding as needed */
 }

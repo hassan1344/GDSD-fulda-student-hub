@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { NavLink, useLocation, useNavigate } from "react-router-dom";
-import logoFHB from "./assets/images/logoFHB.png";
+import logoFHB from "../assets/images/logoFHB-Nav.png";
 import { logoutUser } from "../services/authServices";
 import { jwtDecode } from "jwt-decode";
 
