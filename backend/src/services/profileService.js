@@ -1,12 +1,14 @@
 import { PrismaClient } from "@prisma/client";
 import { uploadToS3, deleteS3Object } from "../utils/uploadToS3.js";
+import { initializeLandlordTrust } from "../utils/rentalScoreUtility.js";
 
 const prisma = new PrismaClient();
 
 export const getProfile = async (req, res) => {
   try {
     // Correction : userName extracted from decoded token
-    const { id: userName } = req;
+    const { userName } = req.user;
+    // console.log(req.user);
     let userProfile, modelId;
     const user = await prisma.user.findUnique({
       where: { user_name: userName },
@@ -59,14 +61,14 @@ export const getAllProfiles = async (req, res) => {
   try {
     const users = await prisma.user.findMany({
       include: {
-        Landlord: true, 
-        Student: true, 
+        Landlord: true,
+        Student: true,
       },
     });
 
     return res.json(users);
   } catch (error) {
-    console.error("Error fetching Profiles:", error.message);  //Correction : Error message
+    console.error("Error fetching Profiles:", error.message); //Correction : Error message
     throw error;
   }
 };
@@ -113,6 +115,8 @@ export const createProfile = async (req, res) => {
           trust_score: parseInt(trustScore) || 0, // Correction, added a fallback condition
         },
       });
+      await initializeLandlordTrust(userName);
+
       modelId = newLandlord.landlord_id;
       newProfile = newLandlord;
     }
@@ -169,7 +173,8 @@ export const updateProfile = async (req, res) => {
       modelId = updatedProfile.landlord_id;
     }
 
-    if (req.files && req?.files["profile_pic"]) { //Optional chaining added
+    if (req.files && req?.files["profile_pic"]) {
+      //Optional chaining added
       await deleteMedia(modelId);
       const file = req.files["profile_pic"][0];
       await addMedia(file, modelId);
