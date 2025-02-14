@@ -8,17 +8,18 @@ datasource db {
 }
 
 model Landlord {
-  landlord_id  String     @id @default(uuid())
-  trust_score  Int        @default(0)
-  created_at   DateTime   @default(now())
-  updated_at   DateTime   @updatedAt
-  user_id      String     @unique
-  address      String
-  first_name   String
-  last_name    String
-  phone_number String     @unique
-  user         User       @relation(fields: [user_id], references: [user_name])
-  Property     Property[]
+  landlord_id   String          @id @default(uuid())
+  trust_score   Int             @default(0)
+  created_at    DateTime        @default(now())
+  updated_at    DateTime        @updatedAt
+  user_id       String          @unique
+  address       String
+  first_name    String
+  last_name     String
+  phone_number  String          @unique
+  user          User            @relation(fields: [user_id], references: [user_name])
+  Property      Property[]
+  LandlordTrust LandlordTrust[]
 
   @@index([user_id], map: "landlord_user_id_fkey")
   @@map("landlord")
@@ -122,21 +123,23 @@ model Media {
 }
 
 model Application {
-  application_id     String            @id @default(uuid())
-  listing_id         String
-  student_id         String
-  application_status ApplicationStatus @default(PENDING)
-  applied_at         DateTime          @default(now())
-  reviewed_at        DateTime?
-  remarks            String?
-  created_at         DateTime          @default(now())
-  updated_at         DateTime          @updatedAt
-  contact_number     String
-  current_address    String
-  full_name          String
-  student_card_id    String
-  listing            Listing           @relation(fields: [listing_id], references: [listing_id])
-  user               User              @relation(fields: [student_id], references: [user_name])
+  application_id        String                  @id @default(uuid())
+  listing_id            String
+  student_id            String
+  application_status    ApplicationStatus       @default(PENDING)
+  applied_at            DateTime                @default(now())
+  reviewed_at           DateTime?
+  remarks               String?
+  created_at            DateTime                @default(now())
+  updated_at            DateTime                @updatedAt
+  contact_number        String
+  current_address       String
+  full_name             String
+  student_card_id       String
+  listing               Listing                 @relation(fields: [listing_id], references: [listing_id])
+  user                  User                    @relation(fields: [student_id], references: [user_name])
+  LandlordRentalHistory LandlordRentalHistory[]
+  LandlordReviews       LandlordReviews[]
 
   @@index([listing_id], map: "application_listing_id_fkey")
   @@index([student_id], map: "application_student_id_fkey")
@@ -230,6 +233,44 @@ model Bid {
   @@index([session_id], map: "bid_session_id_fkey")
   @@index([bidder_id], map: "bid_bidder_id_fkey")
   @@map("bid")
+}
+
+model LandlordRentalHistory {
+  rental_id             String    @id @default(uuid())
+  application_id        String
+  date_started          DateTime?
+  date_ended            DateTime?
+  cancelled_by_landlord Boolean   @default(false)
+
+  application Application @relation(fields: [application_id], references: [application_id])
+
+  @@map("landlord_rental_history")
+}
+
+model LandlordReviews {
+  review_id      String   @id @default(uuid())
+  application_id String
+  rating         Int
+  review_text    String?
+  created_at     DateTime @default(now())
+
+  application Application @relation(fields: [application_id], references: [application_id])
+
+  @@map("landlord_reviews")
+}
+
+model LandlordTrust {
+  landlord_trust_id String   @id @default(uuid())
+  landlord_id       String
+  alpha             Float
+  beta              Float
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+
+  landlord Landlord @relation(fields: [landlord_id], references: [landlord_id])
+
+  @@index([landlord_id], map: "property_landlord_id_fkey")
+  @@map("landlord_trust")
 }
 
 enum UserType {
