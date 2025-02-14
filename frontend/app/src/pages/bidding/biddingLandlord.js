@@ -4,7 +4,7 @@ import io from "socket.io-client";
 import { getBiddingStatus } from "../../services/biddingServices";
 import LandlordNavbar from "../../components/LandlordNavbar";
 
-const BIDDING_SERVER_URL = "https://fulda-student-hub.publicvm.com";
+const BIDDING_SERVER_URL = process.env.REACT_APP_SOCKET_BASE_URL;
 
 const BiddingLandlord = () => {
   const { listingId } = useParams();
