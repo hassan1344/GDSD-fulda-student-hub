@@ -78,8 +78,7 @@ const BiddingStudent = () => {
 
     newSocket.on("biddingEnded", (data) => {
       setBiddingStatus("ended");
-      setHighestBid(data.highestBid);
-      alert(`Bidding ended. Final highest bid: €${data.amount}`);
+      alert(`Bidding ended. Final highest bid: €${data.winner}`);
     });
 
     newSocket.on("userLeft", (data) => {

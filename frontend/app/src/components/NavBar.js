@@ -15,7 +15,8 @@ const Navbar = () => {
   const allNavLinks = [
     { path: "/home", name: "Home", roles: ["STUDENT"] },
     { path: "/admin", name: "Home", roles: ["ADMIN"] },
-    { path: "/myApplications", name: "My Applications", roles: ["STUDENT"] },
+    { path: "/myApplications", name: "Applications", roles: ["STUDENT"] },
+    { path: "/myBids", name: "Bids", roles: ["STUDENT"] },
     { path: "/messages", name: "Messages", roles: ["STUDENT"] },
     { path: "/viewProfile", name: "Profile", roles: ["STUDENT"] },
     { path: "/admin/viewProfile", name: "Profile", roles: ["ADMIN"] },

@@ -98,8 +98,7 @@ const BiddingLandlord = () => {
 
     newSocket.on("biddingEnded", (data) => {
       setBiddingStatus("ended");
-      setHighestBid(data.highestBid);
-      alert(`Bidding ended. Final highest bid: €${data.amount}`);
+      alert(`Bidding ended. Winner: ${data.winner.userName} Higest Bid: €${data.winner.amount}` );
     });
 
     newSocket.on("userLeft", (data) => {

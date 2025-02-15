@@ -46,3 +46,16 @@ export const getListingsByIds = async (listingIds) => {
     return [];
   }
 };
+
+export const getUserBiddingSessions = async (userName) => {
+  try {
+    const response = await apiClient.get(`/bidding/user-biddings?userName=${userName}`, {
+      requireToken: true,
+    });
+
+    return response.data; // Return the data from the API
+  } catch (error) {
+    console.error("Error fetching biddings", error);
+    return [];
+  }
+};

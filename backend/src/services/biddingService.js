@@ -47,3 +47,33 @@ export const getAllActiveBiddings = async (req, res) => {
     res.status(500).json({ error: error.message });
   }
 };
+
+export const getUserBiddingSessions = async (req, res) => {
+  try {
+    const { userName } = req.query;
+
+    const biddingSessions = await prisma.biddingSession.findMany({
+      where: {
+        Bids: {
+          some: {
+            bidder_id: userName, // Ensure the user has at least one bid in the session
+          },
+        },
+      },
+      include: {
+        Bids: true, // Include all bids for verification
+      },
+      orderBy: {
+        status: "asc", // Active sessions first
+      },
+    });
+
+    console.log("Fetched Sessions for", userName, biddingSessions); // Debug log
+
+    return res.json(biddingSessions);
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+};
+
+
