@@ -129,6 +129,12 @@ const EditListing = () => {
         updateFormData.append('property_id', listing.property_id);
       }
 
+      // Again set status as pending for approval of changes
+      if (updateFormData.has('status') && userType !== "ADMIN") {
+        updateFormData.delete('status');
+        updateFormData.append('status', 'Pending');
+      }
+
       const response = userType === "ADMIN" ? 
       await updateListingAdmin(id, updateFormData, token) : 
       await updateListing(id, updateFormData, token);
@@ -214,7 +220,7 @@ const EditListing = () => {
               />
             </div>
 
-            <div>
+            {/* <div>
               <label className="block text-lg font-medium text-gray-700 mb-2">Status</label>
               <select
                 name="status"
@@ -227,7 +233,7 @@ const EditListing = () => {
                 <option value="Rented">Rented</option>
                 <option value="Pending">Pending</option>
               </select>
-            </div>
+            </div> */}
 
             <div>
               <label className="block text-lg font-medium text-gray-700 mb-2">Current Images</label>

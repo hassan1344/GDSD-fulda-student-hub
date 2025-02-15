@@ -36,6 +36,7 @@ const AllProperties = () => {
       const token = localStorage.getItem('accessToken');  //got access token
       try {
         const data = await fetchAllPropertiesAdmin(token);  //will get properties on success
+        console.log("Properties", data);
         if (data) {
           setProperties(data);
         } else {
@@ -77,10 +78,10 @@ const AllProperties = () => {
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {properties.map(property => (
               <div key={property.property_id} className="bg-white shadow-lg rounded-lg overflow-hidden">
-                {property.media && property.media.length > 0 && (
+                {property.Media && property.Media.length > 0 && (
                   <div className="relative h-48">
                     <img
-                      src={`https://fulda-student-hub.s3.eu-north-1.amazonaws.com/public/uploads/images/${property.media[0].media_url}`}
+                      src={`https://fulda-student-hub.s3.eu-north-1.amazonaws.com/public/uploads/images/${property.Media[0].mediaUrl}`}
                       alt={property.address}
                       className="w-full h-full object-cover"
                       onError={(e) => {

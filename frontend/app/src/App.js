@@ -35,6 +35,7 @@ import AdminHomepage from "./pages/admin/AdminHomepage";
 import AllListings from "./pages/admin/AllListings";
 import AllProperties from "./pages/admin/AllProperties";
 import AdminViewProfile from './pages/admin/AdminViewProfile';
+import LeaseAgreement from './pages/landlord/LeaseAgreement';
 
 
 
@@ -75,6 +76,7 @@ const App = () => {
        <Route path="/landlord/my-prop-listings" element={<MyListings />} />
        <Route path ="/landlord/edit-prop-listing/:id" element={<EditListing />} />
        <Route path="/landlord/create-prop-listing" element={<CreateListing />} />
+       <Route path="/landlord/lease-agreement" element={<LeaseAgreement />} />
 
        <Route path="/bidding/BiddingLandlord/:listingId" element={<BiddingLandlord />} />
        <Route path="/bidding/BiddingStudent/:listingId" element={<BiddingStudent />} />
