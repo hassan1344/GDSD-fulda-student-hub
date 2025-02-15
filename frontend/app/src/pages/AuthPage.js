@@ -109,12 +109,6 @@ const AuthPage = () => {
   return (
     <Container maxWidth="xs">
       <Box display="flex" flexDirection="column" alignItems="center" mt={6}>
-        <img
-          src={logoFHB}
-          alt="Fulda Student Hub"
-          width={200}
-          style={{ marginBottom: "8rem" }}
-        />
         <Typography variant="h5" fontWeight={600}>
           {isRegister ? "Register" : "Login"}
         </Typography>

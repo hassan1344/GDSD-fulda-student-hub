@@ -8,7 +8,7 @@ export const themeOptions = {
       contrastText: "#ffffff", // White text for contrast
     },
     secondary: {
-      main: "#ffffff", // White as the secondary color
+      main: "rgb(182, 182, 182)", // White as the secondary color
       contrastText: "#006B3F", // Green text for contrast
     },
     background: {

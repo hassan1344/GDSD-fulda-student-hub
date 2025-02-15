@@ -47,7 +47,6 @@ const ViewStudentProfile = () => {
 
   return (
     <div className="background-container">
-      <Navbar />
       {/* Profile Content */}
       <div className="max-w-4xl mx-auto p-6 bg-white shadow-lg rounded-lg mt-8">
         {/* Profile Header */}

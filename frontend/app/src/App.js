@@ -10,7 +10,6 @@ import LandlordRequests from "./pages/landlord/LandlordRequests";
 import LandlordSelectRequests from "./pages/landlord/LandlordSelectRequests";
 import LandlordViewTenants from "./pages/landlord/LandlordViewTenants";
 import LandlordViewProperties from "./pages/landlord/LandlordViewProperties";
-import AuthPage from "./pages/AuthPage";
 import LandlordHomepage from "./pages/landlord/LandlordHomepage";
 import CreateNewProperties from "./pages/landlord/CreateNewProperties";
 import ViewProperties from "./pages/landlord/ViewProperties";
@@ -33,6 +32,8 @@ import AllProperties from "./pages/admin/AllProperties";
 import AdminViewProfile from './pages/admin/AdminViewProfile';
 import LeaseAgreement from './pages/landlord/LeaseAgreement';
 import Navbar from './components/NavBar';
+import SingUpPage from './pages/auth/SignUp';
+import SignInPage from './pages/auth/SignIn';
 
 const App = () => {
   console.log("App rendered");
@@ -42,9 +43,13 @@ const App = () => {
       <CssBaseline /> {/* Normalizes styles for consistency */}
       <Router basename='/app'>
         <div className="body-content">
+          <Navbar /> {/* Show Navbar on every page */}
           <Routes>
             {/* Define all your routes directly inside Routes */}
-            <Route path="/" element={<AuthPage />} />
+            <Route path="/" element={<Home />} />
+            <Route path="/login" element={<SignInPage />} />
+            <Route path="/register" element={<SingUpPage />} />
+            <Route path="/" element={<Home />} />
             <Route path="/profile" element={<CreateProfilePage />} />
             <Route path="/Home" element={<Home />} />
             <Route path="/searchresults" element={<SearchResults />} />

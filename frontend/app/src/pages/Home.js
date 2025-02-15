@@ -122,8 +122,6 @@ const Home = () => {
 
   return (
     <div className="background-container">
-      <Navbar />
-
       {selectedProperty ? (
         <PropertyDetails
           listing={selectedProperty}
