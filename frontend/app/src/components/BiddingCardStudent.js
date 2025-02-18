@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react"; // Import useState
 import { FaGavel, FaCheckCircle, FaTimesCircle } from "react-icons/fa";
 
-const BiddingCardStudent = ({ session, listing, userName, onViewDetails }) => {
+const BiddingCardStudent = ({ session, listing, userName, onButtonClick }) => {
   const [selectedApplicationId, setSelectedApplicationId] = useState();
 
   const userBid = session.Bids.find((bid) => bid.bidder_id === userName);
@@ -9,7 +9,6 @@ const BiddingCardStudent = ({ session, listing, userName, onViewDetails }) => {
   const didUserWin =
     session.status === "ended" && session.highest_bidder === userName;
 
-    console.log("first");
   return (
     <div
       key={session.session_id}
@@ -22,7 +21,6 @@ const BiddingCardStudent = ({ session, listing, userName, onViewDetails }) => {
       <p className="text-gray-600 text-sm mb-3">
         {listing.description || "No description available"}
       </p>
-
       {/* Pricing & Bidding Details */}
       <div className="bg-gray-100 p-4 rounded-lg">
         <p className="flex items-center gap-2">
@@ -50,7 +48,6 @@ const BiddingCardStudent = ({ session, listing, userName, onViewDetails }) => {
           </span>
         </p>
       </div>
-
       {/* Win/Loss Message */}
       {session.status === "ended" && (
         <p
@@ -71,14 +68,23 @@ const BiddingCardStudent = ({ session, listing, userName, onViewDetails }) => {
           )}
         </p>
       )}
-
       {/* View Details Button */}
-      <button
-//        onClick={() => setSelectedSessionId(session.session_id)}
-        className="mt-4 w-full bg-blue-500 text-white font-semibold py-2 rounded-lg hover:bg-blue-600 transition-all duration-200"
-      >
-        View Details
-      </button>
+      {session.status === "active" && (
+        <button
+          onClick={() => onButtonClick({id: session.listing_id, status: session.status})}
+          className="mt-4 w-full bg-green-500 text-white font-semibold py-2 rounded-lg hover:bg-green-600 transition-all duration-200"
+        >
+          Join Session
+        </button>
+      )}
+      {session.status === "ended" && didUserWin && (
+        <button
+          onClick={() => onButtonClick({id: session.listing_id, status: session.status})}
+          className="mt-4 w-full bg-blue-500 text-white font-semibold py-2 rounded-lg hover:bg-blue-600 transition-all duration-200"
+        >
+          View Details
+        </button>
+      )}
     </div>
   );
 };

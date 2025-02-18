@@ -1,17 +1,21 @@
 import React, { useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import Navbar from "../components/NavBar";
 import { getUserBiddingSessions } from "../services/biddingServices"; // Fetch user bidding sessions
 import { getListingsByIds } from "../services/biddingServices"; // Fetch multiple listings at once
 import { jwtDecode } from "jwt-decode";
 import BiddingCardStudent from "../components/BiddingCardStudent";
+import PropertyDetails from "../components/PropertyDetails";
 //import BiddingSessionDetails from "../components/BiddingSessionDetails";
 
 const ViewBiddingSessionStudent = () => {
   const [biddingSessions, setBiddingSessions] = useState([]);
   const [listingsMap, setListingsMap] = useState({});
-  const [selectedSessionId, setSelectedSessionId] = useState(null);
+  const [selectedProperty, setSelectedProperty] = useState(null);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState(null);
+
+  const navigate = useNavigate();
 
   const accessToken = localStorage.getItem("accessToken");
 
@@ -55,6 +59,24 @@ const ViewBiddingSessionStudent = () => {
 
     fetchBiddingSessions();
   }, [userName]);
+
+  const handleButtonClick = (sessionD) => {
+    if (sessionD.status === "active") {
+      navigate(`/bidding/BiddingStudent/${sessionD.id}`);
+    } else if (sessionD.status === "ended") {
+      const getListing = (id) => listingsMap[id] || null;
+
+      const listing = getListing(sessionD.id);
+
+      console.log(listing);
+      setSelectedProperty(listing);
+    }
+  };
+
+  const handleBack= () => {
+    setSelectedProperty(null);
+  };
+
   /*
   if (selectedSessionId) {
     return (
@@ -68,6 +90,13 @@ const ViewBiddingSessionStudent = () => {
   return (
     <div className="background-container">
       <Navbar />
+
+      {selectedProperty ? (
+        <PropertyDetails
+          listing={selectedProperty}
+          onBack={handleBack}
+        />
+      ) : (
 
       <div className="p-8">
         <header className="mb-6 text-center">
@@ -98,11 +127,11 @@ const ViewBiddingSessionStudent = () => {
               const listing = listingsMap[session.listing_id] || {};
               return (
                 <BiddingCardStudent
-                key={session.session_id}
-                session={session}
-                listing={listing}
-                userName={userName}
-                onViewDetails={(id) => setSelectedSessionId(id)}
+                  key={session.session_id}
+                  session={session}
+                  listing={listing}
+                  userName={userName}
+                  onButtonClick={(sessionD) => handleButtonClick(sessionD)}
                 />
               );
             })}
@@ -121,6 +150,8 @@ const ViewBiddingSessionStudent = () => {
           </div>
         )}
       </div>
+      )}
+
     </div>
   );
 };

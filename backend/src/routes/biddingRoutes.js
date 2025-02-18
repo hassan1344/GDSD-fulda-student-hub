@@ -1,5 +1,5 @@
 import express from "express";
-import { getBiddingStatus, getAllActiveBiddings, getUserBiddingSessions } from "../services/biddingService.js";
+import { getBiddingStatus, getAllActiveBiddings, getUserBiddingSessions, getLandlordBiddingSessions } from "../services/biddingService.js";
 import { authenticate } from "../middlewares/auth.js";
 
 const biddingRouter = express.Router();
@@ -22,4 +22,9 @@ biddingRouter.get(
   getUserBiddingSessions
 );
 
+biddingRouter.get(
+  "/landlord-biddings",
+  authenticate,
+  getLandlordBiddingSessions
+);
 export default biddingRouter;

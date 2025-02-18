@@ -38,7 +38,7 @@ const Messages = () => {
       return;
     }
 
-    socketRef.current = io("https://fulda-student-hub.publicvm.com", {
+    socketRef.current = io("http://localhost:8000", {
       query: { 
         token,
         endpoint: "chat"

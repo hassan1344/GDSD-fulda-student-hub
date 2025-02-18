@@ -20,7 +20,6 @@ import LandlordViewProfile from "./pages/landlordViewProfile";
 import ViewApplicationStudent from "./pages/ViewApplicationStudent";
 import Messages from "./pages/message/Messages";
 
-import ViewBiddingSessionStudent from './pages/ViewBiddingSessionStudent';
 //listings from here
 import MyListings from "./pages/landlord/MyListings";
 import EditListing from "./pages/landlord/EditListing";
@@ -29,6 +28,8 @@ import CreateListing from "./pages/landlord/CreateListing";
 //Bidding here
 import BiddingLandlord from "./pages/bidding/biddingLandlord";
 import BiddingStudent from './pages/bidding/BiddingStudent';
+import ViewBiddingSessionStudent from './pages/ViewBiddingSessionStudent';
+import MyBidding from './pages/landlord/MyBidding';
 
 // Admin imports
 import AdminHomepage from "./pages/admin/AdminHomepage";
@@ -77,6 +78,7 @@ const App = () => {
        <Route path ="/landlord/edit-prop-listing/:id" element={<EditListing />} />
        <Route path="/landlord/create-prop-listing" element={<CreateListing />} />
        <Route path="/landlord/lease-agreement" element={<LeaseAgreement />} />
+       <Route path="/landlord/my-bids" element={<MyBidding />} />
 
        <Route path="/bidding/BiddingLandlord/:listingId" element={<BiddingLandlord />} />
        <Route path="/bidding/BiddingStudent/:listingId" element={<BiddingStudent />} />

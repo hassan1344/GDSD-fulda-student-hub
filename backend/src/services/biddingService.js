@@ -4,12 +4,12 @@ const prisma = new PrismaClient();
 
 export const getBiddingStatus = async (req, res) => {
   try {
-    const {listingId} = req.query;
+    const { listingId } = req.query;
 
     let biddingSession = await prisma.biddingSession.findFirst({
       where: {
         listing_id: listingId,
-        status: 'active',
+        status: "active",
       },
     });
 
@@ -17,13 +17,14 @@ export const getBiddingStatus = async (req, res) => {
       biddingSession = await prisma.biddingSession.findFirst({
         where: {
           listing_id: listingId,
-          status: 'ended',
+          status: "ended",
         },
       });
     }
-    let isBid = false, bidStatus = null;
+    let isBid = false,
+      bidStatus = null;
 
-    if(biddingSession) {
+    if (biddingSession) {
       isBid = true;
       bidStatus = biddingSession.status;
     }
@@ -38,7 +39,7 @@ export const getAllActiveBiddings = async (req, res) => {
   try {
     const activeBiddings = await prisma.biddingSession.findMany({
       where: {
-        status: 'active',
+        status: "active",
       },
     });
 
@@ -76,4 +77,54 @@ export const getUserBiddingSessions = async (req, res) => {
   }
 };
 
+export const getLandlordBiddingSessions = async (req, res) => {
+  try {
+    const { userName } = req.query;
+
+    const biddingSessions = await prisma.biddingSession.groupBy({
+      by: ["listing_id"], // Group by listing_id to get one session per listing
+      where: {
+        listing: {
+          property: {
+            landlord: {
+              user: {
+                user_name: userName, // Filter by landlord's user_name
+              },
+            },
+          },
+        },
+      },
+      _max: {
+        created_at: true, // Get the latest session based on creation date
+      },
+    });
+
+    // Fetch the full bidding session details for the latest sessions
+    const latestSessions = await prisma.biddingSession.findMany({
+      where: {
+        OR: biddingSessions.map((session) => ({
+          listing_id: session.listing_id,
+          created_at: session._max.created_at,
+        })),
+      },
+      include: {
+        listing: {
+          include: {
+            property: true, // Include property details
+          },
+        },
+        Bids: true, // Include all bids
+      },
+      orderBy: {
+        status: "asc", // Active sessions first
+      },
+    });
+
+    console.log("Fetched latest sessions for Landlord", userName, latestSessions);
+
+    return res.json(latestSessions);
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+};
 
