@@ -4,43 +4,68 @@ import { Link } from 'react-router-dom';
 import LandlordNavbar from '../../components/LandlordNavbar';
 import { jwtDecode } from 'jwt-decode';
 import { getProfileByUsername } from '../../services/profileServices';
+import MeetingForm from './MeetingForm';
+import { getApprovedApplications } from '../../services/applicationServices';
+import { scheduleMeeting } from '../../services/calendarService';
 
 const LandlordHomepage = () => {
-/* State to store the landlord's profile data, manage loading status, handle errors, store username extracted from token */
-    const [profile, setProfile] = useState(null);
-    const [loading, setLoading] = useState(true);
-    const [error, setError] = useState(null);
-    const [username, setUserName] = useState("");
+  /* State to store the landlord's profile data, manage loading status, handle errors, store username extracted from token */
+  const [profile, setProfile] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+  const [username, setUserName] = useState("");
+  const [approvedApplication, setApprovedApplication] = useState([]);
 
-/* Fetch profile data when the component mounts  */  
+  /* Fetch profile data when the component mounts  */
   useEffect(() => {
-    const accessToken = localStorage.getItem("accessToken");
-    
-// Decode the access token to extract the username
-    const decodedToken = jwtDecode(accessToken);    
-    const { userName } = decodedToken;
-    setUserName(userName);
+    const fetchData = async () => {
+      const accessToken = localStorage.getItem("accessToken");
 
+      try {
+        // Decode the access token to extract the username
+        const decodedToken = jwtDecode(accessToken);
+        const { userName } = decodedToken;
+        setUserName(userName);
 
-    if (userName) {
-      const fetchProfile = async () => {
-    try {
-// Fetch profile data using the extracted username          
-        const data = await getProfileByUsername(userName);
-        console.log("Data in fetchProfile", data);
-        setProfile(data);
-    } catch (err) {
-        setError("Error loading profile: " + err.message);
-    } finally {
+        if (userName) {
+          // Fetch profile data
+          const profileData = await getProfileByUsername(userName);
+          console.log("Profile data:", profileData);
+          setProfile(profileData);
+
+          // Fetch approved applications after profile is fetched
+          const applicationData = await getApprovedApplications();
+          console.log("Approved applications data:", applicationData.data);
+          if (applicationData.success) {
+            setApprovedApplication(applicationData.data);
+          } else {
+            setError(applicationData.message || 'Failed to fetch applications');
+          }
+        } else {
+          setError("Username is not valid.");
+        }
+      } catch (err) {
+        setError("Error loading data: " + err.message);
+      } finally {
         setLoading(false);
-    }
+      }
     };
-    fetchProfile();
-    } else {
-      setError("Username is not valid.");
-      setLoading(false);
-    }
+
+    fetchData();
   }, []);
+
+  async function onSchedule(formData) {
+    try {
+
+      const response = await scheduleMeeting(formData);
+      // setMeetings([...meetings, {
+      //   ...response.data,
+      //   date: format(parseISO(response.data.date), 'MMM dd, yyyy HH:mm')
+      // }]);
+    } catch (err) {
+      setError(err.response?.data?.error || 'Failed to schedule meeting');
+    }
+  }
 
   /* Menu items for the landlord dashboard */
   const menuItems = [
@@ -75,6 +100,11 @@ const LandlordHomepage = () => {
             ))}
           </div>
         </div>
+        <MeetingForm
+          onSubmit={onSchedule}
+          students={approvedApplication}
+        />
+
       </div>
     </div>
   );

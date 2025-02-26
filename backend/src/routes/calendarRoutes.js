@@ -1,6 +1,6 @@
 import express from "express";
-import { createMeeting, getLandlordMeetings, cancelMeeting } from "../services/calendarController.js";
-import { authenticateLandlord } from "../middlewares/auth.js";
+import { createMeeting, getLandlordMeetings, cancelMeeting, getScheduledMeetings } from "../services/calendarController.js";
+import { authenticateLandlord, authenticateStudent } from "../middlewares/auth.js";
 
 //-----------
 import { getStudents } from "../services/calendarController.js";
@@ -19,5 +19,7 @@ router.delete("/cancel/:meeting_id", authenticateLandlord, cancelMeeting);
 
 //--------- Get all students
 router.get("/students", authenticateLandlord, getStudents);
+
+router.get("/scheduledMeetings", authenticateStudent, getScheduledMeetings);
 
 export default router;

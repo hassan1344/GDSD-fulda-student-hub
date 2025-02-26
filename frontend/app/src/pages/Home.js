@@ -6,7 +6,7 @@ import Disclaimer from "../components/Disclaimer";
 import SearchCard from "../components/SearchCard";
 import PropertyDetails from "../components/PropertyDetails";
 import { getAllAmenities } from "../services/utilServices";
-import { fetchListings } from "../services/searchListingServices";
+import { fetchListings, fetchScheduledMeetings } from "../services/searchListingServices";
 import {
   getAllActiveBiddings,
   getListingsByIds,
@@ -23,6 +23,7 @@ const Home = () => {
   const [amenities, setAmenities] = useState([]);
   const [uniqueAmenities, setUniqueAmenities] = useState([]);
   const [activeBiddings, setActiveBiddings] = useState([]);
+  const [tableData, setTableData] = useState([]);
 
   const navigate = useNavigate();
 
@@ -67,7 +68,14 @@ const Home = () => {
       }
     };
 
+    const fetchScheduledMeeting = async () => {
+      const data = await fetchScheduledMeetings();
+      console.log(73, data);
+      setTableData(data);
+    }
+
     fetchInitialData();
+    fetchScheduledMeeting();
   }, []);
 
   const handleToggleFilter = (filter) => {
@@ -114,7 +122,7 @@ const Home = () => {
   };
 
   const handleSelectProperty = (property, isBidding = false) => {
-    setSelectedProperty({...property, isBidding});
+    setSelectedProperty({ ...property, isBidding });
   };
 
   const handleBackToResults = () => {
@@ -131,7 +139,40 @@ const Home = () => {
           onBack={handleBackToResults}
         />
       ) : (
-        <div className="flex justify-center mt-12">
+        <div className="flex justify-center mt-12 relative">
+          {/* <div className="w-1/4 bg-gray-100 p-4 shadow-lg h-screen overflow-y-auto absolute right-10">
+            <h3 className="text-lg font-semibold text-gray-800 mb-4">Landlord Meetings</h3>
+            <table className="w-full text-left border-collapse">
+              <thead>
+                <tr className="bg-gray-200">
+                  <th className="p-2 border-b">Landlord ID</th>
+                  <th className="p-2 border-b">Meeting ID</th>
+                  <th className="p-2 border-b">Date</th>
+                </tr>
+              </thead>
+              <tbody>
+                {tableData.map((row, index) => (
+                  <tr key={index} className="hover:bg-gray-50">
+                    <td className="p-2 border-b">{row.landlord_id}</td>
+                    <td className="p-2 border-b">{row.meeting_id}</td>
+                    <td className="p-2 border-b">{row.date}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div> */}
+          <div className="w-1/4 bg-gray-100 p-4 shadow-lg h-screen overflow-y-auto absolute right-10">
+            <h3 className="text-lg font-semibold text-gray-800 mb-4">Landlord Meetings</h3>
+            <div className="panel-body text-gray-700">
+              {tableData.map((row, index) => (
+                <div key={index} className="mb-6">
+                  <br />
+                   {row.landlord.user_id} has scehedueld meeting on {(new Date(row.date)).toUTCString()}.
+                  <br /><br />
+                </div>
+              ))}
+            </div>
+          </div>
           <div className="bg-white shadow-lg rounded-lg p-8 w-full max-w-4xl">
             <h2 className="text-2xl font-semibold text-gray-800 text-center mb-6">
               Find Your Perfect Accommodation
@@ -260,9 +301,8 @@ const Home = () => {
                             "/default.jpg"
                           }
                           description={bidding.description}
-                          price={`Current Bid: €${
-                            bidding.rent // || bidding.starting_price
-                          }`}
+                          price={`Current Bid: €${bidding.rent // || bidding.starting_price
+                            }`}
                           poster={`${bidding.property.landlord.first_name} ${bidding.property.landlord.last_name}`}
                           onClick={() => handleSelectProperty(bidding, true)}
                         />

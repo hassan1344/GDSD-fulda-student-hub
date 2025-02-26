@@ -42,22 +42,6 @@ const handleScheduleMeeting = async (formData) => {
   };
 
 
-  //---------------------
-  useEffect(() => {
-    const fetchStudents = async () => {
-      try {
-        const response = await getStudents();
-        setStudents(response.data);
-      } catch (error) {
-        console.error("Error fetching students:", error);
-      }
-    };
-  
-    fetchStudents();
-  }, []);
-
-//------------------------
-
 
 
 

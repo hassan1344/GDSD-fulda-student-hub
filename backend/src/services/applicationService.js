@@ -361,3 +361,37 @@ export const deleteApplicationById = async (req, res) => {
       .json({ error: "An error occurred while deleting the application" });
   }
 };
+
+
+export const getApprovedApplications = async (req, res) => {
+  try {
+      if (!req.user || !req.user.userName) {
+          return res.status(401).json({ success: false, error: "User not authenticated" });
+      }
+
+      // Fetch all applications based on listing IDs
+      const applications = await prisma.application.findMany({
+          where: {
+            application_status: {
+                  
+                        equals :"APPROVED"
+                 
+              }
+          },
+          include: {
+              listing: true
+          }
+      });
+
+      res.status(200).json({
+          success: true,
+          message: "Applications retrieved successfully",
+          data: applications,
+      });
+  } catch (error) {
+    console.error(error);
+    return res
+      .status(500)
+      .json({ error: "An error occurred while fetching the application" });
+  }
+};

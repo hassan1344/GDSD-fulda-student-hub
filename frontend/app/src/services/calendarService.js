@@ -19,7 +19,8 @@ export const scheduleMeeting = async (meetingData) => {
   
   const payload = {
     ...meetingData,
-    landlord_id: decodedToken.userId // Auto-populate from token
+    // landlord_id: decodedToken.userId // Auto-populate from token
+    landlord_id: decodedToken.userName // Auto-populate from token
   };
 
   return apiClient.post('/calendar/schedule', payload, {
