@@ -13,6 +13,7 @@ import utilRouter from "./routes/utilRoutes.js";
 import searchListingRouter from "./routes/searchListingRoute.js";
 import listingModuleRouter from "./routes/listingModuleRoutes.js";
 import biddingRouter from "./routes/biddingRoutes.js";
+import nearestServicesRouter from "./routes/nearestServicesRoutes.js";
 
 //Calendar
 import calendarRouter from "./routes/calendarRoutes.js";
@@ -45,6 +46,7 @@ app.use("/v1/utils", utilRouter);
 app.use("/v1/searchListing", searchListingRouter);
 app.use("/v1/listingsModule", listingModuleRouter);
 app.use("/v1/bidding", biddingRouter);
+app.use("/v1/services", nearestServicesRouter);
 
 // app.use(ResHandler);
 

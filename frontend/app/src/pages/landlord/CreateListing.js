@@ -15,7 +15,7 @@ const CreateListing = () => {
   const [formData, setFormData] = useState({
     title: "",
     description: "",
-    status: "Available",
+    status: "Pending",
     rent: "",
     room_type_id: "",
     property_id: "",
@@ -32,7 +32,7 @@ const CreateListing = () => {
     { id: "1a2b3c4d-5e6f-7g8h-9i0j-1k2l3m4n5o6p", name: "Studio Apartment" },
     { id: "2b3c4d5e-6f7g-8h9i-0j1k-2l3m4n5o6p7q", name: "1-Bedroom Apartment" },
     { id: "3c4d5e6f-7g8h-9i0j-1k2l-3m4n5o6p7q8r", name: "2-Bedroom Apartment" },
-    { id: "6f7g8h9i-0j1k-2l3m-4n5o-6p7q8r9s0t1u", name: "Maisonette" },
+    { id: "6f7g8h9i-0j1k-2l3m-4n5o-6p7q8r9s0t1u", name: "Single Room" },
     { id: "5e6f7g8h-9i0j-1k2l-3m4n-5o6p7q8r9s0t", name: "Penthouse" },
   ];
   /*Fetch available properties from the backend
