@@ -41,23 +41,29 @@ const handleScheduleMeeting = async (formData) => {
     }
   };
 
-/*
-useEffect(() => {
-    const fetchUserId = async () => {
+
+  //---------------------
+  useEffect(() => {
+    const fetchStudents = async () => {
       try {
-        const response  = await getUserId();
-        console.log(123, response);
-        console.log('Fetched User ID:', [...response.data.students]);
-        setStudents(
-        [...response.data.students]
-        );
+        const response = await getStudents();
+        setStudents(response.data);
       } catch (error) {
-        console.error('Error fetching user ID:', error);
+        console.error("Error fetching students:", error);
       }
     };
-    fetchUserId();
+  
+    fetchStudents();
   }, []);
-*/
+
+//------------------------
+
+
+
+
+
+
+
 const handleCancelMeeting = async (meetingId) => {
     try {
       await cancelMeeting(meetingId);

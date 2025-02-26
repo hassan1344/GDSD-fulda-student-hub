@@ -39,18 +39,18 @@ const MeetingForm = ({ onSubmit , students}) => {
       <div>
         <label className="block text-sm font-medium mb-1">Student</label>
         <select
-          value={formData.student_id}
-          onChange={(e) => setFormData({ ...formData, student_id: e.target.value })}
-          className="w-full p-2 border rounded"
-          required
-        >
-          <option value="">Select a student</option>
-          {students.map((studentId) => (
-            <option key={studentId} value={studentId}>
-              {studentId}
-            </option>
-          ))}
-        </select>
+  value={formData.student_id}
+  onChange={(e) => setFormData({ ...formData, student_id: e.target.value })}
+  className="w-full p-2 border rounded"
+  required
+>
+  <option value="">Select a student</option>
+  {students.map((student) => (
+    <option key={student.student_id} value={student.student_id}>
+      {student.first_name} {student.last_name}
+    </option>
+  ))}
+</select>
       </div>
 
 

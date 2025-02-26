@@ -12,6 +12,33 @@ async function getLandlordId(user_name)
 }
   
 
+
+
+
+
+
+//-------------------------------------------------
+export const getStudents = async (req, res) => {
+  try {
+    const students = await prisma.student.findMany({
+      select: { student_id: true, first_name: true, last_name: true }
+    });
+
+    return res.status(200).json(students);
+  } catch (error) {
+    console.error("Error fetching students:", error);
+    return res.status(500).json({ error: "Internal server error" });
+  }
+};
+
+
+
+
+
+
+
+
+
 export const createMeeting = async (req, res) => 
 {
   try {const { landlord_id, student_id, date } = req.body;

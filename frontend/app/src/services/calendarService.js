@@ -2,6 +2,17 @@ import apiClient from './apiClient'; // Your existing Axios instance
 import { jwtDecode } from 'jwt-decode';
 
 
+//---------------
+export const getStudents = async () => {
+  const accessToken = localStorage.getItem('accessToken');
+  return apiClient.get('/calendar/students', {
+    headers: { Authorization: `Bearer ${accessToken}` }
+  });
+};
+
+
+
+
 export const scheduleMeeting = async (meetingData) => {
   const accessToken = localStorage.getItem('accessToken');
   const decodedToken = jwtDecode(accessToken);
