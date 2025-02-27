@@ -6,7 +6,8 @@ import { jwtDecode } from 'jwt-decode';
 import { getProfileByUsername } from '../../services/profileServices';
 import MeetingForm from './MeetingForm';
 import { getApprovedApplications } from '../../services/applicationServices';
-import { scheduleMeeting } from '../../services/calendarService';
+import { cancelMeeting, scheduleMeeting } from '../../services/calendarService';
+import { fetchScheduledMeetings, fetchScheduledMeetingsForLandlord } from '../../services/searchListingServices';
 
 const LandlordHomepage = () => {
   /* State to store the landlord's profile data, manage loading status, handle errors, store username extracted from token */
@@ -15,6 +16,7 @@ const LandlordHomepage = () => {
   const [error, setError] = useState(null);
   const [username, setUserName] = useState("");
   const [approvedApplication, setApprovedApplication] = useState([]);
+  const [tableData, setTableData] = useState([]);
 
   /* Fetch profile data when the component mounts  */
   useEffect(() => {
@@ -41,6 +43,11 @@ const LandlordHomepage = () => {
           } else {
             setError(applicationData.message || 'Failed to fetch applications');
           }
+
+          // For Meeting Data
+          const meetingData = await fetchScheduledMeetingsForLandlord();
+          console.log(49, meetingData)
+          setTableData(meetingData);
         } else {
           setError("Username is not valid.");
         }
@@ -58,6 +65,10 @@ const LandlordHomepage = () => {
     try {
 
       const response = await scheduleMeeting(formData);
+      alert('Meeting scheduled successfully!');
+
+      // Refresh the page after successful Schedule
+      window.location.reload();
       // setMeetings([...meetings, {
       //   ...response.data,
       //   date: format(parseISO(response.data.date), 'MMM dd, yyyy HH:mm')
@@ -66,6 +77,29 @@ const LandlordHomepage = () => {
       setError(err.response?.data?.error || 'Failed to schedule meeting');
     }
   }
+
+  const handleDelete = async (row) => {
+    if (window.confirm('Are you sure you want to delete this meeting?')) {
+      try {
+        // Assuming there's an API endpoint to delete meetings
+        // Replace with your actual API call
+        const response = await cancelMeeting(row.meeting_id);
+
+        if (!(response.status === 200)) {
+          throw new Error('Failed to delete meeting');
+        }
+
+        // Update the local state by filtering out the deleted row
+        setTableData(tableData.filter(item => item.meeting_id !== row.meeting_id));
+
+        alert('Meeting deleted successfully!');
+
+      } catch (error) {
+        console.error('Error deleting meeting:', error);
+        alert('Failed to delete meeting: ' + error.message);
+      }
+    }
+  };
 
   /* Menu items for the landlord dashboard */
   const menuItems = [
@@ -104,7 +138,37 @@ const LandlordHomepage = () => {
           onSubmit={onSchedule}
           students={approvedApplication}
         />
-
+        <div className="bg-gray-100 p-4 shadow-lg overflow-y-auto mt-4">
+          <h3 className="text-lg font-semibold text-gray-800 mb-4">Landlord Meetings</h3>
+          <div className="panel-body text-gray-700">
+            <table className="w-full border-collapse">
+              <thead>
+                <tr className="bg-gray-200">
+                  <th className="p-2 text-left">Student Name</th>
+                  <th className="p-2 text-left">Date</th>
+                  <th className="p-2 text-left">Actions</th>
+                </tr>
+              </thead>
+              <tbody>
+                {tableData.map((row, index) => (
+                  <tr key={index} className="border-b hover:bg-gray-50">
+                    <td className="p-2">{row.student.first_name} {row.student.last_name}</td>
+                    <td className="p-2">{new Date(row.date).toUTCString()}</td>
+                    <td className="p-2 flex gap-2">
+                      <button
+                        className="text-red-500 hover:text-red-700"
+                        onClick={() => handleDelete(row)}
+                        title="Delete"
+                      >
+                        🗑️
+                      </button>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </div>
       </div>
     </div>
   );

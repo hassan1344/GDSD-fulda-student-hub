@@ -47,7 +47,7 @@ const MeetingForm = ({ onSubmit , students}) => {
   <option value="">Select a student</option>
   {students.map((student) => (
     <option key={student.student_id} value={student.student_id}>
-      {student.student_id} {student.first_name} {student.last_name}
+      {student.full_name}
     </option>
   ))}
 </select>

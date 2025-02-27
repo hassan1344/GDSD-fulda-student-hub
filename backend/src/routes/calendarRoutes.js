@@ -22,4 +22,6 @@ router.get("/students", authenticateLandlord, getStudents);
 
 router.get("/scheduledMeetings", authenticateStudent, getScheduledMeetings);
 
+router.get("/scheduledMeetingsForLandlord", authenticateLandlord, getScheduledMeetings);
+
 export default router;

@@ -63,12 +63,10 @@ export const createMeeting = async (req, res) => {
     // if (landlord_id1 !== landlord_id) {
     //   console.log(landlord_id1);
     //   return res.status(403).json({ error: "Unauthorized to schedule meetings" });}
-    console.log(55);
     const newMeeting = await prisma.meeting.create({
       data: { landlord_id: landlord_id1, student_id: student_id1, date: new Date(date), },
       include: { student: { select: { first_name: true, last_name: true } } }
     });
-    console.log(62);
     return res.status(201).json(newMeeting);
   } catch (error) {
     console.error("Error scheduling meeting:", error);
@@ -104,14 +102,15 @@ export const getLandlordMeetings = async (req, res) => {
 export const cancelMeeting = async (req, res) => {
   try {
     const { meeting_id } = req.params;
+    console.log(107, meeting_id);
     const meeting = await prisma.meeting.findUnique({
       where: { meeting_id }
     });
-    const landlord_id1 = await getLandlordId(req.user.userName);
-    // Authorization
-    if (landlord_id1 !== meeting.landlord_id) {
-      return res.status(403).json({ error: "Unauthorized to cancel meeting" });
-    }
+    // const landlord_id1 = await getLandlordId(req.user.userName);
+    // // Authorization
+    // if (landlord_id1 !== meeting.landlord_id) {
+    //   return res.status(403).json({ error: "Unauthorized to cancel meeting" });
+    // }
     const updatedMeeting = await prisma.meeting.update({
       where: { meeting_id },
       data: { status: "CANCELED" }
@@ -148,3 +147,37 @@ export const getScheduledMeetings = async (req, res) => {
     return res.status(500).json({ error: "Internal server error" });
   }
 }
+
+export const deleteMeeting = async (req, res) => {
+  try {
+    const { id } = req.params; // Assuming meeting ID is passed as a URL parameter
+    const landlord_id = req.user.landlordId; // Assuming landlord ID is available from authenticated user
+
+    // Find the meeting first to verify it exists and belongs to the landlord
+    const meeting = await prisma.meeting.findUnique({
+      where: { id: Number(id) }, // Convert to number if your IDs are numeric
+      include: {
+        landlord: { select: { user_id: true } },
+      },
+    });
+
+    if (!meeting) {
+      return res.status(404).json({ error: "Meeting not found" });
+    }
+
+    // Authorization check - ensure the meeting belongs to the requesting landlord
+    if (meeting.landlord_id !== landlord_id) {
+      return res.status(403).json({ error: "Unauthorized access" });
+    }
+
+    // Delete the meeting
+    await prisma.meeting.delete({
+      where: { id: Number(id) },
+    });
+
+    return res.status(200).json({ message: "Meeting deleted successfully" });
+  } catch (error) {
+    console.error("Error deleting meeting:", error);
+    return res.status(500).json({ error: "Internal server error" });
+  }
+};

@@ -24,3 +24,16 @@ export const fetchScheduledMeetings = async() =>{
     return [];
   }
 }
+
+export const fetchScheduledMeetingsForLandlord = async() =>{
+  try {
+    const response = await  apiClient.get("/calendar/scheduledMeetingsForlandlord", {
+      requireToken: true,
+      // params: filters,
+    });;
+    return response.data; // Return the data from the API
+  } catch (error) {
+    console.error("Error fetching featured listings:", error);
+    return [];
+  }
+}
