@@ -113,7 +113,7 @@ model Listing {
   room_type_id   String?
   Application    Application[]
   BiddingSession BiddingSession[]
-  property       Property         @relation(fields: [property_id], references: [property_id], onDelete: Cascade)
+  property       Property         @relation(fields: [property_id], references: [property_id])
   room_type      RoomType?        @relation(fields: [room_type_id], references: [room_type_id])
 
   @@index([property_id], map: "listing_property_id_fkey")
