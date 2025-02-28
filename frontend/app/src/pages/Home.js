@@ -6,11 +6,13 @@ import Disclaimer from "../components/Disclaimer";
 import SearchCard from "../components/SearchCard";
 import PropertyDetails from "../components/PropertyDetails";
 import { getAllAmenities } from "../services/utilServices";
-import { fetchListings } from "../services/searchListingServices";
+import { fetchListings, fetchScheduledMeetings } from "../services/searchListingServices";
 import {
   getAllActiveBiddings,
   getListingsByIds,
 } from "../services/biddingServices";
+import { jwtDecode } from "jwt-decode";
+import { getProfileByUsername } from "../services/profileServices";
 
 const Home = () => {
   const [location, setLocation] = useState("");
@@ -23,6 +25,10 @@ const Home = () => {
   const [amenities, setAmenities] = useState([]);
   const [uniqueAmenities, setUniqueAmenities] = useState([]);
   const [activeBiddings, setActiveBiddings] = useState([]);
+  const [tableData, setTableData] = useState([]);
+  const [profile, setProfile] = useState(null);
+  const [error, setError] = useState(null);
+  const [loading, setLoading] = useState(true);
 
   const navigate = useNavigate();
 
@@ -67,8 +73,35 @@ const Home = () => {
       }
     };
 
+    const fetchProfile = async () => {
+      const accessToken = localStorage.getItem("accessToken");
+
+      const decodedToken = jwtDecode(accessToken);
+      const { userName, userType } = decodedToken;
+
+      try {
+        const data = await getProfileByUsername(userName);
+        console.log("Data in fetchProfile", data);
+        setProfile(data);
+      } catch (err) {
+        setError("Error loading profile: " + err.message);
+      } finally {
+        setLoading(false);
+      }
+    }
+
     fetchInitialData();
+    fetchProfile();
   }, []);
+
+  useEffect(() => {
+    const fetchScheduledMeeting = async () => {
+      const data = await fetchScheduledMeetings(profile.student_id);
+      console.log(73, data);
+      setTableData(data);
+    }
+    if (profile) fetchScheduledMeeting();
+  }, [profile]);
 
   const handleToggleFilter = (filter) => {
     setAdvancedFilters((prev) => ({
@@ -114,7 +147,7 @@ const Home = () => {
   };
 
   const handleSelectProperty = (property, isBidding = false) => {
-    setSelectedProperty({...property, isBidding});
+    setSelectedProperty({ ...property, isBidding });
   };
 
   const handleBackToResults = () => {
@@ -131,7 +164,29 @@ const Home = () => {
           onBack={handleBackToResults}
         />
       ) : (
-        <div className="flex justify-center mt-12">
+        <div className="flex justify-center mt-12 relative">
+          { }
+          <div className="w-1/5 bg-white p-4 shadow-lg h-screen overflow-y-auto absolute left-4">
+            <h3 className="text-lg font-semibold text-gray-800 mb-4">Upcoming Meetings</h3>
+            <div className="panel-body text-gray-700">
+              {tableData.map((row, index) => (
+                <div key={index} className="mb-6">
+                  <br />
+                  Your meeting with {row.landlord.user_id} on {new Date(row.date).toLocaleString('en-US', {
+    weekday: 'short', // "Mon"
+    year: 'numeric',
+    month: 'short', // "Jan"
+    day: '2-digit',
+    hour: '2-digit',
+    minute: '2-digit',
+    hour12: true, // Use 12-hour format
+  })}.
+                  Status ({row.status})
+                  <br /><br />
+                </div>
+              ))}
+            </div>
+          </div>
           <div className="bg-white shadow-lg rounded-lg p-8 w-full max-w-4xl">
             <h2 className="text-2xl font-semibold text-gray-800 text-center mb-6">
               Find Your Perfect Accommodation
@@ -260,9 +315,8 @@ const Home = () => {
                             "/default.jpg"
                           }
                           description={bidding.description}
-                          price={`Current Bid: €${
-                            bidding.rent // || bidding.starting_price
-                          }`}
+                          price={`Current Bid: €${bidding.rent // || bidding.starting_price
+                            }`}
                           poster={`${bidding.property.landlord.first_name} ${bidding.property.landlord.last_name}`}
                           onClick={() => handleSelectProperty(bidding, true)}
                         />

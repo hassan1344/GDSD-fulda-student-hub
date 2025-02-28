@@ -16,6 +16,9 @@ import biddingRouter from "./routes/biddingRoutes.js";
 import nearestServicesRouter from "./routes/nearestServicesRoutes.js";
 import reviewRouter from "./routes/reviewRoutes.js"
 
+//Calendar
+import calendarRouter from "./routes/calendarRoutes.js";
+
 const app = express();
 
 app.use(bodyParser.json());
@@ -48,5 +51,8 @@ app.use("/v1/services", nearestServicesRouter);
 app.use("/v1/reviews", reviewRouter);
 
 // app.use(ResHandler);
+
+//Calendar
+app.use("/v1/calendar", calendarRouter);
 
 export { app };

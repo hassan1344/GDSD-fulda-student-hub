@@ -20,6 +20,7 @@ model Landlord {
   user          User            @relation(fields: [user_id], references: [user_name])
   Property      Property[]
   LandlordTrust LandlordTrust[]
+  meetings Meeting[]
 
   @@index([user_id], map: "landlord_user_id_fkey")
   @@map("landlord")
@@ -36,30 +37,52 @@ model Student {
   created_at        DateTime @default(now())
   updated_at        DateTime @updatedAt
   user_id           String   @unique
-
-  user User @relation(fields: [user_id], references: [user_name])
-
+  user              User     @relation(fields: [user_id], references: [user_name])
+  meetings Meeting[]
   @@map("student")
 }
 
+
+
+model Meeting {
+  meeting_id   String        @id @default(uuid())
+  landlord_id  String
+  student_id   String
+  date         DateTime
+  status       MeetingStatus @default(SCHEDULED)
+  created_at   DateTime      @default(now())
+  updated_at   DateTime      @updatedAt
+  
+  // Relations
+  landlord     Landlord      @relation(fields: [landlord_id], references: [landlord_id])
+  student      Student       @relation(fields: [student_id], references: [student_id])
+
+  // Indexes
+  @@index([landlord_id], name: "meeting_landlord_idx")
+  @@index([student_id], name: "meeting_student_idx")
+  @@index([date], name: "meeting_date_idx")
+}
+
+
+
+
+
 model User {
-  created_at    DateTime  @default(now())
-  updated_at    DateTime  @updatedAt
-  email         String
-  password      String
-  user_name     String    @id
-  user_type     UserType  @default(STUDENT)
-  refresh_token String?   @db.Text
-  Landlord      Landlord?
-  Student       Student?
-
-  Application Application[]
-
-  ConversationsSent     Conversation[]   @relation("SenderConversations")
-  ConversationsReceived Conversation[]   @relation("ReceiverConversations")
-  ChatsSent             Chat[]           @relation("SenderChats")
-  BiddingSession        BiddingSession[]
+  created_at            DateTime         @default(now())
+  updated_at            DateTime         @updatedAt
+  email                 String
+  password              String
+  user_name             String           @id
+  user_type             UserType         @default(STUDENT)
+  refresh_token         String?          @db.Text
+  Application           Application[]
   Bid                   Bid[]
+  BiddingSession        BiddingSession[]
+  ChatsSent             Chat[]           @relation("SenderChats")
+  ConversationsReceived Conversation[]   @relation("ReceiverConversations")
+  ConversationsSent     Conversation[]   @relation("SenderConversations")
+  Landlord              Landlord?
+  Student               Student?
 
   @@map("user")
 }
@@ -82,16 +105,16 @@ model Listing {
   listing_id     String           @id @default(uuid())
   property_id    String
   title          String
-  rent           Float
-  room_type_id   String?
   description    String
   status         String
   created_at     DateTime         @default(now())
   updated_at     DateTime         @updatedAt
-  property       Property         @relation(fields: [property_id], references: [property_id])
-  room_type      RoomType?        @relation(fields: [room_type_id], references: [room_type_id])
+  rent           Float
+  room_type_id   String?
   Application    Application[]
   BiddingSession BiddingSession[]
+  property       Property         @relation(fields: [property_id], references: [property_id])
+  room_type      RoomType?        @relation(fields: [room_type_id], references: [room_type_id])
 
   @@index([property_id], map: "listing_property_id_fkey")
   @@index([room_type_id], map: "listing_room_type_id_fkey")
@@ -114,10 +137,10 @@ model Media {
   model_id       String
   media_url      String
   media_type     String
-  media_category String //  (profile_picture, property_image, document, etc.)
-  identifier     String? //  (government_id, enrolment_certificate)
   created_at     DateTime @default(now())
   updated_at     DateTime @updatedAt
+  identifier     String?
+  media_category String
 
   @@map("media")
 }
@@ -204,16 +227,15 @@ model Chat {
 model BiddingSession {
   session_id     String   @id @default(uuid())
   listing_id     String
-  status         String // possible vals: active, ended
+  status         String
   starting_price Float
   highest_bid    Float    @default(0)
   highest_bidder String?
   created_at     DateTime @default(now())
   ends_at        DateTime
-
-  listing       Listing @relation(fields: [listing_id], references: [listing_id])
-  highestBidder User?   @relation(fields: [highest_bidder], references: [user_name])
-  Bids          Bid[]
+  Bids           Bid[]
+  highestBidder  User?    @relation(fields: [highest_bidder], references: [user_name])
+  listing        Listing  @relation(fields: [listing_id], references: [listing_id])
 
   @@index([listing_id], map: "biddingsession_listing_id_fkey")
   @@index([highest_bidder], map: "biddingsession_highest_bidder_fkey")
@@ -221,14 +243,13 @@ model BiddingSession {
 }
 
 model Bid {
-  bid_id     String   @id @default(uuid())
+  bid_id     String         @id @default(uuid())
   session_id String
   bidder_id  String
   amount     Float
-  created_at DateTime @default(now())
-
-  session BiddingSession @relation(fields: [session_id], references: [session_id])
-  bidder  User           @relation(fields: [bidder_id], references: [user_name])
+  created_at DateTime       @default(now())
+  bidder     User           @relation(fields: [bidder_id], references: [user_name])
+  session    BiddingSession @relation(fields: [session_id], references: [session_id])
 
   @@index([session_id], map: "bid_session_id_fkey")
   @@index([bidder_id], map: "bid_bidder_id_fkey")
@@ -284,4 +305,11 @@ enum ApplicationStatus {
   APPROVED
   REJECTED
   WITHDRAWN
+}
+
+
+enum MeetingStatus {
+  SCHEDULED
+  CANCELED
+  COMPLETED
 }

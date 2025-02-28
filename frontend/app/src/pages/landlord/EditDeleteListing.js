@@ -1,4 +1,4 @@
-/* Edit Property Page "View Property" > "Edit Property" OR "Delete Property" */
+/* Edit Property Page "View Property" > "Edit Property" OR "Delete Listing" */
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import LandlordNavbar from '../../components/LandlordNavbar';
@@ -26,46 +26,57 @@ const EditProperty = () => {
   const [displayedImages, setDisplayedImages] = useState([]);
 
 
- /* Fetch property details when the component mounts or when 'id' changes */
-  useEffect(() => {
-    
-    const fetchProperty = async () => {
-      try {
-        const data = userType === "ADMIN" ? await fetchPropertyByIdAdmin(id, token) : await fetchPropertyById(id, token);
-        if ((userType === "ADMIN" && data) || data.success) {
-          setProperty(data || data.data);
-          setAddress(data.address || data.data.address);
+ //Fix 1
+ useEffect(() => {
+  const fetchProperty = async () => {
+    const token = localStorage.getItem('accessToken'); // Moved inside the function to avoid stale token
 
-          // if (data.data.PropertyAmenity != null) {
-          //   let propAmenity = data.data.PropertyAmenity;
-          //   setAmenities(propAmenity.map(pa => ({
-          //     amenity_name: pa.Amenity.amenity_name,
-          //     amenity_value: pa.Amenity.amenity_value
-          //   })));
-          // }
-          
-          setDisplayedImages(data.Media || data.data.media);
-        }
-      } catch (error) {
-        console.log("error", error)
-        setError('Error fetching property details');
-      }};
-    fetchProperty();
-  }, [id]);   // Dependency on 'id' ensures it fetches data whenever the ID changes
+    try {
+      const data = await fetchPropertyById(id, token);
+      if (data.success) {
+        setProperty(data.data);
+        setAddress(data.data.address);
+        setAmenities(data.data.PropertyAmenity.map(pa => ({
+          amenity_name: pa.Amenity.amenity_name,
+          amenity_value: pa.Amenity.amenity_value
+        })));
+        setDisplayedImages(data.data.media || []);
+      }
+    } catch (error) {
+      setError('Error fetching property details');
+    }
+  };
+
+  fetchProperty();
+}, [id]);  // Keeping the dependency minimal, since token is retrieved inside the function
+
+
+
+
 
 /* Add a new amenity to the amenities list */
-  const handleAddAmenity = () => {
-    if (newAmenity.name && newAmenity.value) {
-      setAmenities([...amenities, {
-        amenity_name: newAmenity.name,
-        amenity_value: newAmenity.value
-      }]);
-      setNewAmenity({ name: '', value: '' });
-    }};
-/* Remove an amenity from the amenities list */
-  const handleRemoveAmenity = (index) => {
-    setAmenities(amenities.filter((_, i) => i !== index));
-  };
+//Fix 4: Removed duplicate amenities
+const handleAddAmenity = () => {
+  if (newAmenity.name && newAmenity.value) {
+    const isDuplicate = amenities.some(
+      (amenity) => amenity.amenity_name.toLowerCase() === newAmenity.name.toLowerCase()
+    );
+
+    if (isDuplicate) {
+      setError('Amenity already exists.');
+      return;
+    }
+
+    setAmenities([...amenities, { amenity_name: newAmenity.name, amenity_value: newAmenity.value }]);
+    setNewAmenity({ name: '', value: '' });
+    setError(null);
+  }
+};
+//Fix 2
+ const handleRemoveAmenity = (name) => {
+  setAmenities(amenities.filter((amenity) => amenity.amenity_name !== name));
+};
+
 
   const handleMediaChange = (e) => {
   setNewMedia(Array.from(e.target.files));
@@ -123,7 +134,11 @@ const EditProperty = () => {
       <LandlordNavbar />
       <div className="container mx-auto px-4 py-8">
         <h1 className="text-4xl font-bold text-center text-green-700 mb-6">Edit Property</h1>
-        {error && <div className="text-red-500 text-center mb-4">{error}</div>}
+ {/*Fix 2*/}
+        {error && (<div className="text-red-500 text-center mb-4 transition-opacity duration-300 ease-in-out">
+             {error}
+        </div>)}
+
         
         <form onSubmit={handleSubmit} className="bg-white shadow-lg rounded-lg p-8 max-w-2xl mx-auto">
           <div className="mb-6">
@@ -167,13 +182,12 @@ const EditProperty = () => {
               {amenities.map((amenity, index) => (
                 <div key={index} className="flex items-center justify-between bg-gray-50 p-2 rounded">
                   <span>{amenity.amenity_name}: {amenity.amenity_value}</span>
-                  <button
-                    type="button"
-                    onClick={() => handleRemoveAmenity(index)}
-                    className="text-red-500 hover:text-red-700"
-                  >
-                    Remove
+                  {/*Fix 2*/}
+                  <button type="button" onClick={() => handleRemoveAmenity(amenity.amenity_name)}
+                  className="text-red-500 hover:text-red-700" >
+                      Remove
                   </button>
+
                 </div>
               ))}
             </div>
