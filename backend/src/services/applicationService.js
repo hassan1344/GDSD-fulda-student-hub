@@ -1,5 +1,6 @@
 import { PrismaClient } from "@prisma/client";
 import { uploadToS3, deleteS3Object } from "../utils/uploadToS3.js";
+import { updateTrustFromRental } from "../utils/rentalScoreUtility.js";
 const prisma = new PrismaClient();
 
 export const createApplication = async (req, res) => {
@@ -14,13 +15,15 @@ export const createApplication = async (req, res) => {
     } = req.body;
     const { userName } = req.user;
 
-    if (
-      !listing_id ||
-      !full_name ||
-      !student_card_id ||
-      !contact_number ||
-      !current_address
-    ) {
+    // Correction: simplified conditional check for required fields
+    const requiredFields = [
+      listing_id,
+      full_name,
+      student_card_id,
+      contact_number,
+      current_address,
+    ];
+    if (!requiredFields.every((field) => field)) {
       return res
         .status(400)
         .json({ error: "All student details are required" });
@@ -51,7 +54,7 @@ export const createApplication = async (req, res) => {
         contact_number,
         current_address,
         application_status: "PENDING",
-        remarks: remarks || null,
+        remarks: remarks, // Correction: removed unnecessary null check
       },
     });
 
@@ -60,9 +63,9 @@ export const createApplication = async (req, res) => {
 
     if (req.files["government_id"]) {
       const file = req.files["government_id"][0];
-
+      // correction: removed unnecessary await
       uploadPromises.push(
-        await uploadToS3(file).then((uploadedFile) => {
+        uploadToS3(file).then((uploadedFile) => {
           mediaEntries.push({
             model_name: "application",
             model_id: application.application_id,
@@ -181,33 +184,35 @@ export const getAllApplications = async (req, res) => {
 
 export const getApplicationsByLandlord = async (req, res) => {
   try {
-      if (!req.user || !req.user.userName) {
-          return res.status(401).json({ success: false, error: "User not authenticated" });
-      }
+    if (!req.user || !req.user.userName) {
+      return res
+        .status(401)
+        .json({ success: false, error: "User not authenticated" });
+    }
 
-      // Fetch all applications based on listing IDs
-      const applications = await prisma.application.findMany({
-          where: {
-              listing: {
-                  property: {
-                    landlord: {
-                      user_id: {
-                        equals: req.user.userName
-                      }
-                    }
-                  }
-              }
+    // Fetch all applications based on listing IDs
+    const applications = await prisma.application.findMany({
+      where: {
+        listing: {
+          property: {
+            landlord: {
+              user_id: {
+                equals: req.user.userName,
+              },
+            },
           },
-          include: {
-              listing: true
-          }
-      });
+        },
+      },
+      include: {
+        listing: true,
+      },
+    });
 
-      res.status(200).json({
-          success: true,
-          message: "Applications retrieved successfully",
-          data: applications,
-      });
+    res.status(200).json({
+      success: true,
+      message: "Applications retrieved successfully",
+      data: applications,
+    });
   } catch (error) {
     console.error(error);
     return res
@@ -215,7 +220,6 @@ export const getApplicationsByLandlord = async (req, res) => {
       .json({ error: "An error occurred while fetching the application" });
   }
 };
-
 
 export const getApplicationById = async (req, res) => {
   try {
@@ -289,7 +293,15 @@ export const updateApplicationStatusById = async (req, res) => {
 
     const application = await prisma.application.findUnique({
       where: { application_id: id },
+      include: {
+        listing: {
+          include: {
+            property: true,
+          },
+        },
+      },
     });
+    // console.log(application);
 
     if (!application) {
       return res.status(404).json({ error: "Application not found" });
@@ -299,9 +311,20 @@ export const updateApplicationStatusById = async (req, res) => {
       where: { application_id: id },
       data: {
         application_status:
-          application_status || application.application_status
+          application_status || application.application_status,
       },
     });
+    const rentalHistory = await prisma.landlordRentalHistory.create({
+      data: {
+        application_id: updatedApplication.application_id,
+        date_started: application_status === "APPROVED" ? new Date() : null,
+        cancelled_by_landlord: application_status === "REJECTED" ? true : false,
+      },
+    });
+
+    if (rentalHistory) {
+      await updateTrustFromRental(rentalHistory.rental_id);
+    }
 
     return res.status(200).json({
       message: "Application updated successfully",

@@ -1,4 +1,5 @@
 import { PrismaClient } from "@prisma/client";
+import { getLandlordTrustScore } from "../utils/rentalScoreUtility.js";
 
 const prisma = new PrismaClient();
 
@@ -12,7 +13,7 @@ export const getAllListings = async (req, res) => {
     // Base filters object
     const filters = {
       where: {
-        status: "Available"
+        status: "Available",
       },
       include: {
         property: {
@@ -58,7 +59,7 @@ export const getAllListings = async (req, res) => {
             some: {
               Amenity: {
                 amenity_name: {
-                    contains: amenityName.toLowerCase(),
+                  contains: amenityName.toLowerCase(),
                 },
               },
             },
@@ -78,22 +79,24 @@ export const getAllListings = async (req, res) => {
     const listings = await prisma.listing.findMany(filters);
 
     // Attach media for each listing's property
-    const listingsWithMedia = await Promise.all(
+    const listingsWithExtras = await Promise.all(
       listings.map(async (listing) => {
         const media = await prisma.media.findMany({
           where: {
             OR: [
-              {
-                model_id: listing.property_id, // Fetch media associated with the property
-                model_name: "property",
-              },
-              {
-                model_id: listing.listing_id,
-                model_name: "listing",
-              }
+              { model_id: listing.property_id, model_name: "property" },
+              { model_id: listing.listing_id, model_name: "listing" },
             ],
           },
         });
+
+        // Fetch trust score for the landlord
+        let trustObj = {};
+        if (listing.property.landlord) {
+          trustObj = await getLandlordTrustScore(
+            listing.property.landlord.landlord_id
+          );
+        }
 
         return {
           ...listing,
@@ -101,11 +104,13 @@ export const getAllListings = async (req, res) => {
             mediaUrl: media.media_url,
             mediaType: media.media_type,
           })),
+          trustScore: trustObj.trustScore, // Append trust score to response
+          decisionMessage: trustObj.decisionMessage,
         };
       })
     );
 
-    res.status(200).json(listingsWithMedia);
+    res.status(200).json(listingsWithExtras);
   } catch (error) {
     console.error("Error fetching listings:", error);
     res
@@ -121,7 +126,9 @@ export const getListingsByIds = async (req, res) => {
   const { ids } = req.body; // Expecting an array of listing IDs in the request body
 
   if (!Array.isArray(ids) || ids.length === 0) {
-    return res.status(400).json({ error: "Invalid or empty listing IDs array" });
+    return res
+      .status(400)
+      .json({ error: "Invalid or empty listing IDs array" });
   }
 
   try {
@@ -171,6 +178,8 @@ export const getListingsByIds = async (req, res) => {
     res.status(200).json(listingsWithMedia);
   } catch (error) {
     console.error("Error fetching listings:", error);
-    res.status(500).json({ error: "An error occurred while fetching listings" });
+    res
+      .status(500)
+      .json({ error: "An error occurred while fetching listings" });
   }
 };

@@ -38,10 +38,10 @@ const Messages = () => {
       return;
     }
 
-    socketRef.current = io("https://fulda-student-hub.publicvm.com", {
-      query: { 
+    socketRef.current = io("http://localhost:8000", {
+      query: {
         token,
-        endpoint: "chat"
+        endpoint: "chat",
       },
     });
 
@@ -83,11 +83,12 @@ const Messages = () => {
     setLoadingConversations(true);
     socketRef.current.emit("getConversations");
     socketRef.current.on("getConversations", async (fetchedConversations) => {
-      
       // Filter out empty conversations
-      const validConversations = fetchedConversations.filter(convo => convo.last_message && convo.last_message.length > 0);
+      const validConversations = fetchedConversations.filter(
+        (convo) => convo.last_message && convo.last_message.length > 0
+      );
       setConversations(validConversations);
-      
+
       setLoadingConversations(false);
 
       const receiverId = localStorage.getItem("receiverId");
@@ -98,7 +99,7 @@ const Messages = () => {
         );
 
         console.log("Existing conversation:", existingConversation);
-        
+
         if (existingConversation) {
           handleChatClick(existingConversation);
           localStorage.removeItem("receiverId");
@@ -157,7 +158,8 @@ const Messages = () => {
 
         if (userName) {
           const profile = await getProfileByUsername(userName);
-          if (profile != null) { // Update: Added a null check for profile and setting empty user to not occur any runtime errors
+          if (profile != null) {
+            // Update: Added a null check for profile and setting empty user to not occur any runtime errors
             setReceiverUser(profile);
           } else {
             setReceiverUser(null);
@@ -349,18 +351,17 @@ const Messages = () => {
               {/* Profile Picture */}
               <div className="flex justify-center mb-4">
                 {
-                // receiverUser?.profile_picture_id ? (
-                //   <img
-                //     src={receiverUser?.profile_picture_id}
-                //     alt="Profile"
-                //     className="w-24 h-24 rounded-full object-cover shadow-md"
-                //   />
-                // ) : 
-                (
+                  // receiverUser?.profile_picture_id ? (
+                  //   <img
+                  //     src={receiverUser?.profile_picture_id}
+                  //     alt="Profile"
+                  //     className="w-24 h-24 rounded-full object-cover shadow-md"
+                  //   />
+                  // ) :
                   <div className="w-24 h-24 bg-gray-200 rounded-full flex items-center justify-center shadow-md">
                     <span className="text-gray-500 text-3xl">👤</span>
                   </div>
-                )}
+                }
               </div>
               <p className="font-semibold text-lg">
                 {receiverUser?.first_name} {receiverUser?.last_name}
