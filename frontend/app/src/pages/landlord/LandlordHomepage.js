@@ -134,11 +134,13 @@ const LandlordHomepage = () => {
             ))}
           </div>
         </div>
-        <MeetingForm
-          onSubmit={onSchedule}
-          students={approvedApplication}
-        />
-        <div className="bg-gray-100 p-4 shadow-lg overflow-y-auto mt-4">
+        <div className='bg-white shadow-2xl rounded-lg p-6 max-w-6xl mx-auto mt-4'>
+          <MeetingForm
+            onSubmit={onSchedule}
+            students={approvedApplication}
+          />
+        </div>
+        <div className="bg-white shadow-2xl rounded-lg p-6 max-w-6xl mx-auto mt-4">
           <h3 className="text-lg font-semibold text-gray-800 mb-4">Landlord Meetings</h3>
           <div className="panel-body text-gray-700">
             <table className="w-full border-collapse">
