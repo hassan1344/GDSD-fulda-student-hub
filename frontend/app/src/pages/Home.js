@@ -172,7 +172,16 @@ const Home = () => {
               {tableData.map((row, index) => (
                 <div key={index} className="mb-6">
                   <br />
-                  {row.landlord.user_id} has scehedueld meeting on {(new Date(row.date)).toUTCString()}.
+                  Your meeting with {row.landlord.user_id} on {new Date(row.date).toLocaleString('en-US', {
+    weekday: 'short', // "Mon"
+    year: 'numeric',
+    month: 'short', // "Jan"
+    day: '2-digit',
+    hour: '2-digit',
+    minute: '2-digit',
+    hour12: true, // Use 12-hour format
+  })}.
+                  Status ({row.status})
                   <br /><br />
                 </div>
               ))}

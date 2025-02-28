@@ -1,5 +1,5 @@
 import express from "express";
-import { createMeeting, getLandlordMeetings, cancelMeeting, getScheduledMeetings } from "../services/calendarController.js";
+import { createMeeting, getLandlordMeetings, cancelMeeting, getScheduledMeetings, updateMeetingStatus, deleteMeeting } from "../services/calendarController.js";
 import { authenticateLandlord, authenticateStudent } from "../middlewares/auth.js";
 
 //-----------
@@ -27,5 +27,7 @@ router.get("/scheduledMeetings", authenticateStudent, getScheduledMeetings);
 
 //
 router.get("/scheduledMeetingsForLandlord", authenticateLandlord, getScheduledMeetings);
+
+router.patch("/update-status/:meeting_id", authenticateLandlord, updateMeetingStatus);
 
 export default router;

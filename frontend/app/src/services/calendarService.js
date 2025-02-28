@@ -58,3 +58,16 @@ export const cancelMeeting = async (meetingId) => {
     }
   });
 };
+
+export const updateMeetingStatus = async (meetingId, newStatus) => {
+  const accessToken = localStorage.getItem('accessToken');
+  
+  return apiClient.patch(`/calendar/update-status/${meetingId}`, 
+    { status: newStatus },  // Request body
+    {
+      headers: {
+        Authorization: `Bearer ${accessToken}`
+      }
+    }
+  );
+};

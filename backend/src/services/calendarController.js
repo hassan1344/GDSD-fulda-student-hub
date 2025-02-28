@@ -88,20 +88,27 @@ export const getLandlordMeetings = async (req, res) => {
 export const cancelMeeting = async (req, res) => {
   try {
     const { meeting_id } = req.params;
-    console.log(107, meeting_id);
+    console.log("Deleting Meeting ID:", meeting_id);
+
+    // Check if the meeting exists before attempting deletion
     const meeting = await prisma.meeting.findUnique({
       where: { meeting_id }
     });
-    const updatedMeeting = await prisma.meeting.update({
-      where: { meeting_id },
-      data: { status: "CANCELED" }
+
+    if (!meeting) {
+      return res.status(404).json({ error: "Meeting not found" });
+    }
+
+    // Perform the deletion
+    await prisma.meeting.delete({
+      where: { meeting_id }
     });
+
     return res.status(200).json({
-      message: "Meeting canceled successfully",
-      meeting: updatedMeeting
+      message: "Meeting deleted successfully"
     });
   } catch (error) {
-    console.error("Error canceling meeting:", error);
+    console.error("Error deleting meeting:", error);
     return res.status(500).json({ error: "Internal server error" });
   }
 };
@@ -114,22 +121,36 @@ export const getScheduledMeetings = async (req, res) => {
     const meetings = await prisma.meeting.findMany({
       where: {
         landlord_id,
-        status: { not: "CANCELED" },
         ...(student_id ? { student_id } : {}), // Filter by student_id if provided
       },
       include: {
         student: { select: { first_name: true, last_name: true } },
         landlord: { select: { user_id: true } }, // Include Landlord and select user_id
-      },
-      orderBy: { date: "asc" },
+      }
     });
 
-    return res.status(200).json(meetings);
+    // Custom sorting:
+    const sortedMeetings = meetings.sort((a, b) => {
+      const statusOrder = { "SCHEDULED": 1, "CANCELED": 2, "COMPLETED": 3 };
+      
+      // First, sort by status priority
+      if (statusOrder[a.status] !== statusOrder[b.status]) {
+        return statusOrder[a.status] - statusOrder[b.status];
+      }
+
+      // If the status is the same, sort by date (ascending)
+      return new Date(a.date) - new Date(b.date);
+    });
+
+    return res.status(200).json(sortedMeetings);
   } catch (error) {
     console.error("Error fetching landlord meetings:", error);
     return res.status(500).json({ error: "Internal server error" });
   }
 };
+
+
+
 
 
 export const deleteMeeting = async (req, res) => {
@@ -162,6 +183,27 @@ export const deleteMeeting = async (req, res) => {
     return res.status(200).json({ message: "Meeting deleted successfully" });
   } catch (error) {
     console.error("Error deleting meeting:", error);
+    return res.status(500).json({ error: "Internal server error" });
+  }
+};
+
+export const updateMeetingStatus = async (req, res) => {
+  try {
+    const { meeting_id } = req.params;
+    const { status } = req.body;
+
+    if (!["SCHEDULED", "CANCELED", "COMPLETED"].includes(status)) {
+      return res.status(400).json({ error: "Invalid status" });
+    }
+
+    const updatedMeeting = await prisma.meeting.update({
+      where: { meeting_id },
+      data: { status }
+    });
+
+    return res.status(200).json(updatedMeeting);
+  } catch (error) {
+    console.error("Error updating meeting status:", error);
     return res.status(500).json({ error: "Internal server error" });
   }
 };
