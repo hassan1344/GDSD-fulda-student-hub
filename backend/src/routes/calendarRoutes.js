@@ -17,11 +17,15 @@ router.get("/landlord/:landlord_id", authenticateLandlord, getLandlordMeetings);
 // Cancel a meeting
 router.delete("/cancel/:meeting_id", authenticateLandlord, cancelMeeting);
 
-//--------- Get all students
+//--------- Get  students
 router.get("/students", authenticateLandlord, getStudents);
 
+
+//
 router.get("/scheduledMeetings", authenticateStudent, getScheduledMeetings);
 
+
+//
 router.get("/scheduledMeetingsForLandlord", authenticateLandlord, getScheduledMeetings);
 
 export default router;

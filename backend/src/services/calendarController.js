@@ -22,9 +22,6 @@ async function getStudentId(user_name) {
   } return dbUser.Student.student_id;
 }
 
-
-
-
 //-------------------------------------------------
 export const getStudents = async (req, res) => {
   try {
@@ -39,14 +36,6 @@ export const getStudents = async (req, res) => {
   }
 };
 
-
-
-
-
-
-
-
-
 export const createMeeting = async (req, res) => {
   try {
     const { landlord_id, student_id, date } = req.body;
@@ -59,10 +48,7 @@ export const createMeeting = async (req, res) => {
     }
     const landlord_id1 = await getLandlordId(req.user.userName);
     const student_id1 = await getStudentId(student_id);
-    // Authorization check
-    // if (landlord_id1 !== landlord_id) {
-    //   console.log(landlord_id1);
-    //   return res.status(403).json({ error: "Unauthorized to schedule meetings" });}
+    
     const newMeeting = await prisma.meeting.create({
       data: { landlord_id: landlord_id1, student_id: student_id1, date: new Date(date), },
       include: { student: { select: { first_name: true, last_name: true } } }
@@ -106,11 +92,6 @@ export const cancelMeeting = async (req, res) => {
     const meeting = await prisma.meeting.findUnique({
       where: { meeting_id }
     });
-    // const landlord_id1 = await getLandlordId(req.user.userName);
-    // // Authorization
-    // if (landlord_id1 !== meeting.landlord_id) {
-    //   return res.status(403).json({ error: "Unauthorized to cancel meeting" });
-    // }
     const updatedMeeting = await prisma.meeting.update({
       where: { meeting_id },
       data: { status: "CANCELED" }
@@ -128,25 +109,28 @@ export const cancelMeeting = async (req, res) => {
 export const getScheduledMeetings = async (req, res) => {
   try {
     const { landlord_id } = req.params;
-    // const landlord_id1 = await getLandlordId(req.user.userName);
-    // Authorization
-    // if (landlord_id1 !== landlord_id) {
-    //   return res.status(403).json({ error: "Unauthorized access" });
-    // }
+    const { student_id } = req.query; // Get student_id from query params
+
     const meetings = await prisma.meeting.findMany({
-      where: { landlord_id, status: { not: "CANCELED" }, },
+      where: {
+        landlord_id,
+        status: { not: "CANCELED" },
+        ...(student_id ? { student_id } : {}), // Filter by student_id if provided
+      },
       include: {
         student: { select: { first_name: true, last_name: true } },
         landlord: { select: { user_id: true } }, // Include Landlord and select user_id
       },
       orderBy: { date: "asc" },
     });
+
     return res.status(200).json(meetings);
   } catch (error) {
     console.error("Error fetching landlord meetings:", error);
     return res.status(500).json({ error: "Internal server error" });
   }
-}
+};
+
 
 export const deleteMeeting = async (req, res) => {
   try {

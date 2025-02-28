@@ -28,43 +28,35 @@ useEffect(() => {
   }};
   fetchMeetings();},[user]);
 
-
+//Schedule Meeting
 const handleScheduleMeeting = async (formData) => {
     try {
       const response = await scheduleMeeting(formData);
-      setMeetings([...meetings, {
-        ...response.data,
-        date: format(parseISO(response.data.date), 'MMM dd, yyyy HH:mm')
-      }]);
+      setMeetings([...meetings, {...response.data, date: format(parseISO(response.data.date), 'MMM dd, yyyy HH:mm')}]);
     } catch (err) {
       setError(err.response?.data?.error || 'Failed to schedule meeting');
     }
   };
 
-
-
-
-
-
-
-
+//Delete Meeting
 const handleCancelMeeting = async (meetingId) => {
     try {
       await cancelMeeting(meetingId);
       setMeetings(meetings.filter(meeting => meeting.meeting_id !== meetingId));
     } catch (err) {
       setError('Failed to cancel meeting');
-    }
-  };
-  if (!user || user.userType !== 'LANDLORD') {
+    }}; 
+    if (!user || user.userType !== 'LANDLORD') {
     return <div className="p-4 text-red-500">Landlord access required</div>;
   }
 
+
+
  
-  return (
+return (
     <div className="max-w-4xl mx-auto p-6">
       <h1 className="text-3xl font-bold mb-6">Meeting Calendar</h1>
-      
+     
       {error && <div className="mb-4 p-3 bg-red-100 text-red-700 rounded">{error}</div>}
       
       <div className="grid md:grid-cols-2 gap-8">
@@ -72,9 +64,7 @@ const handleCancelMeeting = async (meetingId) => {
           <h2 className="text-xl font-semibold mb-4">Schedule New Meeting</h2>
           <MeetingForm onSubmit ={handleScheduleMeeting}
           students = {students} />
-
         </div>
-        
         <div>
           <h2 className="text-xl font-semibold mb-4">Upcoming Meetings</h2>
           {loading ? (

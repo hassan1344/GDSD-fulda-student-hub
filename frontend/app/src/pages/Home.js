@@ -11,6 +11,8 @@ import {
   getAllActiveBiddings,
   getListingsByIds,
 } from "../services/biddingServices";
+import { jwtDecode } from "jwt-decode";
+import { getProfileByUsername } from "../services/profileServices";
 
 const Home = () => {
   const [location, setLocation] = useState("");
@@ -24,6 +26,9 @@ const Home = () => {
   const [uniqueAmenities, setUniqueAmenities] = useState([]);
   const [activeBiddings, setActiveBiddings] = useState([]);
   const [tableData, setTableData] = useState([]);
+  const [profile, setProfile] = useState(null);
+  const [error, setError] = useState(null);
+  const [loading, setLoading] = useState(true);
 
   const navigate = useNavigate();
 
@@ -68,15 +73,35 @@ const Home = () => {
       }
     };
 
-    const fetchScheduledMeeting = async () => {
-      const data = await fetchScheduledMeetings();
-      console.log(73, data);
-      setTableData(data);
+    const fetchProfile = async () => {
+      const accessToken = localStorage.getItem("accessToken");
+
+      const decodedToken = jwtDecode(accessToken);
+      const { userName, userType } = decodedToken;
+
+      try {
+        const data = await getProfileByUsername(userName);
+        console.log("Data in fetchProfile", data);
+        setProfile(data);
+      } catch (err) {
+        setError("Error loading profile: " + err.message);
+      } finally {
+        setLoading(false);
+      }
     }
 
     fetchInitialData();
-    fetchScheduledMeeting();
+    fetchProfile();
   }, []);
+
+  useEffect(() => {
+    const fetchScheduledMeeting = async () => {
+      const data = await fetchScheduledMeetings(profile.student_id);
+      console.log(73, data);
+      setTableData(data);
+    }
+    if (profile) fetchScheduledMeeting();
+  }, [profile]);
 
   const handleToggleFilter = (filter) => {
     setAdvancedFilters((prev) => ({
@@ -140,14 +165,14 @@ const Home = () => {
         />
       ) : (
         <div className="flex justify-center mt-12 relative">
-          {}
+          { }
           <div className="w-1/5 bg-white p-4 shadow-lg h-screen overflow-y-auto absolute left-4">
             <h3 className="text-lg font-semibold text-gray-800 mb-4">Upcoming Meetings</h3>
             <div className="panel-body text-gray-700">
               {tableData.map((row, index) => (
                 <div key={index} className="mb-6">
                   <br />
-                   {row.landlord.user_id} has scehedueld meeting on {(new Date(row.date)).toUTCString()}.
+                  {row.landlord.user_id} has scehedueld meeting on {(new Date(row.date)).toUTCString()}.
                   <br /><br />
                 </div>
               ))}
