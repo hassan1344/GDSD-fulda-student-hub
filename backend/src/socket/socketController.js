@@ -7,7 +7,7 @@ export const createConversation = async (socket, payload) => {
     const { receiver_id } = payload;
     const { userName: sender_id } = socket.decoded;
 
-    console.log("senderrrid ", sender_id, receiver_id);
+    // console.log("senderrrid ", sender_id, receiver_id);
 
     // if (sender_id === receiver_id) return null;
     let createConversation;
@@ -44,7 +44,7 @@ export const createConversation = async (socket, payload) => {
       conversation: createConversation,
     };
 
-    console.log("*****************************", data);
+    // console.log("*****************************", data);
     return data;
   } catch (error) {
     return error.message;
@@ -88,11 +88,7 @@ export const getConversations = async (socket) => {
       },
     });
 
-    console.log(
-      "INNNNNNNNNNNNNNNNNNNNNNNNNNNNNN GET CONVERSATION",
-      conversations
-    );
-
+   
     const processedConversations = conversations.map((conversation) => {
       const isSender = conversation.sender_id === userName;
 

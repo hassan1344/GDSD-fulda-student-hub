@@ -13,6 +13,11 @@ import utilRouter from "./routes/utilRoutes.js";
 import searchListingRouter from "./routes/searchListingRoute.js";
 import listingModuleRouter from "./routes/listingModuleRoutes.js";
 import biddingRouter from "./routes/biddingRoutes.js";
+import nearestServicesRouter from "./routes/nearestServicesRoutes.js";
+import reviewRouter from "./routes/reviewRoutes.js"
+
+//Calendar
+import calendarRouter from "./routes/calendarRoutes.js";
 
 const app = express();
 
@@ -42,7 +47,12 @@ app.use("/v1/utils", utilRouter);
 app.use("/v1/searchListing", searchListingRouter);
 app.use("/v1/listingsModule", listingModuleRouter);
 app.use("/v1/bidding", biddingRouter);
+app.use("/v1/services", nearestServicesRouter);
+app.use("/v1/reviews", reviewRouter);
 
 // app.use(ResHandler);
+
+//Calendar
+app.use("/v1/calendar", calendarRouter);
 
 export { app };
