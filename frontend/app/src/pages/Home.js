@@ -140,29 +140,9 @@ const Home = () => {
         />
       ) : (
         <div className="flex justify-center mt-12 relative">
-          {/* <div className="w-1/4 bg-gray-100 p-4 shadow-lg h-screen overflow-y-auto absolute right-10">
-            <h3 className="text-lg font-semibold text-gray-800 mb-4">Landlord Meetings</h3>
-            <table className="w-full text-left border-collapse">
-              <thead>
-                <tr className="bg-gray-200">
-                  <th className="p-2 border-b">Landlord ID</th>
-                  <th className="p-2 border-b">Meeting ID</th>
-                  <th className="p-2 border-b">Date</th>
-                </tr>
-              </thead>
-              <tbody>
-                {tableData.map((row, index) => (
-                  <tr key={index} className="hover:bg-gray-50">
-                    <td className="p-2 border-b">{row.landlord_id}</td>
-                    <td className="p-2 border-b">{row.meeting_id}</td>
-                    <td className="p-2 border-b">{row.date}</td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div> */}
-          <div className="w-1/4 bg-gray-100 p-4 shadow-lg h-screen overflow-y-auto absolute right-10">
-            <h3 className="text-lg font-semibold text-gray-800 mb-4">Landlord Meetings</h3>
+          {}
+          <div className="w-1/5 bg-white p-4 shadow-lg h-screen overflow-y-auto absolute left-4">
+            <h3 className="text-lg font-semibold text-gray-800 mb-4">Upcoming Meetings</h3>
             <div className="panel-body text-gray-700">
               {tableData.map((row, index) => (
                 <div key={index} className="mb-6">
