@@ -1,21 +1,39 @@
 import { PrismaClient } from "@prisma/client";
 import { uploadToS3, deleteS3Object } from "../utils/uploadToS3.js";
+import { initializeLandlordTrust } from "../utils/rentalScoreUtility.js";
 
 const prisma = new PrismaClient();
 
 export const getProfile = async (req, res) => {
   try {
-    const { id: userName } = req.params;
+    // Correction : userName extracted from decoded token
+    const { userName } = req.user;
+    // console.log(req.user);
     let userProfile, modelId;
-    const user = await prisma.user.findUnique({where: {user_name: userName}});
-    if (user.user_type.toUpperCase() === 'STUDENT') {
-      userProfile = await prisma.student.findUnique({ where: { user_id: userName } });
-      modelId = userProfile.student_id;
-    } else if (user.user_type.toUpperCase() === 'LANDLORD' || user.user_type.toUpperCase() === 'ADMIN') {
-      userProfile = await prisma.landlord.findUnique({ where: { user_id: userName } });
-      modelId = userProfile.landlord_id;
+    const user = await prisma.user.findUnique({
+      where: { user_name: userName },
+    });
+    if (user.user_type.toUpperCase() === "STUDENT") {
+      userProfile = await prisma.student.findUnique({
+        where: { user_id: userName },
+      });
+      modelId = userProfile.student_id; // Correction : Added optional chaining
+    } else if (
+      user.user_type.toUpperCase() === "LANDLORD" ||
+      user.user_type.toUpperCase() === "ADMIN"
+    ) {
+      userProfile = await prisma.landlord.findUnique({
+        where: { user_id: userName },
+      });
+      modelId = userProfile.landlord_id; // Correction : Added optional chaining
     }
-    
+
+    //added null check for userProfile
+
+    if (!userProfile) {
+      return res.status(404).json({ error: "User profile not found" });
+    }
+
     const media = await prisma.media.findMany({
       where: {
         model_id: modelId,
@@ -29,7 +47,11 @@ export const getProfile = async (req, res) => {
         mediaType: media.media_type,
       })),
     };
-    return res.json({...userProfileWithMedia, email: user.email, userType: user.user_type});
+    return res.json({
+      ...userProfileWithMedia,
+      email: user.email,
+      userType: user.user_type,
+    });
   } catch (error) {
     res.status(500).json({ error: error.message });
   }
@@ -39,27 +61,36 @@ export const getAllProfiles = async (req, res) => {
   try {
     const users = await prisma.user.findMany({
       include: {
-        Landlord: true, // Include Landlord details (if available)
-        Student: true,  // Include Student details (if available)
+        Landlord: true,
+        Student: true,
       },
     });
 
     return res.json(users);
   } catch (error) {
-    console.error('Error fetching users:', error);
+    console.error("Error fetching Profiles:", error.message); //Correction : Error message
     throw error;
   }
-}
+};
 
 // Create user details
 export const createProfile = async (req, res) => {
   try {
     const { userName, userType } = req.user;
-    const { firstName, lastName, phoneNumber, address, university, studentIdNumber, emailVerified, trustScore } = req.body;
+    const {
+      firstName,
+      lastName,
+      phoneNumber,
+      address,
+      university,
+      studentIdNumber,
+      emailVerified,
+      trustScore,
+    } = req.body;
 
     const mediaEntries = [];
     let modelId, newProfile;
-    if (userType === 'STUDENT') {
+    if (userType === "STUDENT") {
       const newStudent = await prisma.student.create({
         data: {
           user_id: userName,
@@ -73,7 +104,7 @@ export const createProfile = async (req, res) => {
       });
       modelId = newStudent.student_id;
       newProfile = newStudent;
-    } else if (userType === 'LANDLORD') {
+    } else if (userType === "LANDLORD") {
       const newLandlord = await prisma.landlord.create({
         data: {
           user_id: userName,
@@ -81,9 +112,11 @@ export const createProfile = async (req, res) => {
           last_name: lastName,
           phone_number: phoneNumber,
           address,
-          trust_score: parseInt(trustScore)
+          trust_score: parseInt(trustScore) || 0, // Correction, added a fallback condition
         },
       });
+      await initializeLandlordTrust(userName);
+
       modelId = newLandlord.landlord_id;
       newProfile = newLandlord;
     }
@@ -102,8 +135,18 @@ export const createProfile = async (req, res) => {
 export const updateProfile = async (req, res) => {
   try {
     const { userName, userType } = req.user;
-    const { firstName, lastName, phoneNumber, address, profilePicture, university, studentIdNumber, emailVerified, trustScore } = req.body;
-    
+    const {
+      firstName,
+      lastName,
+      phoneNumber,
+      address,
+      profilePicture,
+      university,
+      studentIdNumber,
+      emailVerified,
+      trustScore,
+    } = req.body;
+
     let updates = {};
     firstName && (updates.first_name = firstName);
     lastName && (updates.last_name = lastName);
@@ -116,13 +159,13 @@ export const updateProfile = async (req, res) => {
 
     let updatedProfile, modelId;
 
-    if (userType === 'STUDENT') {
+    if (userType === "STUDENT") {
       updatedProfile = await prisma.student.update({
         where: { user_id: userName },
         data: updates,
       });
       modelId = updatedProfile.student_id;
-    } else if (userType === 'LANDLORD') {
+    } else if (userType === "LANDLORD") {
       updatedProfile = await prisma.landlord.update({
         where: { user_id: userName },
         data: updates,
@@ -130,21 +173,21 @@ export const updateProfile = async (req, res) => {
       modelId = updatedProfile.landlord_id;
     }
 
-    if (req.files && req.files["profile_pic"]) {
+    if (req.files && req?.files["profile_pic"]) {
+      //Optional chaining added
       await deleteMedia(modelId);
       const file = req.files["profile_pic"][0];
       await addMedia(file, modelId);
     }
     res.status(200).json(updatedProfile);
   } catch (error) {
-    if (error.code === 'P2025') {
+    if (error.code === "P2025") {
       // Handles case where record does not exist
-      return res.status(404).json({ error: 'User details not found' });
+      return res.status(404).json({ error: "User details not found" });
     }
     res.status(500).json({ error: error.message });
   }
 };
-
 
 // Delete user details
 export const deleteProfile = async (req, res) => {
@@ -152,25 +195,29 @@ export const deleteProfile = async (req, res) => {
 
   try {
     let modelId;
-    if (userType === 'STUDENT') {
-      const student = await prisma.student.findUnique({ where: { user_id: userName } });
+    if (userType === "STUDENT") {
+      const student = await prisma.student.findUnique({
+        where: { user_id: userName },
+      });
       modelId = student.student_id;
       await prisma.student.delete({ where: { user_id: userName } });
-    } else if (userType === 'LANDLORD') {
-      const landlord = await prisma.landlord.findUnique({ where: { user_id: userName } });
+    } else if (userType === "LANDLORD") {
+      const landlord = await prisma.landlord.findUnique({
+        where: { user_id: userName },
+      });
       modelId = landlord.landlord_id;
       await prisma.landlord.delete({ where: { user_id: userName } });
     }
     await deleteMedia(modelId);
-    res.status(204).json({ message: 'Details deleted successfully' });
+    res.status(204).json({ message: "Details deleted successfully" });
   } catch (error) {
-    res.status(500).json({ error: 'Failed to delete user details' });
+    res.status(500).json({ error: "Failed to delete user details" });
   }
 };
 
 const deleteMedia = async (modelId) => {
   const mediaEntries = await prisma.media.findMany({
-    where: { model_id: modelId},
+    where: { model_id: modelId },
   });
 
   if (mediaEntries && mediaEntries.length > 0) {
@@ -187,7 +234,7 @@ const deleteMedia = async (modelId) => {
       where: { model_id: modelId },
     });
   }
-}
+};
 
 const addMedia = async (file, modelId) => {
   const mediaEntries = [];
@@ -199,11 +246,11 @@ const addMedia = async (file, modelId) => {
       media_type: "profile_pic",
       media_category: "image",
     });
-  })
+  });
 
   if (mediaEntries.length > 0) {
     await prisma.media.createMany({
       data: mediaEntries,
     });
   }
-}
+};

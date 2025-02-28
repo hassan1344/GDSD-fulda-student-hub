@@ -8,19 +8,20 @@ datasource db {
 }
 
 model Landlord {
-  landlord_id    String           @id @default(uuid())
-  trust_score    Int              @default(0)
-  created_at     DateTime         @default(now())
-  updated_at     DateTime         @updatedAt
-  user_id        String           @unique
-  address        String
-  first_name     String
-  last_name      String
-  phone_number   String           @unique
-  user           User             @relation(fields: [user_id], references: [user_name])
-  landlord_trust landlord_trust[]
-  Property       Property[]
+  landlord_id   String          @id @default(uuid())
+  trust_score   Int             @default(0)
+  created_at    DateTime        @default(now())
+  updated_at    DateTime        @updatedAt
+  user_id       String          @unique
+  address       String
+  first_name    String
+  last_name     String
+  phone_number  String          @unique
+  user          User            @relation(fields: [user_id], references: [user_name])
+  Property      Property[]
+  LandlordTrust LandlordTrust[]
   meetings Meeting[]
+
   @@index([user_id], map: "landlord_user_id_fkey")
   @@map("landlord")
 }
@@ -145,23 +146,23 @@ model Media {
 }
 
 model Application {
-  application_id          String                    @id @default(uuid())
-  listing_id              String
-  student_id              String
-  application_status      ApplicationStatus         @default(PENDING)
-  applied_at              DateTime                  @default(now())
-  reviewed_at             DateTime?
-  remarks                 String?
-  created_at              DateTime                  @default(now())
-  updated_at              DateTime                  @updatedAt
-  contact_number          String
-  current_address         String
-  full_name               String
-  student_card_id         String
-  listing                 Listing                   @relation(fields: [listing_id], references: [listing_id])
-  user                    User                      @relation(fields: [student_id], references: [user_name])
-  landlord_rental_history landlord_rental_history[]
-  landlord_reviews        landlord_reviews[]
+  application_id        String                  @id @default(uuid())
+  listing_id            String
+  student_id            String
+  application_status    ApplicationStatus       @default(PENDING)
+  applied_at            DateTime                @default(now())
+  reviewed_at           DateTime?
+  remarks               String?
+  created_at            DateTime                @default(now())
+  updated_at            DateTime                @updatedAt
+  contact_number        String
+  current_address       String
+  full_name             String
+  student_card_id       String
+  listing               Listing                 @relation(fields: [listing_id], references: [listing_id])
+  user                  User                    @relation(fields: [student_id], references: [user_name])
+  LandlordRentalHistory LandlordRentalHistory[]
+  LandlordReviews       LandlordReviews[]
 
   @@index([listing_id], map: "application_listing_id_fkey")
   @@index([student_id], map: "application_student_id_fkey")
@@ -255,38 +256,42 @@ model Bid {
   @@map("bid")
 }
 
-model landlord_rental_history {
-  rental_id             String      @id
+model LandlordRentalHistory {
+  rental_id             String    @id @default(uuid())
   application_id        String
   date_started          DateTime?
   date_ended            DateTime?
-  cancelled_by_landlord Boolean     @default(false)
-  application           Application @relation(fields: [application_id], references: [application_id])
+  cancelled_by_landlord Boolean   @default(false)
 
-  @@index([application_id], map: "landlord_rental_history_application_id_fkey")
+  application Application @relation(fields: [application_id], references: [application_id])
+
+  @@map("landlord_rental_history")
 }
 
-model landlord_reviews {
-  review_id      String      @id
+model LandlordReviews {
+  review_id      String   @id @default(uuid())
   application_id String
   rating         Int
   review_text    String?
-  created_at     DateTime    @default(now())
-  application    Application @relation(fields: [application_id], references: [application_id])
+  created_at     DateTime @default(now())
 
-  @@index([application_id], map: "landlord_reviews_application_id_fkey")
+  application Application @relation(fields: [application_id], references: [application_id])
+
+  @@map("landlord_reviews")
 }
 
-model landlord_trust {
-  landlord_trust_id String   @id
+model LandlordTrust {
+  landlord_trust_id String   @id @default(uuid())
   landlord_id       String
   alpha             Float
   beta              Float
   createdAt         DateTime @default(now())
-  updatedAt         DateTime
-  landlord          Landlord @relation(fields: [landlord_id], references: [landlord_id])
+  updatedAt         DateTime @updatedAt
+
+  landlord Landlord @relation(fields: [landlord_id], references: [landlord_id])
 
   @@index([landlord_id], map: "property_landlord_id_fkey")
+  @@map("landlord_trust")
 }
 
 enum UserType {
