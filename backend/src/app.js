@@ -15,6 +15,7 @@ import listingModuleRouter from "./routes/listingModuleRoutes.js";
 import biddingRouter from "./routes/biddingRoutes.js";
 import nearestServicesRouter from "./routes/nearestServicesRoutes.js";
 import reviewRouter from "./routes/reviewRoutes.js"
+import propertyBlockchainRoutes from "./routes/propertyBlockchainRoutes.js";
 
 //Calendar
 import calendarRouter from "./routes/calendarRoutes.js";
@@ -49,6 +50,7 @@ app.use("/v1/listingsModule", listingModuleRouter);
 app.use("/v1/bidding", biddingRouter);
 app.use("/v1/services", nearestServicesRouter);
 app.use("/v1/reviews", reviewRouter);
+app.use("/v1/blockchain-config", propertyBlockchainRoutes);
 
 // app.use(ResHandler);
 

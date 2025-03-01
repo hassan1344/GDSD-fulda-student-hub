@@ -41,6 +41,7 @@ model Student {
   user              User     @relation(fields: [user_id], references: [user_name])
   Lease         Lease[]
   meetings Meeting[]
+  Lease          Lease[]
   @@map("student")
 }
 
@@ -98,6 +99,7 @@ model Property {
   Listing         Listing[]
   landlord        Landlord          @relation(fields: [landlord_id], references: [landlord_id])
   PropertyAmenity PropertyAmenity[]
+  blockchain_config PropertyBlockchainConfig?
 
   @@index([landlord_id], map: "property_landlord_id_fkey")
   @@map("property")
@@ -317,6 +319,17 @@ model Lease {
   @@index([landlord_id], map: "lease_landlord_id_fkey")
   @@index([tenant_id], map: "lease_tenant_id_fkey")
   @@map("lease")
+}
+
+model PropertyBlockchainConfig {
+  id                      String   @id @default(uuid())
+  property_id             String   @unique
+  landlord_wallet_address String   @db.VarChar(255)
+  blockchain_tx_enabled   Boolean  @default(false)
+  created_at              DateTime @default(now())
+  updated_at              DateTime @updatedAt
+  property                Property @relation(fields: [property_id], references: [property_id])
+  @@map("property_blockchain_config")
 }
 
 enum UserType {

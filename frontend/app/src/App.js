@@ -41,6 +41,9 @@ import CalendarPage from './pages/landlord/CalendarPage';
 import MeetingForm from './pages/landlord/MeetingForm';
 import MeetingList from './pages/landlord/MeetingList';
 
+// blockchain imports
+import BlockchainPaymentSystem from './pages/landlord/BlockchainPaymentSystem';
+
 
 const App = () => {
   console.log("App rendered");
@@ -82,6 +85,7 @@ const App = () => {
 
        <Route path="/bidding/BiddingLandlord/:listingId" element={<BiddingLandlord />} />
        <Route path="/bidding/BiddingStudent/:listingId" element={<BiddingStudent />} />
+       <Route path="/landlord/blockchain/:property_id" element={<BlockchainPaymentSystem />} />
 
 
        {/* Admin routes */}
