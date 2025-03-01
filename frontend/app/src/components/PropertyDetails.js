@@ -484,7 +484,7 @@ const PropertyDetails = ({ listing, onBack }) => {
               ? "border-b-2 border-blue-600 font-bold text-blue-600"
               : "text-gray-600 hover:text-blue-600 hover:font-medium"
           }`}
-          style={{ display: !listing.isBidding ? "block" : "none" }} // Hide if not from bidding list
+          style={{ display: listing.isBidding === false ? "block" : "none" }} // Hide if not from bidding list
         >
           Apply Now
         </button>
@@ -496,7 +496,7 @@ const PropertyDetails = ({ listing, onBack }) => {
               ? "border-b-2 border-blue-600 font-bold text-blue-600"
               : "text-gray-600 hover:text-blue-600 hover:font-medium"
           }`}
-          style={{ display: listing.isBidding ? "block" : "none" }} // Hide if not from bidding list
+          style={{ display: listing.isBidding === true ? "block" : "none" }} // Hide if not from bidding list
         >
           Bid Now
         </button>

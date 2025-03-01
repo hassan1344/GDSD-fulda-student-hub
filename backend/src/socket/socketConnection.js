@@ -119,13 +119,12 @@ export const initiateSocket = (server) => {
     });
 
     // 2. Join Bidding
-    socket.on('joinBidding', async ({ listingId }) => {
+    socket.on('joinBidding', async ({ listingId }, callback) => {
       try {
         // console.log("first");
         const session = await findActiveBiddingSession(listingId);
         if (!session) {
-          socket.emit('error', 'Bidding session not found.');
-          return;
+          return callback({ error: 'Bidding session not found.' }); 
         }
         const roomId = session.session_id;
         biddingRooms[roomId] = { listingId, bids: [], isActive: true };
@@ -135,12 +134,15 @@ export const initiateSocket = (server) => {
           const bids = await getBidsForSession(roomId);
 
           socket.emit('joinedBidding', { roomId, listingId: session.listing_id, bids: bids});
+          callback({ roomId, listingId: session.listing_id, bids: bids });
         } else {
           socket.emit('error', 'Bidding is not active for this room.');
+          callback({ error: 'Bidding is not active for this room.' });
         }
       } catch (error) {
         console.error('Error joining bidding:', error.message);
         socket.emit('error', 'Failed to join bidding.');
+        callback({ error: 'Failed to join bidding.' });
       }
     });
 

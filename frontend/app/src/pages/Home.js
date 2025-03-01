@@ -49,10 +49,23 @@ const Home = () => {
             ? fetchedBiddings.map((bid) => bid.listing_id)
             : [];
 
-        getListingsByIds(listingIds).then((bidListings) => {
-          setActiveBiddings(bidListings);
-        });
+        // getListingsByIds(listingIds).then((bidListings) => {
+        //   setActiveBiddings(bidListings);
+        // });
 
+        getListingsByIds(listingIds).then((bidListings) => {
+          const mergedBiddings = bidListings.map((listing) => {
+            const relatedBidding = fetchedBiddings.find(
+              (bid) => bid.listing_id === listing.listing_id
+            );
+
+            return {
+              ...listing,
+              ...relatedBidding, // This merges the bidding data into listing
+            };
+          });
+          setActiveBiddings(mergedBiddings);
+        });
         // Normalize amenities to lowercase and replace underscores with spaces
         const normalizedAmenities = [];
         const seenAmenities = new Set();
@@ -315,8 +328,9 @@ const Home = () => {
                             "/default.jpg"
                           }
                           description={bidding.description}
-                          price={`Current Bid: €${bidding.rent // || bidding.starting_price
-                            }`}
+                          price={`Current Bid: €${
+                            bidding.highest_bid // || bidding.starting_price
+                          }`}
                           poster={`${bidding.property.landlord.first_name} ${bidding.property.landlord.last_name}`}
                           onClick={() => handleSelectProperty(bidding, true)}
                         />
