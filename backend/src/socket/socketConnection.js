@@ -40,7 +40,7 @@ export const initiateSocket = (server) => {
         // console.log("======> data from client", data);
 
         const result = await createConversation(socket, data);
-        console.log("Result", result);
+        // console.log("Result", result);
 
         const conversation = result?.conversation;
 
@@ -80,7 +80,7 @@ export const initiateSocket = (server) => {
       // Fetch all chats in a conversation
       socket.on("getChats", async (data) => {
         const chats = await getChats(socket, data);
-        console.log(socket.decoded, "decoded");
+        // console.log(socket.decoded, "decoded");
 
         io.to(socket.decoded.userName).emit("getChats", chats);
       });
@@ -121,7 +121,7 @@ export const initiateSocket = (server) => {
     // 2. Join Bidding
     socket.on('joinBidding', async ({ listingId }, callback) => {
       try {
-        console.log("first");
+        // console.log("first");
         const session = await findActiveBiddingSession(listingId);
         if (!session) {
           return callback({ error: 'Bidding session not found.' }); 

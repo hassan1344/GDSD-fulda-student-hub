@@ -8,17 +8,20 @@ datasource db {
 }
 
 model Landlord {
-  landlord_id  String     @id @default(uuid())
-  trust_score  Int        @default(0)
-  created_at   DateTime   @default(now())
-  updated_at   DateTime   @updatedAt
-  user_id      String     @unique
-  address      String
-  first_name   String
-  last_name    String
-  phone_number String     @unique
-  user         User       @relation(fields: [user_id], references: [user_name])
-  Property     Property[]
+  landlord_id   String          @id @default(uuid())
+  trust_score   Int             @default(0)
+  created_at    DateTime        @default(now())
+  updated_at    DateTime        @updatedAt
+  user_id       String          @unique
+  address       String
+  first_name    String
+  last_name     String
+  phone_number  String          @unique
+  user          User            @relation(fields: [user_id], references: [user_name])
+  Property      Property[]
+  LandlordTrust LandlordTrust[]
+  meetings Meeting[]
+  Lease         Lease[]
 
   @@index([user_id], map: "landlord_user_id_fkey")
   @@map("landlord")
@@ -35,30 +38,54 @@ model Student {
   created_at        DateTime @default(now())
   updated_at        DateTime @updatedAt
   user_id           String   @unique
-
-  user User @relation(fields: [user_id], references: [user_name])
-
+  user              User     @relation(fields: [user_id], references: [user_name])
+  Lease         Lease[]
+  meetings Meeting[]
+  Lease          Lease[]
   @@map("student")
 }
 
+
+
+model Meeting {
+  meeting_id   String        @id @default(uuid())
+  landlord_id  String
+  student_id   String
+  date         DateTime
+  status       MeetingStatus @default(SCHEDULED)
+  created_at   DateTime      @default(now())
+  updated_at   DateTime      @updatedAt
+  
+  // Relations
+  landlord     Landlord      @relation(fields: [landlord_id], references: [landlord_id])
+  student      Student       @relation(fields: [student_id], references: [student_id])
+
+  // Indexes
+  @@index([landlord_id], name: "meeting_landlord_idx")
+  @@index([student_id], name: "meeting_student_idx")
+  @@index([date], name: "meeting_date_idx")
+}
+
+
+
+
+
 model User {
-  created_at    DateTime  @default(now())
-  updated_at    DateTime  @updatedAt
-  email         String
-  password      String
-  user_name     String    @id
-  user_type     UserType  @default(STUDENT)
-  refresh_token String?   @db.Text
-  Landlord      Landlord?
-  Student       Student?
-
-  Application Application[]
-
-  ConversationsSent     Conversation[]   @relation("SenderConversations")
-  ConversationsReceived Conversation[]   @relation("ReceiverConversations")
-  ChatsSent             Chat[]           @relation("SenderChats")
-  BiddingSession        BiddingSession[]
+  created_at            DateTime         @default(now())
+  updated_at            DateTime         @updatedAt
+  email                 String
+  password              String
+  user_name             String           @id
+  user_type             UserType         @default(STUDENT)
+  refresh_token         String?          @db.Text
+  Application           Application[]
   Bid                   Bid[]
+  BiddingSession        BiddingSession[]
+  ChatsSent             Chat[]           @relation("SenderChats")
+  ConversationsReceived Conversation[]   @relation("ReceiverConversations")
+  ConversationsSent     Conversation[]   @relation("SenderConversations")
+  Landlord              Landlord?
+  Student               Student?
 
   @@map("user")
 }
@@ -72,6 +99,7 @@ model Property {
   Listing         Listing[]
   landlord        Landlord          @relation(fields: [landlord_id], references: [landlord_id])
   PropertyAmenity PropertyAmenity[]
+  blockchain_config PropertyBlockchainConfig?
 
   @@index([landlord_id], map: "property_landlord_id_fkey")
   @@map("property")
@@ -81,16 +109,17 @@ model Listing {
   listing_id     String           @id @default(uuid())
   property_id    String
   title          String
-  rent           Float
-  room_type_id   String?
   description    String
   status         String
   created_at     DateTime         @default(now())
   updated_at     DateTime         @updatedAt
-  property       Property         @relation(fields: [property_id], references: [property_id])
-  room_type      RoomType?        @relation(fields: [room_type_id], references: [room_type_id])
+  rent           Float
+  room_type_id   String?
   Application    Application[]
   BiddingSession BiddingSession[]
+  Lease         Lease[]
+  property       Property         @relation(fields: [property_id], references: [property_id])
+  room_type      RoomType?        @relation(fields: [room_type_id], references: [room_type_id])
 
   @@index([property_id], map: "listing_property_id_fkey")
   @@index([room_type_id], map: "listing_room_type_id_fkey")
@@ -113,30 +142,32 @@ model Media {
   model_id       String
   media_url      String
   media_type     String
-  media_category String //  (profile_picture, property_image, document, etc.)
-  identifier     String? //  (government_id, enrolment_certificate)
   created_at     DateTime @default(now())
   updated_at     DateTime @updatedAt
+  identifier     String?
+  media_category String
 
   @@map("media")
 }
 
 model Application {
-  application_id     String            @id @default(uuid())
-  listing_id         String
-  student_id         String
-  application_status ApplicationStatus @default(PENDING)
-  applied_at         DateTime          @default(now())
-  reviewed_at        DateTime?
-  remarks            String?
-  created_at         DateTime          @default(now())
-  updated_at         DateTime          @updatedAt
-  contact_number     String
-  current_address    String
-  full_name          String
-  student_card_id    String
-  listing            Listing           @relation(fields: [listing_id], references: [listing_id])
-  user               User              @relation(fields: [student_id], references: [user_name])
+  application_id        String                  @id @default(uuid())
+  listing_id            String
+  student_id            String
+  application_status    ApplicationStatus       @default(PENDING)
+  applied_at            DateTime                @default(now())
+  reviewed_at           DateTime?
+  remarks               String?
+  created_at            DateTime                @default(now())
+  updated_at            DateTime                @updatedAt
+  contact_number        String
+  current_address       String
+  full_name             String
+  student_card_id       String
+  listing               Listing                 @relation(fields: [listing_id], references: [listing_id])
+  user                  User                    @relation(fields: [student_id], references: [user_name])
+  LandlordRentalHistory LandlordRentalHistory[]
+  LandlordReviews       LandlordReviews[]
 
   @@index([listing_id], map: "application_listing_id_fkey")
   @@index([student_id], map: "application_student_id_fkey")
@@ -201,16 +232,15 @@ model Chat {
 model BiddingSession {
   session_id     String   @id @default(uuid())
   listing_id     String
-  status         String // possible vals: active, ended
+  status         String
   starting_price Float
   highest_bid    Float    @default(0)
   highest_bidder String?
   created_at     DateTime @default(now())
   ends_at        DateTime
-
-  listing       Listing @relation(fields: [listing_id], references: [listing_id])
-  highestBidder User?   @relation(fields: [highest_bidder], references: [user_name])
-  Bids          Bid[]
+  Bids           Bid[]
+  highestBidder  User?    @relation(fields: [highest_bidder], references: [user_name])
+  listing        Listing  @relation(fields: [listing_id], references: [listing_id])
 
   @@index([listing_id], map: "biddingsession_listing_id_fkey")
   @@index([highest_bidder], map: "biddingsession_highest_bidder_fkey")
@@ -218,18 +248,88 @@ model BiddingSession {
 }
 
 model Bid {
-  bid_id     String   @id @default(uuid())
+  bid_id     String         @id @default(uuid())
   session_id String
   bidder_id  String
   amount     Float
-  created_at DateTime @default(now())
-
-  session BiddingSession @relation(fields: [session_id], references: [session_id])
-  bidder  User           @relation(fields: [bidder_id], references: [user_name])
+  created_at DateTime       @default(now())
+  bidder     User           @relation(fields: [bidder_id], references: [user_name])
+  session    BiddingSession @relation(fields: [session_id], references: [session_id])
 
   @@index([session_id], map: "bid_session_id_fkey")
   @@index([bidder_id], map: "bid_bidder_id_fkey")
   @@map("bid")
+}
+
+model LandlordRentalHistory {
+  rental_id             String    @id @default(uuid())
+  application_id        String
+  date_started          DateTime?
+  date_ended            DateTime?
+  cancelled_by_landlord Boolean   @default(false)
+
+  application Application @relation(fields: [application_id], references: [application_id])
+
+  @@map("landlord_rental_history")
+}
+
+model LandlordReviews {
+  review_id      String   @id @default(uuid())
+  application_id String
+  rating         Int
+  review_text    String?
+  created_at     DateTime @default(now())
+
+  application Application @relation(fields: [application_id], references: [application_id])
+
+  @@map("landlord_reviews")
+}
+
+model LandlordTrust {
+  landlord_trust_id String   @id @default(uuid())
+  landlord_id       String
+  alpha             Float
+  beta              Float
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+
+  landlord Landlord @relation(fields: [landlord_id], references: [landlord_id])
+
+  @@index([landlord_id], map: "property_landlord_id_fkey")
+  @@map("landlord_trust")
+}
+
+model Lease {
+  lease_id    String   @id @default(uuid())
+  listing_id  String
+  landlord_id String
+  tenant_id   String
+  created_at  DateTime @default(now())
+  status      String
+  address     String
+  rent        Float
+  security    Float
+  lease_start DateTime
+  lease_end   DateTime
+  landlord    Landlord @relation(fields: [landlord_id], references: [landlord_id])
+  listing     Listing  @relation(fields: [listing_id], references: [listing_id])
+  tenant      Student  @relation(fields: [tenant_id], references: [student_id])
+
+  @@index([listing_id], map: "lease_listing_id_fkey")
+  @@index([landlord_id], map: "lease_landlord_id_fkey")
+  @@index([tenant_id], map: "lease_tenant_id_fkey")
+  @@map("lease")
+}
+
+model PropertyBlockchainConfig {
+  id                      String   @id @default(uuid())
+  property_id             String   @unique
+  landlord_wallet_address String   @db.VarChar(255)
+  blockchain_tx_enabled   Boolean  @default(false)
+  created_at              DateTime @default(now())
+  updated_at              DateTime @updatedAt
+  property                Property @relation(fields: [property_id], references: [property_id])
+  @@map("property_blockchain_config")
 }
 
 enum UserType {
@@ -243,4 +343,11 @@ enum ApplicationStatus {
   APPROVED
   REJECTED
   WITHDRAWN
+}
+
+
+enum MeetingStatus {
+  SCHEDULED
+  CANCELED
+  COMPLETED
 }

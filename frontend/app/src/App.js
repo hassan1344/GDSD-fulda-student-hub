@@ -39,6 +39,14 @@ import AdminViewProfile from './pages/admin/AdminViewProfile';
 import LeaseAgreement from './pages/landlord/LeaseAgreement';
 
 
+//Calendar Imports
+import CalendarPage from './pages/landlord/CalendarPage';
+import MeetingForm from './pages/landlord/MeetingForm';
+import MeetingList from './pages/landlord/MeetingList';
+
+// blockchain imports
+import BlockchainPaymentSystem from './pages/landlord/BlockchainPaymentSystem';
+
 
 const App = () => {
   console.log("App rendered");
@@ -82,6 +90,7 @@ const App = () => {
 
        <Route path="/bidding/BiddingLandlord/:listingId" element={<BiddingLandlord />} />
        <Route path="/bidding/BiddingStudent/:listingId" element={<BiddingStudent />} />
+       <Route path="/landlord/blockchain/:property_id" element={<BlockchainPaymentSystem />} />
 
 
        {/* Admin routes */}
@@ -92,6 +101,8 @@ const App = () => {
        <Route path="/admin/edit-property/:id" element={<EditDeleteListing />} />
        <Route path="/admin/viewProfile" element = {<AdminViewProfile/>}/>
 
+        {/* Calendar routes */}
+        <Route path="/landlord/calendar" element={<CalendarPage/>} />
 
       </Routes>
     </Router>

@@ -2,6 +2,11 @@ import puppeteer from 'puppeteer';
 import path from 'path';
 import fs from 'fs/promises';
 import { fileURLToPath } from 'url';
+import { uploadToS3 } from "../utils/uploadToS3.js";
+
+import { PrismaClient } from '@prisma/client'
+
+const prisma = new PrismaClient();
 
 // Get the current file URL and convert it to a file path
 const __filename = fileURLToPath(import.meta.url);
@@ -63,9 +68,20 @@ export const generateLeaseAgreement = async (req, res) => {
     const outputPdfPath = path.join(__dirname, '..', '..', 'tmp', `${userName}-${listingId}-lease-agreement.pdf`);
     
     await updateHTML(inputHtmlPath, outputHtmlPath, parameters, signaturePath);
-    await createPdf(outputHtmlPath, outputPdfPath);
+    const leaseFile = await createPdf(outputHtmlPath, outputPdfPath);
     await fs.unlink(outputHtmlPath);
     await fs.unlink(signaturePath);
+
+    const leaseObject = await createLease(parameters);
+
+    const leaseBuffer = Buffer.from(leaseFile);
+    const bufferFile = {
+      originalname: `lease_agreement_${leaseObject.lease_id}.pdf`,
+      buffer: leaseBuffer,
+      mimetype: "application/pdf",
+    };
+
+    await addMedia(bufferFile, leaseObject.lease_id);
 
     res.download(outputPdfPath, 'LeaseAgreement.pdf', (err) => {
       if (err) {
@@ -78,5 +94,71 @@ export const generateLeaseAgreement = async (req, res) => {
   } catch (error) {
     console.error(error);
     return res.status(500).json({ error: "An error occurred while generating the lease agreement" });
+  }
+}
+
+const addMedia = async (file, modelId) => {
+  const mediaEntries = [];
+  await uploadToS3(file).then((uploadedFile) => {
+    mediaEntries.push({
+      model_name: "lease",
+      model_id: modelId,
+      media_url: uploadedFile,
+      media_type: "lease",
+      media_category: "pdf",
+    });
+  })
+
+  if (mediaEntries.length > 0) {
+    await prisma.media.createMany({
+      data: mediaEntries,
+    });
+  }
+}
+
+async function createLease(parameters) {
+  try {
+    const { address, rent, security, landlordName, studentName, leaseStartDate, leaseEndDate, landlordAddress, listingId, landlordId, tenantUserName } = parameters;
+    const tenant_id = await getStudentIdByUsername(tenantUserName);
+    const lease = await prisma.lease.create({
+      data: {
+      listing_id: listingId,  
+      landlord_id: landlordId,
+      tenant_id, 
+      status: "active",
+      address,
+      rent: parseFloat(rent),
+      security: parseFloat(security),
+      lease_start: leaseStartDate,
+      lease_start: new Date(leaseStartDate),
+      lease_end: new Date(leaseEndDate),
+      },
+    });
+    return lease;
+  } catch (error) {
+    console.error("Error creating lease:", error);
+  }
+}
+
+async function getStudentIdByUsername(user_id) {
+  try {
+    const student = await prisma.student.findUnique({
+      where: {
+        user_id
+      },
+      select: {
+        student_id: true,
+      },
+    });
+
+    if (!student) {
+      console.log("Student not found");
+      return null;
+    }
+
+    console.log("Student ID:", student.student_id);
+    return student.student_id;
+  } catch (error) {
+    console.error("Error fetching student ID:", error);
   }
 }
