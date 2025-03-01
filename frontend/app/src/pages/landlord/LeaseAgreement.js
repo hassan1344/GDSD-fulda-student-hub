@@ -27,10 +27,8 @@ const LeaseAgreement = (props) => {
   const [landlordId, setLandlordId] = useState('');
   const [listingId, setListingId] = useState('');
 
-  const [application, setApplication] = useState(null);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState(null);
-  // const [leaseData, setLeaseData] = useState(null);
 
   const accessToken = localStorage.getItem("accessToken");
   const decodedToken = jwtDecode(accessToken);
@@ -52,11 +50,7 @@ const LeaseAgreement = (props) => {
           const landlord = propertyData.landlord;
           setLandlordId(landlord.landlord_id);
           setTenantUserName(applicationData.student_id);
-          // setApplication(applicationData);
           leaseData = {...leaseData, landlordName: `${landlord.first_name} ${landlord.last_name}`, address: propertyData.address, landlordAddress: landlord.address};
-          console.log(applicationData);
-          console.log(propertyData);
-          // setLeaseData(leaseData);
 
           setFormData({...formData, ...leaseData});
         } catch (error) {

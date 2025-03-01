@@ -160,7 +160,5 @@ async function getStudentIdByUsername(user_id) {
     return student.student_id;
   } catch (error) {
     console.error("Error fetching student ID:", error);
-  } finally {
-    await prisma.$disconnect();
   }
 }
