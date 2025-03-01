@@ -4,62 +4,63 @@ import { useNavigate } from 'react-router-dom';
 import LandlordNavbar from '../../components/LandlordNavbar';
 import { fetchAllProperties, deleteProperty, fetchPropertyById } from '../../services/LandlordServices';
 
-/*  State to manage the properties list, loading status, and error messages */
 const ViewProperties = () => {
   const [properties, setProperties] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState(null);
   const navigate = useNavigate();
 
-/* Function to view a property by ID and navigate to the details page */
+  // View details of a specific property
   const viewPropertyById = async (propertyId) => {
     try {
       const token = localStorage.getItem('accessToken');
       const data = await fetchPropertyById(propertyId, token);
       if (data.success) {
-        navigate(`/landlord/view-property/${propertyId}`, { state: { property: data.data } });
+        navigate(`/landlord/view-property/${propertyId}`, {
+          state: { property: data.data },
+        });
       } else {
         console.error('Error fetching property details:', data.message);
       }
-    } catch (error) {
-      console.error('Error fetching property details:', error);
+    } catch (err) {
+      console.error('Error fetching property details:', err);
     }
   };
 
-/* Function to handle deleting a property by ID  */
-const handleDelete = async (propertyId) => {
-  if (window.confirm('Are you sure you want to delete this property?')) {
-    try {
-      const response = await deleteProperty(propertyId);
-      if (response.success) {
-        setProperties(properties.filter((prop) => prop.property_id !== propertyId));
-      } else {
-        setError(response.message || 'Failed to delete property');
+  // Delete a property
+  const handleDelete = async (propertyId) => {
+    if (window.confirm('Are you sure you want to delete this property?')) {
+      try {
+        const response = await deleteProperty(propertyId);
+        if (response.success) {
+          setProperties((prev) =>
+            prev.filter((prop) => prop.property_id !== propertyId)
+          );
+        } else {
+          setError(response.message || 'Failed to delete property');
+        }
+      } catch (err) {
+        console.error('Error deleting property:', err);
+        setError('Error deleting property');
       }
-    } catch (error) {
-      console.error('Error deleting property:', error);
-      setError('Error deleting property');
     }
-  }
-};
+  };
 
-  /* useEffect hook to fetch all properties when the component is mounted */
-
-  //service calls of api, no direct api call
+  // Fetch all properties on mount
   useEffect(() => {
     const fetchProperties = async () => {
-      const token = localStorage.getItem('accessToken');  //got access token
+      const token = localStorage.getItem('accessToken');
       try {
-        const data = await fetchAllProperties(token);  //will get properties on success
+        const data = await fetchAllProperties(token);
         if (data.success) {
           setProperties(data.data);
         } else {
           setError(data.message || 'Failed to fetch properties');
         }
-      } catch (error) {
+      } catch (err) {
         setError('Error fetching properties. Please try again later.');
       } finally {
-        setIsLoading(false);    //break loading process
+        setIsLoading(false);
       }
     };
     fetchProperties();
@@ -85,13 +86,22 @@ const handleDelete = async (propertyId) => {
     <div className="min-h-screen bg-green-50">
       <LandlordNavbar />
       <div className="container mx-auto px-4 py-8">
-        <h1 className="text-4xl font-bold text-center text-green-700 mb-6">My Properties</h1>
+        <h1 className="text-4xl font-bold text-center text-green-700 mb-6">
+          My Properties
+        </h1>
+
         {properties.length === 0 ? (
-          <p className="text-center text-gray-600">No properties available.</p>
+          <p className="text-center text-gray-600">
+            No properties available.
+          </p>
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {properties.map(property => (
-              <div key={property.property_id} className="bg-white shadow-lg rounded-lg overflow-hidden">
+            {properties.map((property) => (
+              <div
+                key={property.property_id}
+                className="bg-white shadow-lg rounded-lg overflow-hidden"
+              >
+                {/* Property Image */}
                 {property.media && property.media.length > 0 && (
                   <div className="relative h-48">
                     <img
@@ -105,16 +115,17 @@ const handleDelete = async (propertyId) => {
                     />
                   </div>
                 )}
+
+                {/* Property Info */}
                 <div className="p-4">
                   <h2 className="text-xl font-semibold text-green-700 mb-3">
                     {property.address}
                   </h2>
-                  
-                  {property.property_amenity && property.property_amenity.length > 0 && (
-                    <div className="mb-4">
-                      <div className="flex flex-wrap gap-2">
+                  {property.property_amenity &&
+                    property.property_amenity.length > 0 && (
+                      <div className="mb-4 flex flex-wrap gap-2">
                         {property.property_amenity.map((pa) => (
-                          <span 
+                          <span
                             key={pa.property_amenity_id}
                             className="bg-green-100 text-green-800 text-sm px-3 py-1 rounded-full"
                           >
@@ -122,22 +133,43 @@ const handleDelete = async (propertyId) => {
                           </span>
                         ))}
                       </div>
-                    </div>
-                  )}
+                    )}
 
-                  <div className="flex gap-2">
+                  {/* Buttons */}
+                  <div className="flex gap-2 mt-3">
+                    {/* Edit */}
                     <button
-                      onClick={() => navigate(`/landlord/edit-listing/${property.property_id}`)}
-                      className="flex-1 bg-green-600 hover:bg-green-700 text-white font-bold py-2 px-4 rounded transition duration-200"
+                      onClick={() =>
+                        navigate(`/landlord/edit-listing/${property.property_id}`)
+                      }
+                      className="flex-1 px-3 py-2 text-white font-medium text-sm rounded-md bg-green-600 hover:bg-green-700 transition-colors"
                     >
-                      Edit Property
+                      Edit
                     </button>
+
+                    {/* Delete */}
                     <button
                       onClick={() => handleDelete(property.property_id)}
-                      className="flex-1 bg-red-600 hover:bg-red-700 text-white font-bold py-2 px-4 rounded transition duration-200"
+                      className="flex-1 px-3 py-2 text-white font-medium text-sm rounded-md bg-red-600 hover:bg-red-700 transition-colors"
                     >
-                      Delete Property
+                      Delete
                     </button>
+
+                    {/* Blockchain Payment */}
+                    <div className="relative flex-1">
+                      <button
+                        onClick={() =>
+                          navigate(`/landlord/blockchain/${property.property_id}`)
+                        }
+                        className="w-full px-3 py-2 text-white font-medium text-sm rounded-md bg-blue-600 hover:bg-blue-700 transition-colors"
+                      >
+                        BlockchainTx
+                      </button>
+                      {/* HOT badge with bounce animation */}
+                      <span className="absolute top-0 right-0 -mt-2 -mr-2 text-xs bg-red-600 text-white px-1.5 py-0.5 rounded-full animate-bounce">
+                        HOT
+                      </span>
+                    </div>
                   </div>
                 </div>
               </div>
@@ -146,6 +178,7 @@ const handleDelete = async (propertyId) => {
         )}
       </div>
     </div>
-  );};
+  );
+};
 
 export default ViewProperties;
