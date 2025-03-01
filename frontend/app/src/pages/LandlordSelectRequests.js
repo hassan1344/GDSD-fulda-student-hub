@@ -3,6 +3,7 @@ import LandlordNavbar from '../components/LandlordNavbar';
 import { getAllApplicationsByLandlord, updateApplicationStatus } from '../services/applicationServices';
 import ApplicationDetails from '../components/ApplicationDetails';
 import { ToastContainer, toast } from "react-toastify";
+import { useNavigate } from 'react-router-dom';
 import "react-toastify/dist/ReactToastify.css";
 
 const LandlordSelectRequests = () => {
@@ -10,6 +11,8 @@ const LandlordSelectRequests = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState(null);
   const [selectedApplicationId, setSelectedApplicationId] = useState(null);
+
+  const navigate = useNavigate();
 
   const fetchApplications = async () => {
     try {
@@ -54,6 +57,19 @@ const LandlordSelectRequests = () => {
     }
   };
 
+  const handleGenerateLease = (request) => {
+    navigate('/landlord/lease-agreement', {
+      state: {
+        applicationId: request.application_id,
+        tenantName: request.full_name,
+        landlordName: "Your Name Here", // Replace with actual landlord's name
+        rentAmount: request.listing?.rent_amount || "N/A",
+        startDate: new Date().toISOString().split('T')[0], // Default to today
+        endDate: "YYYY-MM-DD", // Placeholder
+        propertyAddress: request.listing?.address || "Unknown Address",
+      }
+    });
+  };
 
   useEffect(() => {
     fetchApplications();
@@ -122,6 +138,13 @@ const LandlordSelectRequests = () => {
                         className="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600"
                       >
                         View Application
+                      </button>
+                      <button
+                        onClick={() => handleGenerateLease(request)}
+                        className={`bg-purple-500 text-white px-4 py-2 rounded hover:bg-purple-600 ${request.application_status !== "APPROVED" ? "opacity-50 cursor-not-allowed" : ""}`}
+                        disabled={request.application_status !== "APPROVED"}
+                      >
+                        Generate Lease
                       </button>
                     </div>
                   </div>
