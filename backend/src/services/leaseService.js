@@ -59,6 +59,8 @@ export const generateLeaseAgreement = async (req, res) => {
     }
     const { userName } = req.user;
 
+    const tmpDir = path.join(__dirname, '..', '..', 'tmp');
+    await fs.mkdir(tmpDir, { recursive: true }); // Ensure tmp directory exists
     const signatureFile = req.files["landlord_signature"][0];
     const signaturePath = path.join(__dirname, '..', '..', 'tmp', `${userName}-${listingId}-landlord-signature.png`);
     await fs.writeFile(signaturePath, signatureFile.buffer);
