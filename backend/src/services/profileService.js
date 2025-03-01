@@ -7,7 +7,8 @@ const prisma = new PrismaClient();
 export const getProfile = async (req, res) => {
   try {
     // Correction : userName extracted from decoded token
-    const { id: userName } = req;
+    const { userName } = req.user;
+    // console.log(req.user);
     let userProfile, modelId;
     const user = await prisma.user.findUnique({
       where: { user_name: userName },
@@ -31,30 +32,7 @@ export const getProfile = async (req, res) => {
 
     if (!userProfile) {
       return res.status(404).json({ error: "User profile not found" });
-    const user = await prisma.user.findUnique({
-      where: { user_name: userName },
-    });
-    if (user.user_type.toUpperCase() === "STUDENT") {
-      userProfile = await prisma.student.findUnique({
-        where: { user_id: userName },
-      });
-      modelId = userProfile.student_id; // Correction : Added optional chaining
-    } else if (
-      user.user_type.toUpperCase() === "LANDLORD" ||
-      user.user_type.toUpperCase() === "ADMIN"
-    ) {
-      userProfile = await prisma.landlord.findUnique({
-        where: { user_id: userName },
-      });
-      modelId = userProfile.landlord_id; // Correction : Added optional chaining
     }
-
-    //added null check for userProfile
-
-    if (!userProfile) {
-      return res.status(404).json({ error: "User profile not found" });
-    }
-
 
     const media = await prisma.media.findMany({
       where: {
@@ -74,11 +52,6 @@ export const getProfile = async (req, res) => {
       email: user.email,
       userType: user.user_type,
     });
-    return res.json({
-      ...userProfileWithMedia,
-      email: user.email,
-      userType: user.user_type,
-    });
   } catch (error) {
     res.status(500).json({ error: error.message });
   }
@@ -88,33 +61,22 @@ export const getAllProfiles = async (req, res) => {
   try {
     const users = await prisma.user.findMany({
       include: {
-        Landlord: true, 
-        Student: true, 
+        Landlord: true,
+        Student: true,
       },
     });
 
     return res.json(users);
   } catch (error) {
-    console.error("Error fetching Profiles:", error.message);  //Correction : Error message
+    console.error("Error fetching Profiles:", error.message); //Correction : Error message
     throw error;
   }
-};
 };
 
 // Create user details
 export const createProfile = async (req, res) => {
   try {
     const { userName, userType } = req.user;
-    const {
-      firstName,
-      lastName,
-      phoneNumber,
-      address,
-      university,
-      studentIdNumber,
-      emailVerified,
-      trustScore,
-    } = req.body;
     const {
       firstName,
       lastName,
@@ -142,7 +104,6 @@ export const createProfile = async (req, res) => {
       });
       modelId = newStudent.student_id;
       newProfile = newStudent;
-    } else if (userType === "LANDLORD") {
     } else if (userType === "LANDLORD") {
       const newLandlord = await prisma.landlord.create({
         data: {
@@ -186,18 +147,6 @@ export const updateProfile = async (req, res) => {
       trustScore,
     } = req.body;
 
-    const {
-      firstName,
-      lastName,
-      phoneNumber,
-      address,
-      profilePicture,
-      university,
-      studentIdNumber,
-      emailVerified,
-      trustScore,
-    } = req.body;
-
     let updates = {};
     firstName && (updates.first_name = firstName);
     lastName && (updates.last_name = lastName);
@@ -211,13 +160,11 @@ export const updateProfile = async (req, res) => {
     let updatedProfile, modelId;
 
     if (userType === "STUDENT") {
-    if (userType === "STUDENT") {
       updatedProfile = await prisma.student.update({
         where: { user_id: userName },
         data: updates,
       });
       modelId = updatedProfile.student_id;
-    } else if (userType === "LANDLORD") {
     } else if (userType === "LANDLORD") {
       updatedProfile = await prisma.landlord.update({
         where: { user_id: userName },
@@ -226,7 +173,8 @@ export const updateProfile = async (req, res) => {
       modelId = updatedProfile.landlord_id;
     }
 
-    if (req.files && req?.files["profile_pic"]) { //Optional chaining added
+    if (req.files && req?.files["profile_pic"]) {
+      //Optional chaining added
       await deleteMedia(modelId);
       const file = req.files["profile_pic"][0];
       await addMedia(file, modelId);

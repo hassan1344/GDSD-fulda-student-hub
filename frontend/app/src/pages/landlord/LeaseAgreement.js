@@ -1,8 +1,14 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
+import { jwtDecode } from "jwt-decode";
+import { useLocation } from "react-router-dom";
 import LandlordNavbar from '../../components/LandlordNavbar';
-import apiClient from "../../services/apiClient";
+import { generateLease } from "../../services/leaseService";
+import { getApplicationByID } from "../../services/applicationServices";
+import { fetchPropertyById } from "../../services/propertyServices";
 
-const LeaseAgreement = ({listingId='1234567890'}) => {
+const LeaseAgreement = (props) => {
+  const location = useLocation();
+  const { applicationId } = location.state || {};
   const [formData, setFormData] = useState({
     landlordName: "",
     studentName: "",
@@ -17,6 +23,52 @@ const LeaseAgreement = ({listingId='1234567890'}) => {
 
   const [previewUrl, setPreviewUrl] = useState(null);
   const [submitting, setSubmitting] = useState(false);
+  const [tenantUserName, setTenantUserName] = useState('');
+  const [landlordId, setLandlordId] = useState('');
+  const [listingId, setListingId] = useState('');
+
+  const [application, setApplication] = useState(null);
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState(null);
+  // const [leaseData, setLeaseData] = useState(null);
+
+  const accessToken = localStorage.getItem("accessToken");
+  const decodedToken = jwtDecode(accessToken);
+  const { userType } = decodedToken;
+
+  useEffect(() => {
+      const fetchApplications = async () => {
+        setIsLoading(true);
+        setError(null);
+  
+        try {
+          let leaseData = {};
+          const applicationData = await getApplicationByID(applicationId, userType);
+          const listing = applicationData.listing;
+          setListingId(listing.listing_id);
+          leaseData = {...leaseData, studentName: applicationData.full_name, rent: listing.rent};
+          const propertyId = listing.property_id;
+          const propertyData = await fetchPropertyById(propertyId);
+          const landlord = propertyData.landlord;
+          setLandlordId(landlord.landlord_id);
+          setTenantUserName(applicationData.student_id);
+          // setApplication(applicationData);
+          leaseData = {...leaseData, landlordName: `${landlord.first_name} ${landlord.last_name}`, address: propertyData.address, landlordAddress: landlord.address};
+          console.log(applicationData);
+          console.log(propertyData);
+          // setLeaseData(leaseData);
+
+          setFormData({...formData, ...leaseData});
+        } catch (error) {
+          console.error("Error loading applications:", error);
+          setError("Failed to load application details.");
+        } finally {
+          setIsLoading(false);
+        }
+      };
+  
+      if (applicationId) fetchApplications();
+    }, [applicationId]);
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -32,20 +84,6 @@ const LeaseAgreement = ({listingId='1234567890'}) => {
     setSubmitting(true);
 
     try {
-      // Send the form data to generate the lease agreement
-      // const response = await apiClient.post("/application/generate-lease", {
-      //   landlordName: formData.landlordName,
-      //   studentName: formData.studentName,
-      //   address: formData.address,
-      //   rent: formData.rent,
-      //   security: formData.security,
-      //   leaseStartDate: formData.leaseStartDate,
-      //   leaseEndDate: formData.leaseEndDate,
-      //   landlordAddress: formData.landlordAddress,
-      // },{
-      //   requireToken: true,
-      //   responseType: 'blob'
-      // });
 
       // Upload the landlord's signature
       const leaseFormData = new FormData();
@@ -59,25 +97,14 @@ const LeaseAgreement = ({listingId='1234567890'}) => {
       leaseFormData.append("leaseEndDate", formData.leaseEndDate);
       leaseFormData.append("landlordAddress", formData.landlordAddress);
       leaseFormData.append("listingId", listingId);
+      leaseFormData.append("landlordId", landlordId);
+      leaseFormData.append("tenantUserName", tenantUserName);
 
-      const response = await apiClient.post("/application/generate-lease", leaseFormData, {
-        headers: {
-          "Content-Type": "multipart/form-data",
-        },
-        requireToken: true,
-        responseType: 'blob'
-      });
-
-      if (response.statusText !== "OK") {
-        throw new Error(`Failed to download PDF: ${response.statusText}`);
-      }
-
-      if (response.data) {
-        const pdfBlob = new Blob([response.data], { type: "application/pdf" });
-        const pdfUrl = URL.createObjectURL(pdfBlob);
+      try {
+        const pdfUrl = await generateLease(leaseFormData);
         setPreviewUrl(pdfUrl);
-      } else {
-        throw new Error("Empty PDF data received");
+      } catch (error) {
+        console.error(error.message);
       }
 
       alert("Lease agreement generated successfully.");
@@ -93,26 +120,6 @@ const LeaseAgreement = ({listingId='1234567890'}) => {
     <div className="min-h-screen bg-green-50">
       <LandlordNavbar />
       <div className="container mx-auto px-4 py-8">
-        <button
-          // onClick={() => navigate('/landlord/home')}
-          className="mb-6 flex items-center text-green-700 hover:text-green-800 font-semibold transition duration-200"
-        >
-          <svg
-            xmlns="http://www.w3.org/2000/svg"
-            className="h-6 w-6 mr-2"
-            fill="none"
-            viewBox="0 0 24 24"
-            stroke="currentColor"
-          >
-            <path
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              strokeWidth={2}
-              d="M10 19l-7-7m0 0l7-7m-7 7h18"
-            />
-          </svg>
-          Back to Home
-        </button>
 
         <h1 className="text-4xl font-bold text-center text-green-700 mb-8">Generate Lease Agreement</h1>
 
@@ -226,13 +233,6 @@ const LeaseAgreement = ({listingId='1234567890'}) => {
             </div>
 
             <div className="flex justify-end space-x-4">
-              <button
-                type="button"
-                // onClick={() => }
-                className="px-6 py-3 bg-gray-500 text-white rounded-lg hover:bg-gray-600 transition duration-200"
-              >
-                Cancel
-              </button>
               <button
                 type="submit"
                 className="px-6 py-3 bg-green-600 text-white rounded-lg hover:bg-green-700 transition duration-200"

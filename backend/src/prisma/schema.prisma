@@ -21,6 +21,7 @@ model Landlord {
   Property      Property[]
   LandlordTrust LandlordTrust[]
   meetings Meeting[]
+  Lease         Lease[]
 
   @@index([user_id], map: "landlord_user_id_fkey")
   @@map("landlord")
@@ -38,6 +39,7 @@ model Student {
   updated_at        DateTime @updatedAt
   user_id           String   @unique
   user              User     @relation(fields: [user_id], references: [user_name])
+  Lease         Lease[]
   meetings Meeting[]
   @@map("student")
 }
@@ -113,6 +115,7 @@ model Listing {
   room_type_id   String?
   Application    Application[]
   BiddingSession BiddingSession[]
+  Lease         Lease[]
   property       Property         @relation(fields: [property_id], references: [property_id])
   room_type      RoomType?        @relation(fields: [room_type_id], references: [room_type_id])
 
@@ -292,6 +295,28 @@ model LandlordTrust {
 
   @@index([landlord_id], map: "property_landlord_id_fkey")
   @@map("landlord_trust")
+}
+
+model Lease {
+  lease_id    String   @id @default(uuid())
+  listing_id  String
+  landlord_id String
+  tenant_id   String
+  created_at  DateTime @default(now())
+  status      String
+  address     String
+  rent        Float
+  security    Float
+  lease_start DateTime
+  lease_end   DateTime
+  landlord    Landlord @relation(fields: [landlord_id], references: [landlord_id])
+  listing     Listing  @relation(fields: [listing_id], references: [listing_id])
+  tenant      Student  @relation(fields: [tenant_id], references: [student_id])
+
+  @@index([listing_id], map: "lease_listing_id_fkey")
+  @@index([landlord_id], map: "lease_landlord_id_fkey")
+  @@index([tenant_id], map: "lease_tenant_id_fkey")
+  @@map("lease")
 }
 
 enum UserType {
