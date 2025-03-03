@@ -6,7 +6,10 @@ import Disclaimer from "../components/Disclaimer";
 import SearchCard from "../components/SearchCard";
 import PropertyDetails from "../components/PropertyDetails";
 import { getAllAmenities } from "../services/utilServices";
-import { fetchListings, fetchScheduledMeetings } from "../services/searchListingServices";
+import {
+  fetchListings,
+  fetchScheduledMeetings,
+} from "../services/searchListingServices";
 import {
   getAllActiveBiddings,
   getListingsByIds,
@@ -96,12 +99,13 @@ const Home = () => {
         const data = await getProfileByUsername(userName);
         console.log("Data in fetchProfile", data);
         setProfile(data);
+        localStorage.setItem("profile", JSON.stringify(data));
       } catch (err) {
         setError("Error loading profile: " + err.message);
       } finally {
         setLoading(false);
       }
-    }
+    };
 
     fetchInitialData();
     fetchProfile();
@@ -112,7 +116,7 @@ const Home = () => {
       const data = await fetchScheduledMeetings(profile.student_id);
       console.log(73, data);
       setTableData(data);
-    }
+    };
     if (profile) fetchScheduledMeeting();
   }, [profile]);
 
@@ -178,24 +182,28 @@ const Home = () => {
         />
       ) : (
         <div className="flex justify-center mt-12 relative">
-          { }
+          {}
           <div className="w-1/5 bg-white p-4 shadow-lg h-screen overflow-y-auto absolute left-4">
-            <h3 className="text-lg font-semibold text-gray-800 mb-4">Upcoming Meetings</h3>
+            <h3 className="text-lg font-semibold text-gray-800 mb-4">
+              Upcoming Meetings
+            </h3>
             <div className="panel-body text-gray-700">
               {tableData.map((row, index) => (
                 <div key={index} className="mb-6">
                   <br />
-                  Your meeting with {row.landlord.user_id} on {new Date(row.date).toLocaleString('en-US', {
-    weekday: 'short', // "Mon"
-    year: 'numeric',
-    month: 'short', // "Jan"
-    day: '2-digit',
-    hour: '2-digit',
-    minute: '2-digit',
-    hour12: true, // Use 12-hour format
-  })}.
-                  Status ({row.status})
-                  <br /><br />
+                  Your meeting with {row.landlord.user_id} on{" "}
+                  {new Date(row.date).toLocaleString("en-US", {
+                    weekday: "short", // "Mon"
+                    year: "numeric",
+                    month: "short", // "Jan"
+                    day: "2-digit",
+                    hour: "2-digit",
+                    minute: "2-digit",
+                    hour12: true, // Use 12-hour format
+                  })}
+                  . Status ({row.status})
+                  <br />
+                  <br />
                 </div>
               ))}
             </div>
@@ -293,7 +301,7 @@ const Home = () => {
                               "/default.jpg"
                             }
                             description={listing.description}
-                            price={`€${listing.rent}`}
+                            price={`${listing.rent}`}
                             poster={`${listing.property.landlord.first_name} ${listing.property.landlord.last_name}`}
                             onClick={() => handleSelectProperty(listing, false)}
                           />
@@ -328,8 +336,8 @@ const Home = () => {
                             "/default.jpg"
                           }
                           description={bidding.description}
-                          price={`Current Bid: €${
-                            bidding.highest_bid // || bidding.starting_price
+                          price={`Current Bid: ${
+                            bidding.highest_bid !== 0 ? bidding.highest_bid : bidding.starting_price
                           }`}
                           poster={`${bidding.property.landlord.first_name} ${bidding.property.landlord.last_name}`}
                           onClick={() => handleSelectProperty(bidding, true)}
