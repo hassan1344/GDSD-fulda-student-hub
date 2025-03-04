@@ -19,6 +19,7 @@ import ViewPropertyDetails from './pages/landlord/ViewPropertyDetails';
 import LandlordViewProfile from "./pages/landlordViewProfile";
 import ViewApplicationStudent from "./pages/ViewApplicationStudent";
 import Messages from "./pages/message/Messages";
+
 //listings from here
 import MyListings from "./pages/landlord/MyListings";
 import EditListing from "./pages/landlord/EditListing";
@@ -27,6 +28,8 @@ import CreateListing from "./pages/landlord/CreateListing";
 //Bidding here
 import BiddingLandlord from "./pages/bidding/biddingLandlord";
 import BiddingStudent from './pages/bidding/BiddingStudent';
+import ViewBiddingSessionStudent from './pages/ViewBiddingSessionStudent';
+import MyBidding from './pages/landlord/MyBidding';
 
 // Admin imports
 import AdminHomepage from "./pages/admin/AdminHomepage";
@@ -35,6 +38,14 @@ import AllProperties from "./pages/admin/AllProperties";
 import AdminViewProfile from './pages/admin/AdminViewProfile';
 import LeaseAgreement from './pages/landlord/LeaseAgreement';
 
+
+//Calendar Imports
+import CalendarPage from './pages/landlord/CalendarPage';
+import MeetingForm from './pages/landlord/MeetingForm';
+import MeetingList from './pages/landlord/MeetingList';
+
+// blockchain imports
+import BlockchainPaymentSystem from './pages/landlord/BlockchainPaymentSystem';
 
 
 const App = () => {
@@ -49,6 +60,7 @@ const App = () => {
         <Route path="/Home" element={<Home />} />
         <Route path="/searchresults" element={<SearchResults />} />
         <Route path="/myApplications" element = {<ViewApplicationStudent/>}/>
+        <Route path="/myBids" element = {<ViewBiddingSessionStudent/>}/>
         <Route path="/viewProfile" element = {<ViewStudentProfile/>}/>
         <Route path="/messages" element = {<Messages/>}/>
 
@@ -74,9 +86,11 @@ const App = () => {
        <Route path ="/landlord/edit-prop-listing/:id" element={<EditListing />} />
        <Route path="/landlord/create-prop-listing" element={<CreateListing />} />
        <Route path="/landlord/lease-agreement" element={<LeaseAgreement />} />
+       <Route path="/landlord/my-bids" element={<MyBidding />} />
 
        <Route path="/bidding/BiddingLandlord/:listingId" element={<BiddingLandlord />} />
        <Route path="/bidding/BiddingStudent/:listingId" element={<BiddingStudent />} />
+       <Route path="/landlord/blockchain/:property_id" element={<BlockchainPaymentSystem />} />
 
 
        {/* Admin routes */}
@@ -87,6 +101,8 @@ const App = () => {
        <Route path="/admin/edit-property/:id" element={<EditDeleteListing />} />
        <Route path="/admin/viewProfile" element = {<AdminViewProfile/>}/>
 
+        {/* Calendar routes */}
+        <Route path="/landlord/calendar" element={<CalendarPage/>} />
 
       </Routes>
     </Router>

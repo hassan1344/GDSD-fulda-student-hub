@@ -151,15 +151,15 @@ const AuthPage = () => {
           if (userType === "STUDENT") {
             setTimeout(() => {
               navigate("/home", { replace: true });
-            }, 2000);
+            }, 500);
           } else if (userType === "LANDLORD") {
             setTimeout(() => {
               navigate("/landlord", { replace: true }); //Add landlord landing page
-            }, 2000);
+            }, 500);
           } else if (userType === "ADMIN") {
             setTimeout(() => {
               navigate('/admin', { replace: true });
-            }, 2000);
+            }, 500);
           } else {
             showNotification("An error occurred. Please try again.");
           }

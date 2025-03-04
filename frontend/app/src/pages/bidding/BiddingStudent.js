@@ -10,6 +10,8 @@ const BiddingStudent = () => {
   const navigate = useNavigate();
   const location = useLocation();
 
+  const [startingPrice, setStartingPrice] = useState("");
+  const [endTime, setEndTime] = useState("");
   const [currentBid, setCurrentBid] = useState("");
   const [highestBid, setHighestBid] = useState({
     status: "",
@@ -38,6 +40,7 @@ const BiddingStudent = () => {
     });
 
     newSocket.on("joinedBidding", (data) => {
+      console.log(data);
       if (data) {
         const highestBid = data.bids.length
           ? data.bids.reduce((max, bid) =>
@@ -51,6 +54,8 @@ const BiddingStudent = () => {
           highest_bidder: highestBid?.bidder_id || null,
         };
         setHighestBid(bidder_dets);
+        setEndTime(data.endsAt);
+        setStartingPrice(data.startingPrice);
       }
 
       setBidders(data.bids);
@@ -78,12 +83,11 @@ const BiddingStudent = () => {
 
     newSocket.on("biddingEnded", (data) => {
       setBiddingStatus("ended");
-      setHighestBid(data.highestBid);
-      alert(`Bidding ended. Final highest bid: €${data.amount}`);
+      alert(`Bidding ended. Final highest bid: €${data.winner.amount}`);
     });
 
     newSocket.on("userLeft", (data) => {
-      if (data) {
+      if (data?.bids) {
         const highestBid = data.bids.length
           ? data.bids.reduce((max, bid) =>
               bid.amount > max.amount ? bid : max
@@ -107,13 +111,43 @@ const BiddingStudent = () => {
     return () => newSocket.disconnect();
   }, []);
 
+  const calculateTimeLeft = (endTime) => {
+    const difference = new Date(endTime) - new Date();
+    if (difference <= 0) return "00:00:00";
+
+    const hours = Math.floor(difference / (1000 * 60 * 60));
+    const minutes = Math.floor((difference % (1000 * 60 * 60)) / (1000 * 60));
+    const seconds = Math.floor((difference % (1000 * 60)) / 1000);
+
+    return `${String(hours).padStart(2, "0")}:${String(minutes).padStart(
+      2,
+      "0"
+    )}:${String(seconds).padStart(2, "0")}`;
+  };
+
+  const [timeLeft, setTimeLeft] = useState(calculateTimeLeft(endTime));
+
+  useEffect(() => {
+    const timer = setInterval(() => {
+      setTimeLeft(calculateTimeLeft(endTime));
+    }, 1000);
+
+    return () => clearInterval(timer);
+  }, [endTime]);
+
   const handleJoinBidding = () => {
     if (!listingId || !socket) {
       alert("Invalid listing ID or socket not connected.");
       return;
     }
-    socket.emit("joinBidding", { listingId });
-    setBiddingStatus("active");
+    socket.emit("joinBidding", { listingId }, (response) => {
+      console.log(response);
+      if (response?.error) {
+        alert(response.error);
+      } else {
+        setBiddingStatus("active");
+      }
+    });
   };
 
   const handlePlaceBid = () => {
@@ -132,14 +166,14 @@ const BiddingStudent = () => {
   };
 
   return (
-    <div className="background-container">
+    <div className="background-container min-h-screen bg-gray-100">
       <Navbar />
-      <div className="p-8">
-        <header className="mb-6 text-center">
-          <h1 className="text-3xl font-bold text-gray-800">
+      <div className="p-8 max-w-4xl mx-auto">
+        <header className="mb-8 text-center">
+          <h1 className="text-4xl font-bold text-gray-900">
             Join Bidding Session
           </h1>
-          <p className="text-gray-500 mt-2 text-sm">
+          <p className="text-gray-500 mt-2 text-lg">
             Participate in the bidding process and place your bid
           </p>
         </header>
@@ -148,19 +182,28 @@ const BiddingStudent = () => {
           <div className="flex justify-center mt-12">
             <button
               onClick={handleJoinBidding}
-              className="px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
+              className="px-8 py-4 bg-blue-600 text-white text-lg font-medium rounded-xl shadow-lg hover:bg-blue-700 transition-all transform hover:scale-105"
             >
               Join Bidding
             </button>
           </div>
         ) : (
-          <div className="max-w-3xl mx-auto bg-white shadow-lg rounded-xl p-8">
-            <h2 className="text-3xl font-semibold text-gray-800 mb-6 text-center">
+          <div className="max-w-3xl mx-auto bg-white shadow-xl rounded-2xl p-8">
+            <h2 className="text-3xl font-semibold text-gray-900 mb-6 text-center">
               Bidding Details
             </h2>
 
             {/* Display Current Highest Bid */}
-            <div className="bg-gray-100 p-4 rounded-lg shadow-sm mb-4">
+            <div className="bg-gray-50 p-6 rounded-lg shadow-md mb-6">
+              <p className="text-lg text-red-500 mt-3 font-bold">
+                <strong>Time Left:</strong> {timeLeft}
+              </p>
+              <p className="text-xl font-medium text-gray-700">
+                <strong>Starting Price:</strong>
+                <span className="text-green-600 font-bold ml-2">
+                  €{startingPrice || "N/A"}
+                </span>
+              </p>
               <p className="text-xl font-medium text-gray-700">
                 <strong>Current Highest Bid:</strong>
                 <span className="text-green-600 font-bold ml-2">
@@ -173,9 +216,8 @@ const BiddingStudent = () => {
                   {highestBid.highest_bidder || "N/A"}
                 </span>
               </p>
-              <p className="text-lg text-gray-600 mt-2">
-                <strong>Total Bids:</strong>{" "}
-                {bidders.length || "No bids yet"}
+              <p className="text-lg text-gray-600 mt-3">
+                <strong>Total Bids:</strong> {bidders.length || "No bids yet"}
               </p>
             </div>
 
@@ -184,13 +226,13 @@ const BiddingStudent = () => {
               <h3 className="text-lg font-semibold text-gray-700">
                 Bid History
               </h3>
-              <div className="mt-3 bg-gray-50 p-4 rounded-lg shadow-inner max-h-40 overflow-y-auto">
+              <div className="mt-3 bg-gray-50 p-4 rounded-lg shadow-inner max-h-48 overflow-y-auto">
                 {bidders.length > 0 ? (
                   <ul className="space-y-3">
                     {bidders.map((bid, index) => (
                       <li
                         key={index}
-                        className="flex justify-between bg-white p-3 rounded-lg shadow"
+                        className="flex justify-between bg-white p-3 rounded-lg shadow-sm hover:shadow-md transition"
                       >
                         <span className="text-gray-800 font-medium">
                           {bid.bidder_id}
@@ -218,22 +260,25 @@ const BiddingStudent = () => {
                 type="number"
                 value={currentBid}
                 onChange={(e) => setCurrentBid(e.target.value)}
-                className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-400 transition"
+                className="w-full p-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-green-400 transition shadow-sm"
                 placeholder="Enter bid amount"
+                min="1"
               />
             </div>
 
             {/* Buttons */}
-            <div className="mt-6 flex flex-wrap justify-center gap-4">
+            <div className="mt-8 flex flex-wrap justify-center gap-6">
               <button
                 onClick={handlePlaceBid}
-                className="px-6 py-3 bg-green-600 text-white rounded-lg shadow-md hover:bg-green-700 transition-all transform hover:scale-105"
+                disabled={timeLeft === "00:00:00"}
+                className={`px-8 py-4 text-white text-lg font-medium rounded-xl shadow-md transition-all transform hover:scale-105
+                  ${timeLeft === "00:00:00" ? "bg-gray-400 cursor-not-allowed" : "bg-green-600 hover:bg-green-700"}`}
               >
                 Place Bid
               </button>
               <button
                 onClick={handleLeaveBidding}
-                className="px-6 py-3 bg-red-600 text-white rounded-lg shadow-md hover:bg-red-700 transition-all transform hover:scale-105"
+                className="px-8 py-4 bg-red-600 text-white text-lg font-medium rounded-xl shadow-md hover:bg-red-700 transition-all transform hover:scale-105"
               >
                 Leave Bidding
               </button>

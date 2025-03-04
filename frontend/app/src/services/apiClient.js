@@ -3,8 +3,8 @@ import { jwtDecode } from "jwt-decode";
 import { logoutUser } from "./authServices";
 
 const apiClient = axios.create({
-  // baseURL: "http://localhost:8000/v1",
-  baseURL: "https://fulda-student-hub.publicvm.com/api/v1",
+  //  baseURL: "http://localhost:8000/v1",
+ baseURL: "https://fulda-student-hub.publicvm.com/api/v1",
   timeout: 30000,
 });
 

@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { submitApplication } from "../services/applicationServices";
 
@@ -14,6 +14,23 @@ const ApplicationForm = ({ listing_id, onBack }) => {
     financialProof: null,
     otherDocuments: [],
   });
+
+  useEffect(() => {
+    const storedProfile = localStorage.getItem("profile");
+    if (storedProfile) {
+      try {
+        const profileData = JSON.parse(storedProfile);
+        setFormData((prev) => ({
+          ...prev,
+          fullName: `${profileData.first_name} ${profileData.last_name}`,
+          studentId: profileData.student_id_number,
+          contactNumber: profileData.phone_number || "",
+        }));
+      } catch (error) {
+        console.error("Error parsing profile data:", error);
+      }
+    }
+  }, []);
 
   const [termsAccepted, setTermsAccepted] = useState(false);
   const [actAccepted, setActAccepted] = useState(false);
