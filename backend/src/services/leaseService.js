@@ -2,6 +2,11 @@ import puppeteer from 'puppeteer';
 import path from 'path';
 import fs from 'fs/promises';
 import { fileURLToPath } from 'url';
+import { uploadToS3 } from "../utils/uploadToS3.js";
+
+import { PrismaClient } from '@prisma/client'
+
+const prisma = new PrismaClient();
 
 // Get the current file URL and convert it to a file path
 const __filename = fileURLToPath(import.meta.url);
@@ -33,7 +38,7 @@ const getCurrentDate = () => {
 };
 
 const createPdf = async(outputHtml, outputPdfPath) => {
-  const browser = await puppeteer.launch();
+  const browser = await puppeteer.launch({executablePath: '/usr/bin/google-chrome-stable', args: ["--no-sandbox"]});
   const page = await browser.newPage();
   console.log(`file:///${outputHtml}`)
 
@@ -52,20 +57,43 @@ export const generateLeaseAgreement = async (req, res) => {
     if (!req.files["landlord_signature"]) {
       return res.status(400).json({ error: "Landlord signature is required" });
     }
+    console.log('Debuggind Lease Backend');
     const { userName } = req.user;
+    console.log('userName:', userName);
+    console.log('listingId:', listingId);
 
+    const tmpDir = path.join(__dirname, '..', '..', 'tmp');
+    await fs.mkdir(tmpDir, { recursive: true }); // Ensure tmp directory exists
+    console.log('tmpDir:', tmpDir);
     const signatureFile = req.files["landlord_signature"][0];
     const signaturePath = path.join(__dirname, '..', '..', 'tmp', `${userName}-${listingId}-landlord-signature.png`);
+    console.log('signaturePath:', signaturePath);
     await fs.writeFile(signaturePath, signatureFile.buffer);
 
     const inputHtmlPath = path.join(__dirname, '..', 'utils', 'leaseContractTemplate.html');
+    console.log('inputHtmlPath:', inputHtmlPath);
     const outputHtmlPath = path.join(__dirname, '..', '..', 'tmp', `${userName}-${listingId}-lease-agreement.html`);
+    console.log('outputHtmlPath:', outputHtmlPath);
     const outputPdfPath = path.join(__dirname, '..', '..', 'tmp', `${userName}-${listingId}-lease-agreement.pdf`);
+    console.log('outputPdfPath:', outputPdfPath);
     
     await updateHTML(inputHtmlPath, outputHtmlPath, parameters, signaturePath);
-    await createPdf(outputHtmlPath, outputPdfPath);
+    const leaseFile = await createPdf(outputHtmlPath, outputPdfPath);
     await fs.unlink(outputHtmlPath);
     await fs.unlink(signaturePath);
+
+    const leaseObject = await createLease(parameters);
+
+    const leaseBuffer = Buffer.from(leaseFile);
+    const bufferFile = {
+      originalname: `lease_agreement_${leaseObject.lease_id}.pdf`,
+      buffer: leaseBuffer,
+      mimetype: "application/pdf",
+    };
+    console.log('FILE CREATE SUCCESSFULLY');
+    await addMedia(bufferFile, leaseObject.lease_id);
+
+    console.log('FILE UPLOADED SUCCESSFULLY');
 
     res.download(outputPdfPath, 'LeaseAgreement.pdf', (err) => {
       if (err) {
@@ -78,5 +106,71 @@ export const generateLeaseAgreement = async (req, res) => {
   } catch (error) {
     console.error(error);
     return res.status(500).json({ error: "An error occurred while generating the lease agreement" });
+  }
+}
+
+const addMedia = async (file, modelId) => {
+  const mediaEntries = [];
+  await uploadToS3(file).then((uploadedFile) => {
+    mediaEntries.push({
+      model_name: "lease",
+      model_id: modelId,
+      media_url: uploadedFile,
+      media_type: "lease",
+      media_category: "pdf",
+    });
+  })
+
+  if (mediaEntries.length > 0) {
+    await prisma.media.createMany({
+      data: mediaEntries,
+    });
+  }
+}
+
+async function createLease(parameters) {
+  try {
+    const { address, rent, security, landlordName, studentName, leaseStartDate, leaseEndDate, landlordAddress, listingId, landlordId, tenantUserName } = parameters;
+    const tenant_id = await getStudentIdByUsername(tenantUserName);
+    const lease = await prisma.lease.create({
+      data: {
+      listing_id: listingId,  
+      landlord_id: landlordId,
+      tenant_id, 
+      status: "active",
+      address,
+      rent: parseFloat(rent),
+      security: parseFloat(security),
+      lease_start: leaseStartDate,
+      lease_start: new Date(leaseStartDate),
+      lease_end: new Date(leaseEndDate),
+      },
+    });
+    return lease;
+  } catch (error) {
+    console.error("Error creating lease:", error);
+  }
+}
+
+async function getStudentIdByUsername(user_id) {
+  try {
+    const student = await prisma.student.findUnique({
+      where: {
+        user_id
+      },
+      select: {
+        student_id: true,
+      },
+    });
+
+    if (!student) {
+      console.log("Student not found");
+      return null;
+    }
+
+    console.log("Student ID:", student.student_id);
+    return student.student_id;
+  } catch (error) {
+    console.error("Error fetching student ID:", error);
   }
 }

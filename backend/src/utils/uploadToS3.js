@@ -33,7 +33,7 @@ export const uploadToS3 = async (file) => {
       .send(new PutObjectCommand(uploadParams))
       .then(() => uniqueFileName);
   } catch (error) {
-    throw new Error("Something went wrong while uploading");
+    console.error("Something went wrong while uploading");
   }
 };
 
@@ -46,6 +46,6 @@ export const deleteS3Object = async (key) => {
 
     return await s3.send(new DeleteObjectCommand(deleteParams));
   } catch (error) {
-    throw new Error("Something went wrong while deleting");
+    console.error("Something went wrong while uploading");
   }
 };

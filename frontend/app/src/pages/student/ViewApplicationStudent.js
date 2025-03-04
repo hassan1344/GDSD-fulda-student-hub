@@ -79,6 +79,7 @@ const ViewApplicationStudent = () => {
               <ApplicationCard
                 key={application.application_id}
                 application_id={application.application_id}
+                listing_id = {application.listing_id}
                 application_status={application.application_status}
                 appliedAt={application.applied_at}
                 title={application.listing.title}

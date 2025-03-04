@@ -40,7 +40,7 @@ export const initiateSocket = (server) => {
         // console.log("======> data from client", data);
 
         const result = await createConversation(socket, data);
-        console.log("Result", result);
+        // console.log("Result", result);
 
         const conversation = result?.conversation;
 
@@ -80,7 +80,7 @@ export const initiateSocket = (server) => {
       // Fetch all chats in a conversation
       socket.on("getChats", async (data) => {
         const chats = await getChats(socket, data);
-        console.log(socket.decoded, "decoded");
+        // console.log(socket.decoded, "decoded");
 
         io.to(socket.decoded.userName).emit("getChats", chats);
       });
@@ -119,13 +119,12 @@ export const initiateSocket = (server) => {
     });
 
     // 2. Join Bidding
-    socket.on('joinBidding', async ({ listingId }) => {
+    socket.on('joinBidding', async ({ listingId }, callback) => {
       try {
-        console.log("first");
+        // console.log("first");
         const session = await findActiveBiddingSession(listingId);
         if (!session) {
-          socket.emit('error', 'Bidding session not found.');
-          return;
+          return callback({ error: 'Bidding session not found.' }); 
         }
         const roomId = session.session_id;
         biddingRooms[roomId] = { listingId, bids: [], isActive: true };
@@ -133,14 +132,16 @@ export const initiateSocket = (server) => {
           socket.join(roomId);
           console.log(`User ${userName} joined bidding for room: ${roomId}`);
           const bids = await getBidsForSession(roomId);
-
-          socket.emit('joinedBidding', { roomId, listingId: session.listing_id, bids: bids});
+          socket.emit('joinedBidding', { roomId, listingId: session.listing_id, bids: bids, startingPrice: session.starting_price, endsAt:session.ends_at});
+          callback({ roomId, listingId: session.listing_id, bids: bids });
         } else {
           socket.emit('error', 'Bidding is not active for this room.');
+          callback({ error: 'Bidding is not active for this room.' });
         }
       } catch (error) {
         console.error('Error joining bidding:', error.message);
         socket.emit('error', 'Failed to join bidding.');
+        callback({ error: 'Failed to join bidding.' });
       }
     });
 
