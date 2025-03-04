@@ -10,6 +10,8 @@ const BiddingStudent = () => {
   const navigate = useNavigate();
   const location = useLocation();
 
+  const [startingPrice, setStartingPrice] = useState("");
+  const [endTime, setEndTime] = useState("");
   const [currentBid, setCurrentBid] = useState("");
   const [highestBid, setHighestBid] = useState({
     status: "",
@@ -52,6 +54,8 @@ const BiddingStudent = () => {
           highest_bidder: highestBid?.bidder_id || null,
         };
         setHighestBid(bidder_dets);
+        setEndTime(data.endsAt);
+        setStartingPrice(data.startingPrice);
       }
 
       setBidders(data.bids);
@@ -106,6 +110,30 @@ const BiddingStudent = () => {
 
     return () => newSocket.disconnect();
   }, []);
+
+  const calculateTimeLeft = (endTime) => {
+    const difference = new Date(endTime) - new Date();
+    if (difference <= 0) return "00:00:00";
+
+    const hours = Math.floor(difference / (1000 * 60 * 60));
+    const minutes = Math.floor((difference % (1000 * 60 * 60)) / (1000 * 60));
+    const seconds = Math.floor((difference % (1000 * 60)) / 1000);
+
+    return `${String(hours).padStart(2, "0")}:${String(minutes).padStart(
+      2,
+      "0"
+    )}:${String(seconds).padStart(2, "0")}`;
+  };
+
+  const [timeLeft, setTimeLeft] = useState(calculateTimeLeft(endTime));
+
+  useEffect(() => {
+    const timer = setInterval(() => {
+      setTimeLeft(calculateTimeLeft(endTime));
+    }, 1000);
+
+    return () => clearInterval(timer);
+  }, [endTime]);
 
   const handleJoinBidding = () => {
     if (!listingId || !socket) {
@@ -167,6 +195,15 @@ const BiddingStudent = () => {
 
             {/* Display Current Highest Bid */}
             <div className="bg-gray-50 p-6 rounded-lg shadow-md mb-6">
+              <p className="text-lg text-red-500 mt-3 font-bold">
+                <strong>Time Left:</strong> {timeLeft}
+              </p>
+              <p className="text-xl font-medium text-gray-700">
+                <strong>Starting Price:</strong>
+                <span className="text-green-600 font-bold ml-2">
+                  €{startingPrice || "N/A"}
+                </span>
+              </p>
               <p className="text-xl font-medium text-gray-700">
                 <strong>Current Highest Bid:</strong>
                 <span className="text-green-600 font-bold ml-2">
@@ -233,7 +270,9 @@ const BiddingStudent = () => {
             <div className="mt-8 flex flex-wrap justify-center gap-6">
               <button
                 onClick={handlePlaceBid}
-                className="px-8 py-4 bg-green-600 text-white text-lg font-medium rounded-xl shadow-md hover:bg-green-700 transition-all transform hover:scale-105"
+                disabled={timeLeft === "00:00:00"}
+                className={`px-8 py-4 text-white text-lg font-medium rounded-xl shadow-md transition-all transform hover:scale-105
+                  ${timeLeft === "00:00:00" ? "bg-gray-400 cursor-not-allowed" : "bg-green-600 hover:bg-green-700"}`}
               >
                 Place Bid
               </button>

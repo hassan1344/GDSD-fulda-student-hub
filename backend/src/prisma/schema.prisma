@@ -17,58 +17,49 @@ model Landlord {
   first_name    String
   last_name     String
   phone_number  String          @unique
+  meetings      Meeting[]
   user          User            @relation(fields: [user_id], references: [user_name])
-  Property      Property[]
   LandlordTrust LandlordTrust[]
-  meetings Meeting[]
   Lease         Lease[]
+  Property      Property[]
 
   @@index([user_id], map: "landlord_user_id_fkey")
   @@map("landlord")
 }
 
 model Student {
-  student_id        String   @id @default(uuid())
+  student_id        String    @id @default(uuid())
   first_name        String
   last_name         String
   university        String
-  email_verified    Boolean  @default(false)
+  email_verified    Boolean   @default(false)
   student_id_number String
   phone_number      String
-  created_at        DateTime @default(now())
-  updated_at        DateTime @updatedAt
-  user_id           String   @unique
-  user              User     @relation(fields: [user_id], references: [user_name])
-  Lease         Lease[]
-  meetings Meeting[]
-  Lease          Lease[]
+  created_at        DateTime  @default(now())
+  updated_at        DateTime  @updatedAt
+  user_id           String    @unique
+  meetings          Meeting[]
+  Lease             Lease[]
+  user              User      @relation(fields: [user_id], references: [user_name])
+
   @@map("student")
 }
 
-
-
 model Meeting {
-  meeting_id   String        @id @default(uuid())
-  landlord_id  String
-  student_id   String
-  date         DateTime
-  status       MeetingStatus @default(SCHEDULED)
-  created_at   DateTime      @default(now())
-  updated_at   DateTime      @updatedAt
-  
-  // Relations
-  landlord     Landlord      @relation(fields: [landlord_id], references: [landlord_id])
-  student      Student       @relation(fields: [student_id], references: [student_id])
+  meeting_id  String        @id @default(uuid())
+  landlord_id String
+  student_id  String
+  date        DateTime
+  status      MeetingStatus @default(SCHEDULED)
+  created_at  DateTime      @default(now())
+  updated_at  DateTime      @updatedAt
+  landlord    Landlord      @relation(fields: [landlord_id], references: [landlord_id])
+  student     Student       @relation(fields: [student_id], references: [student_id])
 
-  // Indexes
-  @@index([landlord_id], name: "meeting_landlord_idx")
-  @@index([student_id], name: "meeting_student_idx")
-  @@index([date], name: "meeting_date_idx")
+  @@index([landlord_id], map: "meeting_landlord_idx")
+  @@index([student_id], map: "meeting_student_idx")
+  @@index([date], map: "meeting_date_idx")
 }
-
-
-
-
 
 model User {
   created_at            DateTime         @default(now())
@@ -91,14 +82,14 @@ model User {
 }
 
 model Property {
-  property_id     String            @id @default(uuid())
-  landlord_id     String
-  address         String
-  created_at      DateTime          @default(now())
-  updated_at      DateTime          @updatedAt
-  Listing         Listing[]
-  landlord        Landlord          @relation(fields: [landlord_id], references: [landlord_id])
-  PropertyAmenity PropertyAmenity[]
+  property_id       String                    @id @default(uuid())
+  landlord_id       String
+  address           String
+  created_at        DateTime                  @default(now())
+  updated_at        DateTime                  @updatedAt
+  Listing           Listing[]
+  landlord          Landlord                  @relation(fields: [landlord_id], references: [landlord_id])
+  PropertyAmenity   PropertyAmenity[]
   blockchain_config PropertyBlockchainConfig?
 
   @@index([landlord_id], map: "property_landlord_id_fkey")
@@ -117,7 +108,7 @@ model Listing {
   room_type_id   String?
   Application    Application[]
   BiddingSession BiddingSession[]
-  Lease         Lease[]
+  Lease          Lease[]
   property       Property         @relation(fields: [property_id], references: [property_id])
   room_type      RoomType?        @relation(fields: [room_type_id], references: [room_type_id])
 
@@ -262,26 +253,26 @@ model Bid {
 }
 
 model LandlordRentalHistory {
-  rental_id             String    @id @default(uuid())
+  rental_id             String      @id @default(uuid())
   application_id        String
   date_started          DateTime?
   date_ended            DateTime?
-  cancelled_by_landlord Boolean   @default(false)
+  cancelled_by_landlord Boolean     @default(false)
+  application           Application @relation(fields: [application_id], references: [application_id])
 
-  application Application @relation(fields: [application_id], references: [application_id])
-
+  @@index([application_id], map: "landlord_rental_history_application_id_fkey")
   @@map("landlord_rental_history")
 }
 
 model LandlordReviews {
-  review_id      String   @id @default(uuid())
+  review_id      String      @id @default(uuid())
   application_id String
   rating         Int
   review_text    String?
-  created_at     DateTime @default(now())
+  created_at     DateTime    @default(now())
+  application    Application @relation(fields: [application_id], references: [application_id])
 
-  application Application @relation(fields: [application_id], references: [application_id])
-
+  @@index([application_id], map: "landlord_reviews_application_id_fkey")
   @@map("landlord_reviews")
 }
 
@@ -292,8 +283,7 @@ model LandlordTrust {
   beta              Float
   createdAt         DateTime @default(now())
   updatedAt         DateTime @updatedAt
-
-  landlord Landlord @relation(fields: [landlord_id], references: [landlord_id])
+  landlord          Landlord @relation(fields: [landlord_id], references: [landlord_id])
 
   @@index([landlord_id], map: "property_landlord_id_fkey")
   @@map("landlord_trust")
@@ -329,6 +319,7 @@ model PropertyBlockchainConfig {
   created_at              DateTime @default(now())
   updated_at              DateTime @updatedAt
   property                Property @relation(fields: [property_id], references: [property_id])
+
   @@map("property_blockchain_config")
 }
 
@@ -344,7 +335,6 @@ enum ApplicationStatus {
   REJECTED
   WITHDRAWN
 }
-
 
 enum MeetingStatus {
   SCHEDULED

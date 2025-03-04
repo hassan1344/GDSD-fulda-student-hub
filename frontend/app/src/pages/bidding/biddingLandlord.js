@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { useParams, useNavigate, useLocation } from "react-router-dom";
+import { useParams, useNavigate } from "react-router-dom";
 import io from "socket.io-client";
 import { getBiddingStatus } from "../../services/biddingServices";
 import LandlordNavbar from "../../components/LandlordNavbar";
@@ -10,7 +10,6 @@ const BIDDING_SERVER_URL = "http://localhost:8000";
 const BiddingLandlord = () => {
   const { listingId } = useParams();
   const navigate = useNavigate();
-  const location = useLocation();
 
   const [startingPrice, setStartingPrice] = useState("");
   const [duration, setDuration] = useState("");
@@ -74,6 +73,7 @@ const BiddingLandlord = () => {
           highest_bid: highestBid?.amount || 0,
           highest_bidder: highestBid?.bidder_id || null,
         };
+        setStartingPrice(data.startingPrice);
         setHighestBid(bidder_dets);
       }
 
@@ -302,7 +302,8 @@ const BiddingLandlord = () => {
             <h2 className="text-2xl font-semibold text-gray-900 text-center mb-4">Bidding Details</h2>
             
             <div className="bg-white p-4 rounded-lg shadow mb-4">
-              <p className="text-xl font-medium text-gray-700"><strong>Current Highest Bid:</strong> <span className="text-green-600 font-bold ml-2">€{highestBid.highest_bid || "N/A"}</span></p>
+            <p className="text-xl font-medium text-gray-700"><strong>Starting Price:</strong> <span className="text-green-600 font-bold ml-2">€{startingPrice || "N/A"}</span></p>
+            <p className="text-xl font-medium text-gray-700"><strong>Current Highest Bid:</strong> <span className="text-green-600 font-bold ml-2">€{highestBid.highest_bid || "N/A"}</span></p>
               <p className="text-xl font-medium text-gray-700"><strong>Bidder:</strong> <span className="text-green-600 font-bold ml-2">{highestBid.highest_bidder || "N/A"}</span></p>
               <p className="text-lg text-gray-600 mt-2"><strong>Total Bids:</strong> {bidders.length || "No bids yet"}</p>
             </div>
@@ -340,7 +341,7 @@ const BiddingLandlord = () => {
             onClick={() => navigate("/landlord/my-prop-listings")}
             className="px-6 py-3 bg-gray-500 text-white rounded-lg hover:bg-gray-600 transition duration-200"
           >
-            Back to Listings
+            Navigate to Listings
           </button>
           {biddingStatus === "active" && (
             <button

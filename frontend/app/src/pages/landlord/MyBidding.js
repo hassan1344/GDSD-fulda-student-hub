@@ -52,7 +52,7 @@ const MyBidding = () => {
       <LandlordNavbar />
       <div className="p-8">
         <header className="mb-6 text-center">
-          <h1 className="text-3xl font-bold text-gray-800">Your Listings' Bidding Sessions</h1>
+          <h1 className="text-3xl font-bold text-gray-800">Your Bidding Sessions</h1>
           <p className="text-gray-500 mt-2 text-sm">Monitor bidding sessions for your properties</p>
         </header>
 
@@ -70,7 +70,6 @@ const MyBidding = () => {
         ) : biddingSessions.length > 0 ? (
           <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
             {biddingSessions.map((session) => {
-//              const listing = listingsMap[session.listing_id] || {};
               return (
                 <BiddingCardLandlord
                   key={session.session_id}

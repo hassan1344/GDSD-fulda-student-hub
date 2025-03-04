@@ -132,8 +132,7 @@ export const initiateSocket = (server) => {
           socket.join(roomId);
           console.log(`User ${userName} joined bidding for room: ${roomId}`);
           const bids = await getBidsForSession(roomId);
-
-          socket.emit('joinedBidding', { roomId, listingId: session.listing_id, bids: bids});
+          socket.emit('joinedBidding', { roomId, listingId: session.listing_id, bids: bids, startingPrice: session.starting_price, endsAt:session.ends_at});
           callback({ roomId, listingId: session.listing_id, bids: bids });
         } else {
           socket.emit('error', 'Bidding is not active for this room.');
