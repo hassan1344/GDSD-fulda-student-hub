@@ -11,17 +11,19 @@ const PropertyDetails = ({ listing, onBack }) => {
   const [activeTab, setActiveTab] = useState("about");
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
   const [reviewData, setReviewData] = useState([]);
+  const [loadingLocation, setLoadingLocation] = useState(true); // tracks if location data is being fetched
 
   const navigate = useNavigate();
-  const location = useLocation(); // ✅ Correct way to get the current location
-
+  const location = useLocation(); //
   const [locationData, setLocationData] = useState(null);
 
   useEffect(() => {
     const fetchLocationData = async () => {
+      setLoadingLocation(true);
       try {
         if (!listing?.property?.address) {
           setLocationData(null);
+          setLoadingLocation(false);
           return;
         }
 
@@ -31,6 +33,7 @@ const PropertyDetails = ({ listing, onBack }) => {
 
         if (!response.data || Object.keys(response.data).length === 0) {
           setLocationData(null);
+          setLoadingLocation(false);
           return;
         }
 
@@ -39,6 +42,7 @@ const PropertyDetails = ({ listing, onBack }) => {
         console.error("Error fetching location data:", error);
         setLocationData(null);
       }
+      setLoadingLocation(false);
     };
 
     fetchLocationData();
@@ -140,12 +144,38 @@ const PropertyDetails = ({ listing, onBack }) => {
         );
 
       case "location":
+        if (loadingLocation) {
+          return (
+            <div className="p-4 bg-yellow-50 border border-yellow-200 rounded-md flex items-center justify-center flex-col">
+              {/* Spinner */}
+              <div className="loader ease-linear rounded-full border-8 border-t-8 border-gray-200 h-12 w-12 mb-4"></div>
+              <p className="text-gray-600 font-medium">Fetching map data...</p>
+              <style>
+                {`
+                  .loader {
+                    border-top-color: #3498db;
+                    animation: spinner 1.5s linear infinite;
+                  }
+                  @keyframes spinner {
+                    0% {
+                      transform: rotate(0deg);
+                    }
+                    100% {
+                      transform: rotate(360deg);
+                    }
+                  }
+                `}
+              </style>
+            </div>
+          );
+        }
+
         if (!locationData) {
           return (
             <div className="p-4 bg-yellow-50 border border-yellow-200 rounded-md">
               <p className="text-yellow-700">
-                Location data is not available for this address. The address
-                might be invalid or not found in our database.
+                We were unable to retrieve location data for this address. 
+                Please verify the address or contact support if the problem persists.
               </p>
             </div>
           );
@@ -156,23 +186,22 @@ const PropertyDetails = ({ listing, onBack }) => {
             <style>
               {`
                     .property-marker {
-                    font-size: 32px;
-                    line-height: 1;
-                    transform: translateY(-50%);
-                    display: flex;
-                    flex-direction: column;
-                    align-items: center;
-                  }
-
-                  .marker-text {
-                    font-size: 12px;
-                    background: rgba(255, 255, 255, 0.9);
-                    padding: 2px 6px;
-                    border-radius: 4px;
-                    margin-top: -8px;
-                    font-weight: 500;
-                    white-space: nowrap;
-                  }
+                      font-size: 32px;
+                      line-height: 1;
+                      transform: translateY(-50%);
+                      display: flex;
+                      flex-direction: column;
+                      align-items: center;
+                    }
+                    .marker-text {
+                      font-size: 12px;
+                      background: rgba(255, 255, 255, 0.9);
+                      padding: 2px 6px;
+                      border-radius: 4px;
+                      margin-top: -8px;
+                      font-weight: 500;
+                      white-space: nowrap;
+                    }
                     .amenity-marker {
                       width: 20px;
                       height: 20px;
@@ -185,7 +214,6 @@ const PropertyDetails = ({ listing, onBack }) => {
                       border: 1px solid #ccc;
                       box-shadow: 0 1px 2px rgba(0,0,0,0.1);
                     }
-                    
                     .marker-label {
                       position: absolute;
                       white-space: nowrap;
@@ -199,7 +227,7 @@ const PropertyDetails = ({ listing, onBack }) => {
                   `}
             </style>
             <div>
-              <h3 className="text-lg font-semibold mb-4"> </h3>
+              <h3 className="text-lg font-semibold mb-4"></h3>
               <ul className="space-y-3">
                 {locationData && (
                   <>
@@ -249,60 +277,56 @@ const PropertyDetails = ({ listing, onBack }) => {
                   </Marker>
 
                   {/* Amenity Markers */}
-                  {locationData && (
-                    <>
-                      <Marker
-                        latitude={locationData.supermarket.lat}
-                        longitude={locationData.supermarket.lon}
-                      >
-                        <div className="amenity-marker">🛒</div>
-                        <div className="marker-label">
-                          Supermarket ({locationData.supermarket.distance})
-                        </div>
-                      </Marker>
+                  <Marker
+                    latitude={locationData.supermarket.lat}
+                    longitude={locationData.supermarket.lon}
+                  >
+                    <div className="amenity-marker">🛒</div>
+                    <div className="marker-label">
+                      Supermarket ({locationData.supermarket.distance})
+                    </div>
+                  </Marker>
 
-                      <Marker
-                        latitude={locationData.hospital.lat}
-                        longitude={locationData.hospital.lon}
-                      >
-                        <div className="amenity-marker">🏥</div>
-                        <div className="marker-label">
-                          Hospital ({locationData.hospital.distance})
-                        </div>
-                      </Marker>
+                  <Marker
+                    latitude={locationData.hospital.lat}
+                    longitude={locationData.hospital.lon}
+                  >
+                    <div className="amenity-marker">🏥</div>
+                    <div className="marker-label">
+                      Hospital ({locationData.hospital.distance})
+                    </div>
+                  </Marker>
 
-                      <Marker
-                        latitude={locationData.busStop.lat}
-                        longitude={locationData.busStop.lon}
-                      >
-                        <div className="amenity-marker">🚌</div>
-                        <div className="marker-label">
-                          Bus Stop ({locationData.busStop.distance})
-                        </div>
-                      </Marker>
+                  <Marker
+                    latitude={locationData.busStop.lat}
+                    longitude={locationData.busStop.lon}
+                  >
+                    <div className="amenity-marker">🚌</div>
+                    <div className="marker-label">
+                      Bus Stop ({locationData.busStop.distance})
+                    </div>
+                  </Marker>
 
-                      <Marker
-                        latitude={locationData.railwayStation.lat}
-                        longitude={locationData.railwayStation.lon}
-                      >
-                        <div className="amenity-marker">🚆</div>
-                        <div className="marker-label">
-                          Bahnhof ({locationData.railwayStation.distance})
-                        </div>
-                      </Marker>
+                  <Marker
+                    latitude={locationData.railwayStation.lat}
+                    longitude={locationData.railwayStation.lon}
+                  >
+                    <div className="amenity-marker">🚆</div>
+                    <div className="marker-label">
+                      Bahnhof ({locationData.railwayStation.distance})
+                    </div>
+                  </Marker>
 
-                      {/* University Marker */}
-                      <Marker
-                        latitude={50.5667} // Replace with actual university coordinates from your API
-                        longitude={9.6833}
-                      >
-                        <div className="amenity-marker">🎓</div>
-                        <div className="marker-label">
-                          University ({locationData.distanceFromUniversity})
-                        </div>
-                      </Marker>
-                    </>
-                  )}
+                  {/* University Marker */}
+                  <Marker
+                    latitude={50.5667} // Replace with actual university coordinates from your API
+                    longitude={9.6833}
+                  >
+                    <div className="amenity-marker">🎓</div>
+                    <div className="marker-label">
+                      University ({locationData.distanceFromUniversity})
+                    </div>
+                  </Marker>
                 </Map>
               )}
             </div>
