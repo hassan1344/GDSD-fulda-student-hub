@@ -1,4 +1,3 @@
-/* eslint-disable react-hooks/exhaustive-deps */
 import React, { useState, useEffect } from 'react';
 import { useParams } from 'react-router-dom';
 import { ethers } from 'ethers'; // For ethers v5
@@ -24,7 +23,7 @@ const BlockchainPaymentSystem = () => {
 
   const [paymentLogs, setPaymentLogs] = useState([]);
 
-  // 1) Fetch property details from backend (same as original)
+  // 1) Fetch property details from backend
   useEffect(() => {
     const fetchPropertyDetails = async () => {
       try {
@@ -79,7 +78,7 @@ const BlockchainPaymentSystem = () => {
   }, [config?.landlord_wallet_address]); // Runs on mount + whenever walletAddress updates
   
 
-  // Connect/Disconnect user wallet (not used for logs, just for config updates)
+  // Connect/Disconnect user wallet 
   const handleWalletAction = async () => {
     try {
       if (walletAddress) {
