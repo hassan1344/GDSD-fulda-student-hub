@@ -239,6 +239,33 @@ const ApplicationDetails = ({ applicationId, onBack }) => {
             )}
           </div>
         </div>
+        {/* 
+          ONLY SHOW THIS SECTION IF STATUS != "pending". 
+        */}
+        {reviewData === null ? (
+          // If no review exists, show the form
+          userType === "STUDENT" &&
+          application.application_status !== "PENDING" && (
+            <div className="mt-6">
+              <ReviewForm
+                onSubmit={(newReview) => {
+                  handleReviewSubmit(newReview); // Submit review and update state
+                }}
+              />
+            </div>
+          )
+        ) : (
+          // If the review exists, display the review
+          <div className="mt-6">
+            <div className="p-4 bg-white rounded-lg shadow-sm">
+              <p className="font-medium text-gray-700">Your Review:</p>
+              <p className="text-yellow-500">{reviewData.rating} ⭐</p>
+              <p className="text-sm text-gray-600">
+                {reviewData.comment || reviewData.reviewText}
+              </p>
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );

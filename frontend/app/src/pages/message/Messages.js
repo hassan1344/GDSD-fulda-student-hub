@@ -85,7 +85,10 @@ const Messages = () => {
     socketRef.current.on("getConversations", async (fetchedConversations) => {
       
       // Filter out empty conversations
-      const validConversations = fetchedConversations.filter(convo => convo.last_message && convo.last_message.length > 0);
+      const validConversations = fetchedConversations.filter(
+        (convo) => convo.last_message && convo.last_message.length > 0
+      );
+
       setConversations(validConversations);
       
       setLoadingConversations(false);
@@ -117,25 +120,34 @@ const Messages = () => {
 
       // **Add the old logic here for setting receiverUsers**
       try {
-        const profilePromises = fetchedConversations.map(
-          async (conversation) => {
-            if (conversation.sender_id === currentUserName) {
-              // Use optional chaining to avoid errors if properties are missing
-              return await getProfileByUsername(
-                conversation.receiver?.user_name
-              );
-            } else {
-              return await getProfileByUsername(conversation.sender?.user_name);
-            }
-          }
-        );
-
-        // Wait for all profile fetches to complete
-        const updatedReceiverUsers = await Promise.all(profilePromises);
-        setReceiverUsers(updatedReceiverUsers);
+        // Extract unique user names from conversations
+        const userNames = [
+          ...new Set(
+            fetchedConversations
+              .map((conversation) => conversation.user?.user_name)
+              .filter(Boolean) // Remove null/undefined values
+          ),
+        ];
+      
+        if (userNames.length === 0) {
+          console.warn("No valid users found in conversations.");
+          return;
+        }
+      
+        // Fetch all user profiles in parallel
+        const profiles = await Promise.all(userNames.map(getProfileByUsername));
+      
+        // Update state using functional update to ensure latest state is used
+        setReceiverUsers((prevUsers) => {
+          const updatedUsers = profiles.filter(Boolean); // Remove null profiles
+          return updatedUsers;
+        });
+      
       } catch (error) {
         console.error("Error fetching profiles:", error);
       }
+            
+      
     });
   };
 
