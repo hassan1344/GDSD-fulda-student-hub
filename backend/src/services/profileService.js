@@ -5,7 +5,9 @@ const prisma = new PrismaClient();
 
 export const getProfile = async (req, res) => {
   try {
-    const { id: userName } = req.params;
+    // Correction : userName extracted from decoded token
+    const userName = req.params.id;
+    console.log(userName);
     let userProfile, modelId;
     const user = await prisma.user.findUnique({where: {user_name: userName}});
     if (user.user_type.toUpperCase() === 'STUDENT') {
