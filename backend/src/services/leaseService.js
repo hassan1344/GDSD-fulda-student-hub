@@ -38,7 +38,7 @@ const getCurrentDate = () => {
 };
 
 const createPdf = async(outputHtml, outputPdfPath) => {
-  const browser = await puppeteer.launch();
+  const browser = await puppeteer.launch({executablePath: '/usr/bin/chromium-browser'});
   const page = await browser.newPage();
   console.log(`file:///${outputHtml}`)
 
