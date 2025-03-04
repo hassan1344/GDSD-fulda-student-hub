@@ -57,17 +57,25 @@ export const generateLeaseAgreement = async (req, res) => {
     if (!req.files["landlord_signature"]) {
       return res.status(400).json({ error: "Landlord signature is required" });
     }
+    console.log('Debuggind Lease Backend');
     const { userName } = req.user;
+    console.log('userName:', userName);
+    console.log('listingId:', listingId);
 
     const tmpDir = path.join(__dirname, '..', '..', 'tmp');
     await fs.mkdir(tmpDir, { recursive: true }); // Ensure tmp directory exists
+    console.log('tmpDir:', tmpDir);
     const signatureFile = req.files["landlord_signature"][0];
     const signaturePath = path.join(__dirname, '..', '..', 'tmp', `${userName}-${listingId}-landlord-signature.png`);
+    console.log('signaturePath:', signaturePath);
     await fs.writeFile(signaturePath, signatureFile.buffer);
 
     const inputHtmlPath = path.join(__dirname, '..', 'utils', 'leaseContractTemplate.html');
+    console.log('inputHtmlPath:', inputHtmlPath);
     const outputHtmlPath = path.join(__dirname, '..', '..', 'tmp', `${userName}-${listingId}-lease-agreement.html`);
+    console.log('outputHtmlPath:', outputHtmlPath);
     const outputPdfPath = path.join(__dirname, '..', '..', 'tmp', `${userName}-${listingId}-lease-agreement.pdf`);
+    console.log('outputPdfPath:', outputPdfPath);
     
     await updateHTML(inputHtmlPath, outputHtmlPath, parameters, signaturePath);
     const leaseFile = await createPdf(outputHtmlPath, outputPdfPath);
@@ -82,8 +90,10 @@ export const generateLeaseAgreement = async (req, res) => {
       buffer: leaseBuffer,
       mimetype: "application/pdf",
     };
-
+    console.log('FILE CREATE SUCCESSFULLY');
     await addMedia(bufferFile, leaseObject.lease_id);
+
+    console.log('FILE UPLOADED SUCCESSFULLY');
 
     res.download(outputPdfPath, 'LeaseAgreement.pdf', (err) => {
       if (err) {
