@@ -34,7 +34,7 @@ export const getStudentReviews = async (applicationId) => {
     );
     return response.data;
   } catch (error) {
-    console.error("Error getting review:", error);
+    // console.error("Error getting review:", error);
     throw error;
   }
 };

@@ -160,7 +160,7 @@ const ApplicationCard = ({
           <span className="font-semibold">Room Type:</span> {roomType || "N/A"}
         </p>
         <p>
-          <span className="font-semibold">Rent:</span> ${rent} USDT
+          <span className="font-semibold">Rent:</span> €{rent}
         </p>
       </div>
 

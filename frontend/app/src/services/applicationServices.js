@@ -85,3 +85,15 @@ export const getApprovedApplications = async () => {
   }
 };
 
+export const getLeaseDoc = async (applicationId) => {
+  try {
+    const response = await apiClient.get(`/application/get-lease/${applicationId || 0}`, {
+      requireToken: true,
+    });
+    return response;
+  } catch (error) {
+    console.error("Error getting lease doc:", error);
+    throw error;
+  }
+}
+

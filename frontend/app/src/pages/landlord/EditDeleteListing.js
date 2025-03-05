@@ -5,6 +5,7 @@ import LandlordNavbar from '../../components/LandlordNavbar';
 import { fetchPropertyById, fetchPropertyByIdAdmin, updateProperty } from '../../services/LandlordServices';
 import { jwtDecode } from 'jwt-decode';
 import { updatePropertyAdmin } from '../../services/propertyServices';
+import LoadingOverlay from '../../components/LoadingOverlay';
 
 const EditProperty = () => {
 /* Extract property ID from URL parameters using useParams hook  */
@@ -138,8 +139,10 @@ const handleAddAmenity = () => {
         {error && (<div className="text-red-500 text-center mb-4 transition-opacity duration-300 ease-in-out">
              {error}
         </div>)}
-
-        
+        <LoadingOverlay 
+        isLoading={isLoading} 
+        message="Updating Property..." 
+      />
         <form onSubmit={handleSubmit} className="bg-white shadow-lg rounded-lg p-8 max-w-2xl mx-auto">
           <div className="mb-6">
             <label className="block text-gray-700 text-sm font-bold mb-2">Address</label>
@@ -149,6 +152,7 @@ const handleAddAmenity = () => {
               onChange={(e) => setAddress(e.target.value)}
               className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-green-500"
               required
+              disabled={isLoading}
             />
           </div>
 
@@ -161,6 +165,7 @@ const handleAddAmenity = () => {
                 value={newAmenity.name}
                 onChange={(e) => setNewAmenity({...newAmenity, name: e.target.value})}
                 className="flex-1 px-3 py-2 border rounded-lg"
+                disabled={isLoading}
               />
               <input
                 type="text"
@@ -168,11 +173,13 @@ const handleAddAmenity = () => {
                 value={newAmenity.value}
                 onChange={(e) => setNewAmenity({...newAmenity, value: e.target.value})}
                 className="flex-1 px-3 py-2 border rounded-lg"
+                disabled={isLoading}
               />
               <button
                 type="button"
                 onClick={handleAddAmenity}
                 className="bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700"
+                disabled={isLoading}
               >
                 Add
               </button>
@@ -183,7 +190,7 @@ const handleAddAmenity = () => {
                 <div key={index} className="flex items-center justify-between bg-gray-50 p-2 rounded">
                   <span>{amenity.amenity_name}: {amenity.amenity_value}</span>
                   {/*Fix 2*/}
-                  <button type="button" onClick={() => handleRemoveAmenity(amenity.amenity_name)}
+                  <button type="button" disabled={isLoading} onClick={() => handleRemoveAmenity(amenity.amenity_name)}
                   className="text-red-500 hover:text-red-700" >
                       Remove
                   </button>
@@ -207,6 +214,7 @@ const handleAddAmenity = () => {
                     type="button"
                     onClick={() => handleImageDelete(media.media_id)}
                     className="absolute top-2 right-2 bg-red-500 text-white p-1 rounded-full hover:bg-red-600"
+                    disabled={isLoading}
                   >
                     ×
                   </button>
@@ -223,6 +231,7 @@ const handleAddAmenity = () => {
               multiple
               accept="image/*"
               className="w-full p-2 border rounded-lg"
+              disabled={isLoading}
             />
           </div>
 

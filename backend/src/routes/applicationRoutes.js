@@ -2,7 +2,7 @@ import express from "express";
 import * as applicationService from "../services/applicationService.js";
 import { authenticate, authenticateLandlord, authenticateStudent } from "../middlewares/auth.js";
 import { handleMultiPartData } from "../utils/handleMultiPart.js";
-import {generateLeaseAgreement} from '../services/leaseService.js';
+import { generateLeaseAgreement, getLeaseDocument} from '../services/leaseService.js';
 
 const applicationRouter = express.Router();
 
@@ -40,6 +40,12 @@ applicationRouter.get(
   "/get-application-by-id-l/:id",
   authenticateLandlord,
   applicationService.getApplicationByIdLandlord
+);
+
+applicationRouter.get(
+  "/get-lease/:applicationId",
+  authenticate,
+  getLeaseDocument
 );
 
 applicationRouter.post(

@@ -174,3 +174,64 @@ async function getStudentIdByUsername(user_id) {
     console.error("Error fetching student ID:", error);
   }
 }
+
+export const getLeaseDocument = async (req, res) => {
+  try {
+    let applicationId = req.params.applicationId;
+    console.log("Fetching lease agreement for application ID:", applicationId);
+    if (!applicationId) {
+      return res.status(400).json({ error: "Invalid applicationId provided" });
+    }
+
+    const application = await prisma.application.findFirst({
+      where: {
+        application_id: applicationId
+      },
+      include: {
+        user: true
+      },
+    });
+
+    if (!application && !application.listing_id) {
+      return res.status(400).json({ error: `No application found for ID: ${applicationId}` });
+    }
+
+    const lease = await prisma.lease.findFirst({
+      where: {
+        listing_id: application.listing_id,
+        tenant: {
+          user_id: application.user.user_name // Additional check for user
+        }
+      },
+      orderBy: {
+        created_at: 'desc' // Assumes you have a created_at field
+      }
+    });
+
+    if (!lease) {
+      return res.status(400).json({ error: `No lease found for application ID: ${applicationId}` });
+    }
+
+    // Assuming you want to find the first media document related to this lease
+    const leaseDoc = await prisma.media.findFirst({
+      where: {
+        model_id: lease.lease_id.toString(), // Ensure correct type
+        model_name: "lease",
+      },
+    });
+
+    if (!leaseDoc) {
+      return res.status(400).json({ error: `No document found for lease ID: ${lease.lease_id}` });
+    }
+
+    return res.status(200).json(leaseDoc);
+  } catch (error) {
+    console.error("Error fetching lease agreement:", error);
+    console.error("Error details:", {
+      name: error.name,
+      message: error.message,
+      stack: error.stack
+    });
+    return res.status(500).json({ error: "Internal server error" });
+  }
+}

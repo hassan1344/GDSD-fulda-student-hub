@@ -300,8 +300,8 @@ const Home = () => {
                               `https://fulda-student-hub.s3.eu-north-1.amazonaws.com/public/uploads/images/${listing.Media[0]?.mediaUrl}` ||
                               "/default.jpg"
                             }
-                            description={listing.description}
-                            price={`${listing.rent}`}
+                            description={listing.title}
+                            price={`Rent: ${listing.rent}`}
                             poster={`${listing.property.landlord.first_name} ${listing.property.landlord.last_name}`}
                             onClick={() => handleSelectProperty(listing, false)}
                           />
@@ -336,7 +336,7 @@ const Home = () => {
                             "/default.jpg"
                           }
                           description={bidding.description}
-                          price={`Current Bid: ${
+                          price={`Latest Bid: ${
                             bidding.highest_bid !== 0 ? bidding.highest_bid : bidding.starting_price
                           }`}
                           poster={`${bidding.property.landlord.first_name} ${bidding.property.landlord.last_name}`}

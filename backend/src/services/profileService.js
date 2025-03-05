@@ -7,8 +7,8 @@ const prisma = new PrismaClient();
 export const getProfile = async (req, res) => {
   try {
     // Correction : userName extracted from decoded token
-    const { userName } = req.user;
-    // console.log(req.user);
+    const userName = req.params.id;
+    // console.log(userName);
     let userProfile, modelId;
     const user = await prisma.user.findUnique({
       where: { user_name: userName },

@@ -31,6 +31,14 @@ const Messages = () => {
   const currentUserName = token ? jwtDecode(token).userName : null;
   const currentUserType = token ? jwtDecode(token).userType : null;
 
+
+  const truncateText = (text, maxLength) => {
+    if (!text) return '';
+    return text.length <= maxLength 
+      ? text 
+      : text.slice(0, maxLength) + '...';
+  };
+
   // Initialize Socket
   const initializeSocket = () => {
     if (!token) {
@@ -38,7 +46,8 @@ const Messages = () => {
       return;
     }
 
-    socketRef.current = io("https://fulda-student-hub.publicvm.com", {
+    // socketRef.current = io("https://fulda-student-hub.publicvm.com", {
+      socketRef.current = io("http://localhost:8000", {
       query: {
         token,
         endpoint: "chat",
@@ -118,22 +127,31 @@ const Messages = () => {
 
       // **Add the old logic here for setting receiverUsers**
       try {
-        const profilePromises = fetchedConversations.map(
-          async (conversation) => {
-            if (conversation.sender_id === currentUserName) {
-              // Use optional chaining to avoid errors if properties are missing
-              return await getProfileByUsername(
-                conversation.receiver?.user_name
-              );
-            } else {
-              return await getProfileByUsername(conversation.sender?.user_name);
-            }
-          }
-        );
+        // Extract unique user names from conversations
+        const userNames = [
+          ...new Set(
+            fetchedConversations
+              .map((conversation) => conversation.user?.user_name)
+              .filter(Boolean) // Remove null/undefined values
+          ),
+        ];
+      
+        if (userNames.length === 0) {
+          console.warn("No valid users found in conversations.");
+          return;
+        }
+      
+        console.log("User names:", userNames);
 
-        // Wait for all profile fetches to complete
-        const updatedReceiverUsers = await Promise.all(profilePromises);
-        setReceiverUsers(updatedReceiverUsers);
+        // Fetch all user profiles in parallel
+        const profiles = await Promise.all(userNames.map(getProfileByUsername));
+      
+        // Update state using functional update to ensure latest state is used
+        setReceiverUsers((prevUsers) => {
+          const updatedUsers = profiles.filter(Boolean); // Remove null profiles
+          return updatedUsers;
+        });
+      
       } catch (error) {
         console.error("Error fetching profiles:", error);
       }
@@ -231,25 +249,39 @@ const Messages = () => {
       fetchChats(currentConversation.conversation_id);
     }
 
+    // Add overflow hidden to body when component mounts
+    document.body.style.overflow = 'hidden';
+
     return () => {
       socketRef.current?.disconnect();
+      document.body.style.overflow = 'visible';
     };
   }, [token, currentConversation]);
 
+  // Handle Key Press for Enter to Send Message
+  const handleKeyPress = (e) => {
+    if (e.key === 'Enter') {
+      sendMessage();
+    }
+  };
+
   return (
-    <div className="background-container min-h-screen">
+    <div className="background-container overflow-hidden">
       {currentUserType && currentUserType === "LANDLORD" ? (
         <LandlordNavbar />
       ) : (
         <Navbar />
       )}
-      <div className="custom-container max-w-6xl mx-auto p-6 bg-white shadow-lg rounded-lg mt-8 flex h-full">
-        {/* Left Panel - Conversations */}
-        <div className="w-1/3 p-4 bg-gray-100 rounded-lg mr-6 overflow-y-auto flex-grow">
+      <div className="min-h-screen flex justify-center bg-gradient-to-br from-green-100 via-green-50 to-white overflow-hidden">
+      <div className="w-[1200px] p-0 bg-white shadow-lg rounded-lg mt-8 flex h-[600px] overflow-hidden"> 
+      {/* Left Panel - Conversations */}
+      <div className="w-[350px] p-0 bg-gray-100 rounded-l-lg overflow-hidden">
+        <div className="p-4">
           <h2 className="text-2xl font-semibold mb-4">Conversations</h2>
-          <ul>
-            {conversations.map((conversation) => {
-              const otherParticipant =
+          <div className="h-[540px] overflow-y-auto pr-2">
+            <ul>
+              {conversations.map((conversation) => {
+                const otherParticipant =
                 conversation.sender_id === currentUserName
                   ? receiverUsers.find(
                       (user) =>
@@ -258,79 +290,85 @@ const Messages = () => {
                   : receiverUsers.find(
                       (user) => user.user_id === conversation.sender?.user_name
                     );
-              return (
-                <li
-                  key={conversation.conversation_id}
-                  onClick={() => handleChatClick(conversation)}
-                  className={`cursor-pointer p-2 rounded mb-2 ${
-                    currentConversation?.conversation_id ===
-                    conversation.conversation_id
-                      ? "bg-blue-100"
-                      : "hover:bg-gray-200"
-                  }`}
-                >
-                  <div className="flex justify-between items-center">
-                    <div className="flex items-center">
-                      <strong>
-                        {otherParticipant?.first_name}{" "}
-                        {otherParticipant?.last_name}
-                      </strong>
+                return (
+                  <li
+                    key={conversation.conversation_id}
+                    onClick={() => handleChatClick(conversation)}
+                    className={`cursor-pointer p-2 rounded mb-2 ${
+                      currentConversation?.conversation_id ===
+                      conversation.conversation_id
+                        ? "bg-blue-100"
+                        : "hover:bg-gray-200"
+                    }`}
+                  >
+                    <div className="justify-between items-center">
+                      <div className="flex items-center">
+                        <strong>
+                          {otherParticipant?.first_name}{" "}
+                          {otherParticipant?.last_name}
+                        </strong>
+                      </div>
+                      <div className="text-gray-500">
+                       { truncateText(conversation.last_message || "No messages yet", 25) }
+                      </div>
                     </div>
-                    <span className="text-gray-500">
-                      {conversation.last_message || "No messages yet"}
-                    </span>
-                  </div>
-                </li>
-              );
-            })}
-          </ul>
+                  </li>
+                );
+              })}
+            </ul>
+          </div>
         </div>
+      </div>
 
-        {/* Middle Panel - Chat Pane */}
-        <div className="w-2/3 p-4 bg-gray-50 rounded-lg mr-6 overflow-y-auto flex-grow">
+      {/* Middle Panel - Chat Pane */}
+      <div className="w-[600px] p-0 bg-gray-50 overflow-hidden">
+        <div className="p-4">
           {currentConversation ? (
             <div>
               <h3 className="text-2xl font-semibold mb-4">
                 <span className="mr-2">💬</span>
                 {receiverUser?.first_name} {receiverUser?.last_name}
               </h3>
-              <ul className="mb-4 max-h-72 overflow-y-auto">
-                {messages.map((message) => (
-                  <li
-                    key={`${message.chat_id}-${message.createdAt}`}
-                    className="mb-2 flex"
-                  >
-                    <div
-                      className={`flex ${
-                        message.sender_id === currentUserName
-                          ? "ml-auto"
-                          : "mr-auto"
-                      }`}
+              <div className="h-[400px] overflow-y-auto pr-2 mb-4">
+                <ul>
+                  {messages.map((message) => (
+                    <li
+                      key={`${message.chat_id}-${message.createdAt}`}
+                      className="mb-2 flex"
                     >
-                      <span
-                        className={`${
+                      <div
+                        className={`flex ${
                           message.sender_id === currentUserName
-                            ? "bg-gray-300"
-                            : "bg-green-300"
-                        } p-2 rounded text-sm`}
+                            ? "ml-auto"
+                            : "mr-auto"
+                        }`}
                       >
-                        {message.message}
-                      </span>
-                    </div>
-                  </li>
-                ))}
-              </ul>
+                        <span
+                          className={`${
+                            message.sender_id === currentUserName
+                              ? "bg-gray-300"
+                              : "bg-green-300"
+                          } p-2 rounded text-sm`}
+                        >
+                          {message.message}
+                        </span>
+                      </div>
+                    </li>
+                  ))}
+                </ul>
+              </div>
               <div className="flex">
                 <input
                   type="text"
                   value={messageInput}
                   onChange={(e) => setMessageInput(e.target.value)}
                   placeholder="Type a message"
-                  className="border p-2 rounded w-4/5"
+                  className="border p-2 rounded w-[480px]"
+                  onKeyDown={handleKeyPress}
                 />
                 <button
                   onClick={sendMessage}
-                  className="bg-blue-500 text-white p-2 rounded ml-2 w-1/5"
+                  className="bg-blue-500 text-white p-2 rounded ml-2 w-[100px]"
                 >
                   Send
                 </button>
@@ -342,32 +380,24 @@ const Messages = () => {
             </div>
           )}
         </div>
+      </div>
 
-        {/* Right Panel - User Profile */}
-        <div className="w-1/4 p-4 bg-gray-200 rounded-lg">
+      {/* Right Panel - User Profile */}
+      <div className="w-[250px] p-0 bg-gray-200 rounded-r-lg overflow-hidden">
+        <div className="p-4">
           <h3 className="text-xl font-semibold mb-4">User Profile</h3>
           {receiverUser ? (
             <div className="flex flex-col items-center">
-              {/* Profile Picture */}
               <div className="flex justify-center mb-4">
-                {
-                  // receiverUser?.profile_picture_id ? (
-                  //   <img
-                  //     src={receiverUser?.profile_picture_id}
-                  //     alt="Profile"
-                  //     className="w-24 h-24 rounded-full object-cover shadow-md"
-                  //   />
-                  // ) :
-                  <div className="w-24 h-24 bg-gray-200 rounded-full flex items-center justify-center shadow-md">
-                    <span className="text-gray-500 text-3xl">👤</span>
-                  </div>
-                }
+                <div className="w-24 h-24 bg-gray-200 rounded-full flex items-center justify-center shadow-md">
+                  <span className="text-gray-500 text-3xl">👤</span>
+                </div>
               </div>
-              <p className="font-semibold text-lg">
+              <p className="font-semibold text-lg text-center">
                 {receiverUser?.first_name} {receiverUser?.last_name}
               </p>
-              <p className="text-gray-500">Email: {receiverUser?.email}</p>
-              <p className="text-gray-500">
+              <p className="text-gray-500 text-center">Email: {receiverUser?.email}</p>
+              <p className="text-gray-500 text-center">
                 Phone: {receiverUser?.phone_number}
               </p>
             </div>
@@ -376,6 +406,8 @@ const Messages = () => {
           )}
         </div>
       </div>
+    </div>
+    </div>
     </div>
   );
 };
