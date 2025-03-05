@@ -32,7 +32,7 @@ const AuthPage = () => {
 
   const showNotification = (msg) => {
     setNotification({ message: msg, visible: true });
-    setTimeout(() => setNotification({ message: "", visible: false }), 3000); // 3-second timer
+    setTimeout(() => setNotification({ message: "", visible: false }), 2000);
   };
 
   const handleSubmit = async (e) => {

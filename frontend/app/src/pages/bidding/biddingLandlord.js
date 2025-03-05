@@ -5,8 +5,7 @@ import { getBiddingStatus } from "../../services/biddingServices";
 import LandlordNavbar from "../../components/LandlordNavbar";
 import { jwtDecode } from "jwt-decode";
 
-// const BIDDING_SERVER_URL = "https://fulda-student-hub.publicvm.com";
-const BIDDING_SERVER_URL = "http://localhost:8000";
+const BIDDING_SERVER_URL = process.env.REACT_APP_SOCKET_BASE_URL;
 
 const BiddingLandlord = () => {
   const { listingId } = useParams();

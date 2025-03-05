@@ -3,8 +3,7 @@ import { useParams, useNavigate, useLocation } from "react-router-dom";
 import io from "socket.io-client";
 import Navbar from "../../components/NavBar";
 
-// const BIDDING_SERVER_URL = "https://fulda-student-hub.publicvm.com";
-const BIDDING_SERVER_URL = "http://localhost:8000";
+const BIDDING_SERVER_URL = process.env.REACT_APP_SOCKET_BASE_URL;
 
 const BiddingStudent = () => {
   const { listingId } = useParams();
