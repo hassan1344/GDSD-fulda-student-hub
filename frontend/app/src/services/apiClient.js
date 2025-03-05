@@ -3,8 +3,8 @@ import { jwtDecode } from "jwt-decode";
 import { logoutUser } from "./authServices";
 
 const apiClient = axios.create({
-  baseURL: process.env.REACT_APP_API_BASE_URL,
-  timeout: 30000,
+   baseURL: process.env.REACT_APP_API_BASE_URL,
+  timeout: 100000,
 });
 
 let isRefreshing = false; // Tracks ongoing refresh requests

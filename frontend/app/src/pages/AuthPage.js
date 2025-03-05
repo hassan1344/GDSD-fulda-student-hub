@@ -34,8 +34,8 @@ const AuthPage = () => {
   const handleInputChange = (e) => setFormData({ ...formData, [e.target.name]: e.target.value });
 
   const showNotification = (msg) => {
-    setNotification(msg);
-    setTimeout(() => setNotification(""), 3000);
+    setNotification({ message: msg, visible: true });
+    setTimeout(() => setNotification({ message: "", visible: false }), 2000);
   };
 
   const handleSubmit = async (e) => {

@@ -73,4 +73,27 @@ export const getAllApplicationsByLandlord = async () => {
   }
 };
 
+export const getApprovedApplications = async () => {
+  try {
+    const response = await apiClient.get("/application/get-approved-applications", {
+      requireToken: true,
+    });
+    return response.data;
+  } catch (error) {
+    console.error("Error getting applications:", error);
+    throw error;
+  }
+};
+
+export const getLeaseDoc = async (applicationId) => {
+  try {
+    const response = await apiClient.get(`/application/get-lease/${applicationId || 0}`, {
+      requireToken: true,
+    });
+    return response;
+  } catch (error) {
+    console.error("Error getting lease doc:", error);
+    throw error;
+  }
+}
 

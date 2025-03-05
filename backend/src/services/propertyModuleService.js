@@ -4,7 +4,12 @@ import multer from 'multer';
 
 const upload = multer().fields([{ name: 'media', maxCount: 5 }]); // Accepting up to 5 files under 'media'
 
-const prisma = new PrismaClient({ log: ['query', 'info', 'warn', 'error'] });
+const prisma = new PrismaClient({ log: ['query', 'info', 'warn', 'error'],
+  transactionOptions: {
+    maxWait: 60000,  // 60 seconds max wait
+    timeout: 120000  // 2 minutes timeout
+  }
+});
 
 async function getLandlordId(user_name) {
   const dbUser = await prisma.user.findUnique({
@@ -116,7 +121,7 @@ export const createProperty = async (req, res) => {
           landlord: true,
           PropertyAmenity: {
             include: {
-              Amenity:true,
+              Amenity: true,
             },
           },
         },
@@ -138,9 +143,9 @@ export const createProperty = async (req, res) => {
     if (error.message === "Associated landlord profile not found") {
       return res.status(404).json({ success: false, error: "Landlord profile not found" });
     }
-    res.status(500).json({ 
-      success: false, 
-      error: "An unexpected error occurred while creating the property" 
+    res.status(500).json({
+      success: false,
+      error: "An unexpected error occurred while creating the property"
     });
   }
 };
@@ -159,8 +164,8 @@ export const getAllProperties = async (req, res) => {
     console.log("getAllProperties called with landlord_id:", landlord_id);
 
     const properties = await prisma.property.findMany({
-      where: { 
-        landlord_id 
+      where: {
+        landlord_id
       },
       include: {
         landlord: true
@@ -205,9 +210,9 @@ export const getAllProperties = async (req, res) => {
     if (error.message === "Associated landlord profile not found") {
       return res.status(404).json({ success: false, error: "Landlord profile not found" });
     }
-    res.status(500).json({ 
-      success: false, 
-      error: "An unexpected error occurred while retrieving properties" 
+    res.status(500).json({
+      success: false,
+      error: "An unexpected error occurred while retrieving properties"
     });
   }
 };
@@ -228,11 +233,11 @@ export const getPropertyById = async (req, res) => {
     const property = await prisma.property.findUnique({
       where: { property_id: id, landlord_id },
       include: {
-        landlord: true 
+        landlord: true
         ,
         PropertyAmenity: {
           include: {
-            Amenity:true
+            Amenity: true
           }
         },
         Listing: {
@@ -274,6 +279,8 @@ export const updateProperty = async (req, res) => {
       return res.status(401).json({ success: false, error: "User not authenticated" });
     }
 
+    console.log("CHECKEC", req.body)
+
     const { id } = req.params;
     const { address, amenities, imagesToDelete } = req.body;
     const landlord_id = await getLandlordId(req.user.userName);
@@ -292,7 +299,7 @@ export const updateProperty = async (req, res) => {
         // Get existing property amenities
         const existingPropertyAmenities = await prisma.PropertyAmenity.findMany({
           where: { property_id: id },
-          include: { Amenity:true }
+          include: { Amenity: true }
         });
 
         // Delete existing property-amenity associations
@@ -303,7 +310,7 @@ export const updateProperty = async (req, res) => {
         // Delete orphaned amenities
         for (const propertyAmenity of existingPropertyAmenities) {
           const otherReferences = await prisma.PropertyAmenity.count({
-            where: { 
+            where: {
               amenity_id: propertyAmenity.amenity_id,
               NOT: { property_id: id }
             }
@@ -342,7 +349,11 @@ export const updateProperty = async (req, res) => {
 
       // Rest of the media handling code remains the same
       if (imagesToDelete) {
-        const imageIdsToDelete = Array.isArray(imagesToDelete) ? imagesToDelete : [imagesToDelete];
+        const imageIdsToDelete = typeof imagesToDelete === 'string'
+          ? JSON.parse(imagesToDelete)
+          : Array.isArray(imagesToDelete)
+            ? imagesToDelete
+            : [imagesToDelete];
         for (const imageId of imageIdsToDelete) {
           const media = await prisma.media.findUnique({
             where: { media_id: imageId }
@@ -382,7 +393,7 @@ export const updateProperty = async (req, res) => {
         include: {
           landlord: true,
           PropertyAmenity: {
-            include: { Amenity:true },
+            include: { Amenity: true },
           },
         },
       });
@@ -429,7 +440,7 @@ export const updatePropertyAdmin = async (req, res) => {
         // Get existing property amenities
         const existingPropertyAmenities = await prisma.PropertyAmenity.findMany({
           where: { property_id: id },
-          include: { Amenity:true }
+          include: { Amenity: true }
         });
 
         // Delete existing property-amenity associations
@@ -440,7 +451,7 @@ export const updatePropertyAdmin = async (req, res) => {
         // Delete orphaned amenities
         for (const propertyAmenity of existingPropertyAmenities) {
           const otherReferences = await prisma.PropertyAmenity.count({
-            where: { 
+            where: {
               amenity_id: propertyAmenity.amenity_id,
               NOT: { property_id: id }
             }
@@ -519,7 +530,7 @@ export const updatePropertyAdmin = async (req, res) => {
         include: {
           landlord: true,
           PropertyAmenity: {
-            include: { Amenity:true },
+            include: { Amenity: true },
           },
         },
       });

@@ -1,7 +1,14 @@
 import React, { useState, useEffect } from "react";
-import { getApplicationByID, updateApplicationStatus } from "../services/applicationServices";
+import {
+  getApplicationByID,
+  getLeaseDoc,
+  updateApplicationStatus,
+} from "../services/applicationServices";
+import { getStudentReviews } from "../services/reviewServices";
+import { addReviewForLandlord } from "../services/reviewServices";
 import Navbar from "../components/NavBar";
 import Disclaimer from "./Disclaimer";
+import ReviewForm from "./ReviewForm";
 import { jwtDecode } from "jwt-decode";
 import { ToastContainer, toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
@@ -10,6 +17,8 @@ const ApplicationDetails = ({ applicationId, onBack }) => {
   const [application, setApplication] = useState(null);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState(null);
+  const [reviewData, setReviewData] = useState(null);
+  const [leaseData, setLeaseData] = useState(null);
 
   const accessToken = localStorage.getItem("accessToken");
   const decodedToken = jwtDecode(accessToken);
@@ -31,7 +40,6 @@ const ApplicationDetails = ({ applicationId, onBack }) => {
         autoClose: 2000,
         position: "top-right",
       });
-
     } catch (error) {
       setError("Failed to update application status.");
       // Show error toast notification
@@ -58,9 +66,37 @@ const ApplicationDetails = ({ applicationId, onBack }) => {
       }
     };
 
-    if (applicationId) fetchApplications();
+    const fetchReviews = async () => {
+      try {
+        const data = await getStudentReviews(applicationId);
+        setReviewData(data);
+      } catch (error) {
+        setReviewData(null);
+        // console.error("Error loading review:", error);
+      }
+    };
+
+    const fetchLeaseDocuments = async () => {
+      try {
+        console.log("Fetching lease documents for listing ID:", applicationId);
+        const data = await getLeaseDoc(applicationId);
+        setLeaseData(data.data);
+      } catch (error) {
+        setLeaseData(null);
+        // Show error toast notification
+      }
+    };
+
+    if (applicationId) {
+      fetchApplications();
+      if (userType === "STUDENT") {
+        fetchReviews();
+      }
+      fetchLeaseDocuments();
+    }
   }, [applicationId]);
 
+  // console.log(application);
   if (isLoading) {
     return (
       <p className="text-center text-gray-600 mt-6">
@@ -81,8 +117,32 @@ const ApplicationDetails = ({ applicationId, onBack }) => {
     );
   }
 
+  const handleReviewSubmit = async (review) => {
+    try {
+      console.log("Received review data:", review);
+      await addReviewForLandlord({
+        application_id: application.application_id,
+        reviewText: review.reviewText,
+        rating: review.rating,
+      });
+      setReviewData(review);
+
+      toast.success(`Review added successfully!`, {
+        autoClose: 2000,
+        position: "top-right",
+      });
+    } catch (error) {
+      console.error("Error adding review:", error);
+      toast.error(error.response.data.message, {
+        autoClose: 2000,
+        position: "top-right",
+      });
+    }
+  };
+
   return (
     <div className="background-container">
+      <ToastContainer />
       {userType === "STUDENT" && <Navbar />}
       <div className="max-w-4xl mx-auto p-6 bg-white shadow-md rounded-lg mt-8">
         <div className="flex justify-between">
@@ -92,22 +152,23 @@ const ApplicationDetails = ({ applicationId, onBack }) => {
           >
             Back to Applications
           </button>
-          {userType === "LANDLORD" && application.application_status === "PENDING" &&
-            <div className="space-x-4">
-              <button
-                onClick={() => handleRequestAction("APPROVED")}
-                className="bg-green-500 text-white px-4 py-2 rounded hover:bg-green-600"
-              >
-                Approve
-              </button>
-              <button
-                onClick={() => handleRequestAction("REJECTED")}
-                className="bg-red-500 text-white px-4 py-2 rounded hover:bg-red-600"
-              >
-                Reject
-              </button>
-            </div>
-          }
+          {userType === "LANDLORD" &&
+            application.application_status === "PENDING" && (
+              <div className="space-x-4">
+                <button
+                  onClick={() => handleRequestAction("APPROVED")}
+                  className="bg-green-500 text-white px-4 py-2 rounded hover:bg-green-600"
+                >
+                  Approve
+                </button>
+                <button
+                  onClick={() => handleRequestAction("REJECTED")}
+                  className="bg-red-500 text-white px-4 py-2 rounded hover:bg-red-600"
+                >
+                  Reject
+                </button>
+              </div>
+            )}
         </div>
         <br></br>
 
@@ -117,8 +178,6 @@ const ApplicationDetails = ({ applicationId, onBack }) => {
             Status: {application.application_status || "N/A"}
           </span>
         </h2>
-
-
 
         <div className="mb-6">
           <h3 className="text-lg font-medium text-gray-700">
@@ -173,7 +232,7 @@ const ApplicationDetails = ({ applicationId, onBack }) => {
         </div>
 
         <div className="mb-6">
-          <h3 className="text-lg font-medium text-gray-700">Media Files</h3>
+          <h3 className="text-lg font-medium text-gray-700">Media File(s)</h3>
           <div className="mt-4 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
             {application.media?.length > 0 ? (
               application.media.map((item) => (
@@ -239,6 +298,100 @@ const ApplicationDetails = ({ applicationId, onBack }) => {
             )}
           </div>
         </div>
+        <div className="mb-6">
+          <h3 className="text-lg font-medium text-gray-700">Lease File(s)</h3>
+          <div className="mt-4 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+            {leaseData ? (
+                <div
+                  key={leaseData.media_id}
+                  className="relative border rounded-lg overflow-hidden shadow-lg hover:shadow-xl transition-shadow duration-300 bg-white"
+                >
+                  {leaseData.media_url.includes("pdf") ? (
+                    <div className="flex flex-col items-center justify-center p-6 bg-gray-100 h-48">
+                      <div className="w-16 h-16 bg-red-500 rounded-full flex items-center justify-center mb-4">
+                        <svg
+                          xmlns="http://www.w3.org/2000/svg"
+                          fill="none"
+                          viewBox="0 0 24 24"
+                          strokeWidth="2"
+                          stroke="white"
+                          className="w-8 h-8"
+                        >
+                          <path
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            d="M14.25 2.25h-4.5a2.25 2.25 0 00-2.25 2.25v15a2.25 2.25 0 002.25 2.25h7.5a2.25 2.25 0 002.25-2.25v-11.25l-3.75-3.75z"
+                          />
+                          <path
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            d="M14.25 2.25V6h3.75"
+                          />
+                        </svg>
+                      </div>
+                      <a
+                        href={`https://fulda-student-hub.s3.eu-north-1.amazonaws.com/public/uploads/images/${leaseData.media_url}`}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="text-blue-600 font-semibold underline text-sm"
+                      >
+                        View {leaseData.media_type} File
+                      </a>
+                    </div>
+                  ) : (
+                    <div className="relative h-48 bg-gray-50">
+                      <a
+                        href={`https://fulda-student-hub.s3.eu-north-1.amazonaws.com/public/uploads/images/${leaseData.media_url}`}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="text-blue-600 font-semibold underline text-sm"
+                      >
+                        <img
+                          src={`https://fulda-student-hub.s3.eu-north-1.amazonaws.com/public/uploads/images/${leaseData.media_url}`}
+                          alt={leaseData.media_type}
+                          className="w-full h-full object-cover transition-transform duration-300 hover:scale-105"
+                        />
+                        <div className="absolute bottom-0 left-0 w-full bg-gray-900 bg-opacity-50 text-white text-sm py-2 px-4">
+                          {leaseData.media_type}
+                        </div>
+                      </a>
+                    </div>
+                  )}
+                </div>
+              )
+             : (
+              <p className="text-sm text-gray-500">No lease available</p>
+            )}
+          </div>
+        </div>
+        {/* 
+          ONLY SHOW THIS SECTION IF STATUS != "pending". 
+        */}
+        {reviewData === null ? (
+          // If no review exists, show the form
+          userType === "STUDENT" &&
+          application.application_status !== "PENDING" && (
+            <div className="mt-6">
+              <ReviewForm
+                onSubmit={(newReview) => {
+                  handleReviewSubmit(newReview); // Submit review and update state
+                }}
+              />
+            </div>
+          )
+        ) : (
+          // If the review exists, display the review
+          <div className="mt-6">
+            <div className="p-4 bg-white rounded-lg shadow-sm">
+              <p className="font-medium text-gray-700">Your Review:</p>
+              <p className="text-yellow-500">{reviewData.rating} ⭐</p>
+              <p className="text-sm text-gray-600">
+                {reviewData.comment || reviewData.reviewText}
+              </p>
+            </div>
+          </div>
+        )}
+
       </div>
     </div>
   );

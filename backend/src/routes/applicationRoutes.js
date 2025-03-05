@@ -1,8 +1,8 @@
 import express from "express";
 import * as applicationService from "../services/applicationService.js";
-import { authenticateLandlord, authenticateStudent } from "../middlewares/auth.js";
+import { authenticate, authenticateLandlord, authenticateStudent } from "../middlewares/auth.js";
 import { handleMultiPartData } from "../utils/handleMultiPart.js";
-import {generateLeaseAgreement} from '../services/leaseService.js';
+import { generateLeaseAgreement, getLeaseDocument} from '../services/leaseService.js';
 
 const applicationRouter = express.Router();
 
@@ -42,6 +42,12 @@ applicationRouter.get(
   applicationService.getApplicationByIdLandlord
 );
 
+applicationRouter.get(
+  "/get-lease/:applicationId",
+  authenticate,
+  getLeaseDocument
+);
+
 applicationRouter.post(
   "/generate-lease/",
   authenticateLandlord,
@@ -61,6 +67,13 @@ applicationRouter.delete(
   "/delete-application-by-id/:id",
   authenticateStudent,
   applicationService.deleteApplicationById
+);
+
+//------
+applicationRouter.get(
+  "/get-approved-applications",
+  authenticate,
+  applicationService.getApprovedApplications
 );
 
 export const applicationRoutes = applicationRouter;
