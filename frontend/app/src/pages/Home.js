@@ -107,7 +107,10 @@ const Home = () => {
     };
 
     fetchInitialData();
-    fetchProfile();
+    if (localStorage.getItem("accessToken")) {
+      fetchProfile();
+
+    }
   }, []);
 
   useEffect(() => {
