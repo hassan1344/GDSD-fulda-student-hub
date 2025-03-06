@@ -2,7 +2,9 @@ import apiClient from "./apiClient";
 
 export const getAllActiveBiddings = async () => {
   try {
-    const response = await apiClient.get("/bidding/active-biddings");
+    const response = await apiClient.get("/bidding/active-biddings", {
+      requireToken: true,
+    });
 
     return response.data; // Return the data from the API
   } catch (error) {

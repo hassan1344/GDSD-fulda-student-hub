@@ -1,11 +1,11 @@
 import React, { useEffect, useState } from "react";
 import { Routes, Route, useNavigate } from "react-router-dom";
-import ApplicationCard from "../../components/ApplicationCard";
-import Navbar from "../../components/NavBar";
-import Disclaimer from "../../components/Disclaimer";
-import { getAllApplications } from "../../services/applicationServices";
-import { getRoomTypeById } from "../../services/utilServices";
-import ApplicationDetails from "../../components/ApplicationDetails";
+import ApplicationCard from "../components/ApplicationCard";
+import Navbar from "../components/NavBar";
+import Disclaimer from "../components/Disclaimer";
+import { getAllApplications } from "../services/applicationServices";
+import { getRoomTypeById } from "../services/utilServices";
+import ApplicationDetails from "../components/ApplicationDetails";
 
 const ViewApplicationStudent = () => {
   const [applications, setApplications] = useState([]);

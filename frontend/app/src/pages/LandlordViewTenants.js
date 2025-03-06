@@ -1,5 +1,5 @@
 import React from "react";
-import LandlordNavbar from '../../components/LandlordNavbar';
+import LandlordNavbar from "../components/LandlordNavbar";
 
 const LandlordViewTenants = () => {
   // Mock data for tenants
