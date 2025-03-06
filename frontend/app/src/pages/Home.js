@@ -19,7 +19,7 @@ import { getProfileByUsername } from "../services/profileServices";
 const Home = () => {
   const [location, setLocation] = useState("");
   const [roomType, setRoomType] = useState("");
-  const [priceRange, setPriceRange] = useState([0, 1000]);
+  const [priceRange, setPriceRange] = useState([0, 2000]);
   const [showAdvanced, setShowAdvanced] = useState(false);
   const [selectedProperty, setSelectedProperty] = useState(null);
   const [advancedFilters, setAdvancedFilters] = useState({});
@@ -183,7 +183,7 @@ const Home = () => {
       ) : (
         <div className="flex justify-center mt-12 relative">
           {}
-          <div className="w-1/5 bg-white p-4 shadow-lg h-screen overflow-y-auto absolute left-4">
+          <div className="w-1/5 bg-white p-4 shadow-lg overflow-y-auto absolute left-4 rounded-lg">
             <h3 className="text-lg font-semibold text-gray-800 mb-4">
               Upcoming Meetings
             </h3>
@@ -206,6 +206,7 @@ const Home = () => {
                   <br />
                 </div>
               ))}
+                No upcoming meetings.
             </div>
           </div>
           <div className="bg-white shadow-lg rounded-lg p-8 w-full max-w-4xl">

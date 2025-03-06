@@ -12,7 +12,6 @@ biddingRouter.get(
 
 biddingRouter.get(
   "/active-biddings",
-  authenticate,
   getAllActiveBiddings
 );
 

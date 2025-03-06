@@ -15,7 +15,7 @@ export const addReviewForLandlord = async (review) => {
 export const getReviewsForALandlord = async (listingId) => {
   try {
     const response = await apiClient.get(`/reviews/${listingId}`, {
-      requireToken: true,
+      // requireToken: true,
     });
     return response.data;
   } catch (error) {

@@ -38,7 +38,7 @@
 }
 
 .background-container {
-  @apply min-h-screen bg-gradient-to-br from-green-100 via-green-50 to-white overflow-hidden;
+  @apply min-h-screen overflow-hidden;
 }
 
 .property-card-button {

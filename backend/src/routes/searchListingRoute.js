@@ -6,7 +6,7 @@ const searchListingRouter = express.Router();
 
 searchListingRouter.get("/", searchListingService.getAllListings); // GET all Listings
 searchListingRouter.post("/search", 
-    authenticate,
+    // authenticate,
     searchListingService.getListingsByIds); // Get multiple listings by IDs
 
 export default searchListingRouter;

@@ -12,7 +12,7 @@ export const themeOptions = {
       contrastText: "#006B3F", // Green text for contrast
     },
     background: {
-      default: "#F7F7F7", // Light grey background
+      default: "rgb(229, 255, 231)", // Light grey background
       paper: "#ffffff", // White background for paper components
     },
     text: {
