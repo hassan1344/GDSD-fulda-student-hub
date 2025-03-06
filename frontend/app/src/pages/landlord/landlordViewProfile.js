@@ -1,8 +1,7 @@
 import React, { useEffect, useState } from "react";
-import { getProfileByUsername } from "../services/profileServices"; 
+import { getProfileByUsername } from "../../services/profileServices"; 
 import {jwtDecode} from "jwt-decode";
-import LandlordNavbar from "../components/LandlordNavbar";
-import Disclaimer from "../components/Disclaimer";
+import LandlordNavbar from '../../components/LandlordNavbar';
 
 const LandlordViewProfile = () => {
   const [profile, setProfile] = useState(null);

@@ -1,8 +1,7 @@
 import React, { useEffect, useState } from "react";
-import { getProfileByUsername } from "../services/profileServices"; // Adjust the import based on your structure
+import { getProfileByUsername } from "../../services/profileServices"; // Adjust the import based on your structure
 import { jwtDecode } from "jwt-decode";
-import Navbar from "../components/NavBar";
-import Disclaimer from "../components/Disclaimer";
+import Navbar from "../../components/NavBar";
 
 const ViewStudentProfile = () => {
   const [profile, setProfile] = useState(null);
@@ -48,9 +47,6 @@ const ViewStudentProfile = () => {
 
   return (
     <div className="background-container">
-      {/* Navbar */}
-      <Navbar />
-
       {/* Profile Content */}
       <div className="max-w-4xl mx-auto p-6 bg-white shadow-lg rounded-lg mt-8">
         {/* Profile Header */}

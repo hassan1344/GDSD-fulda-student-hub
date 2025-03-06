@@ -63,7 +63,7 @@ export const addReview = async (req, res) => {
 export const getAllReviewsForALandlord = async (req, res) => {
   const { listingId } = req.params;
   //   console.log(listingId);
-  const { userName } = req.user;
+  // const { userName } = req.user;
 
   try {
     const listing = await prisma.listing.findUnique({
@@ -78,9 +78,9 @@ export const getAllReviewsForALandlord = async (req, res) => {
       where: {
         application: {
           listing_id: listingId,
-          student_id: {
-            not: userName, // Exclude current
-          },
+          // student_id: {
+          //   not: userName, // Exclude current
+          // },
         },
       },
       include: {

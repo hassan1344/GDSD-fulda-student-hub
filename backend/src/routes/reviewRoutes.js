@@ -13,7 +13,7 @@ reviewRouter.get(
 
 reviewRouter.get(
   "/:listingId",
-  authenticateStudent,
+  // authenticateStudent,
   reviewService.getAllReviewsForALandlord
 );
 

@@ -6,6 +6,7 @@ import { getReviewsForALandlord } from "../services/reviewServices";
 
 import Map, { Marker } from "react-map-gl/maplibre";
 import "maplibre-gl/dist/maplibre-gl.css";
+import { checkLogin } from "../services/authServices";
 
 const PropertyDetails = ({ listing, onBack }) => {
   const [activeTab, setActiveTab] = useState("about");
@@ -18,6 +19,7 @@ const PropertyDetails = ({ listing, onBack }) => {
   const [locationData, setLocationData] = useState(null);
 
   useEffect(() => {
+
     const fetchLocationData = async () => {
       setLoadingLocation(true);
       try {
@@ -107,13 +109,12 @@ const PropertyDetails = ({ listing, onBack }) => {
               Trust Score: {listing.trustScore} ⭐
             </p>
             <p
-              className={`mt-2 text-sm font-medium ${
-                listing.trustScore >= 0.7
+              className={`mt-2 text-sm font-medium ${listing.trustScore >= 0.7
                   ? "text-green-600"
                   : listing.trustScore >= 0.4
-                  ? "text-yellow-600"
-                  : "text-red-600"
-              }`}
+                    ? "text-yellow-600"
+                    : "text-red-600"
+                }`}
             >
               {listing.decisionMessage}
             </p>
@@ -174,7 +175,7 @@ const PropertyDetails = ({ listing, onBack }) => {
           return (
             <div className="p-4 bg-yellow-50 border border-yellow-200 rounded-md">
               <p className="text-yellow-700">
-                We were unable to retrieve location data for this address. 
+                We were unable to retrieve location data for this address.
                 Please verify the address or contact support if the problem persists.
               </p>
             </div>
@@ -343,12 +344,17 @@ const PropertyDetails = ({ listing, onBack }) => {
             <button
               className="bg-blue-500 text-white p-2 rounded mt-2"
               onClick={() => {
-                // Store the landlord's user ID in localStorage to access on the Messages page
-                localStorage.setItem(
-                  "receiverId",
-                  listing.property.landlord.user_id
-                );
-                window.location.href = "/app/messages";
+                if (checkLogin()) {
+                  // Store the landlord's user ID in localStorage to access on the Messages page
+                  localStorage.setItem(
+                    "receiverId",
+                    listing.property.landlord.user_id
+                  );
+                  window.location.href = "/app/messages";
+                } else {
+                  window.location.href = "/app/login";
+                }
+
               }}
             >
               Contact
@@ -434,11 +440,10 @@ const PropertyDetails = ({ listing, onBack }) => {
                   key={index}
                   src={`https://fulda-student-hub.s3.eu-north-1.amazonaws.com/public/uploads/images/${image.mediaUrl}`}
                   alt={`Thumbnail ${index + 1}`}
-                  className={`w-full h-24 object-cover rounded-md cursor-pointer ${
-                    index === currentImageIndex
+                  className={`w-full h-24 object-cover rounded-md cursor-pointer ${index === currentImageIndex
                       ? "border-2 border-blue-500"
                       : ""
-                  }`}
+                    }`}
                   onClick={() => setCurrentImageIndex(index)}
                 />
               ))}
@@ -463,67 +468,61 @@ const PropertyDetails = ({ listing, onBack }) => {
       <div className="flex space-x-4 mb-6 border-b">
         <button
           onClick={() => setActiveTab("about")}
-          className={`py-2 px-4 transition-all duration-200 ${
-            activeTab === "about"
+          className={`py-2 px-4 transition-all duration-200 ${activeTab === "about"
               ? "border-b-2 border-blue-600 font-bold text-blue-600"
               : "text-gray-600 hover:text-blue-600 hover:font-medium"
-          }`}
+            }`}
         >
           About
         </button>
         <button
           onClick={() => setActiveTab("reviews")}
-          className={`py-2 px-4 transition-all duration-200 ${
-            activeTab === "reviews"
+          className={`py-2 px-4 transition-all duration-200 ${activeTab === "reviews"
               ? "border-b-2 border-blue-600 font-bold text-blue-600"
               : "text-gray-600 hover:text-blue-600 hover:font-medium"
-          }`}
+            }`}
         >
           Reviews
         </button>
         <button
           onClick={() => setActiveTab("location")}
-          className={`py-2 px-4 transition-all duration-200 ${
-            activeTab === "location"
+          className={`py-2 px-4 transition-all duration-200 ${activeTab === "location"
               ? "border-b-2 border-blue-600 font-bold text-blue-600"
               : "text-gray-600 hover:text-blue-600 hover:font-medium"
-          }`}
+            }`}
         >
           Nearby Services
         </button>
         <button
           onClick={() => setActiveTab("contact")}
-          className={`py-2 px-4 transition-all duration-200 ${
-            activeTab === "contact"
+          className={`py-2 px-4 transition-all duration-200 ${activeTab === "contact"
               ? "border-b-2 border-blue-600 font-bold text-blue-600"
               : "text-gray-600 hover:text-blue-600 hover:font-medium"
-          }`}
+            }`}
         >
           Contact
         </button>
-        <button
+        {checkLogin() && <button
           onClick={() => setActiveTab("apply")}
-          className={`py-2 px-4 transition-all duration-200 ${
-            activeTab === "apply"
+          className={`py-2 px-4 transition-all duration-200 ${activeTab === "apply"
               ? "border-b-2 border-blue-600 font-bold text-blue-600"
               : "text-gray-600 hover:text-blue-600 hover:font-medium"
-          }`}
+            }`}
           style={{ display: listing.isBidding === false ? "block" : "none" }} // Hide if not from bidding list
         >
           Apply Now
-        </button>
+        </button>}
 
-        <button
+        {checkLogin() && <button
           onClick={() => setActiveTab("bid")}
-          className={`py-2 px-4 transition-all duration-200 ${
-            activeTab === "bid"
+          className={`py-2 px-4 transition-all duration-200 ${activeTab === "bid"
               ? "border-b-2 border-blue-600 font-bold text-blue-600"
               : "text-gray-600 hover:text-blue-600 hover:font-medium"
-          }`}
+            }`}
           style={{ display: listing.isBidding === true ? "block" : "none" }} // Hide if not from bidding list
         >
           Bid Now
-        </button>
+        </button>}
       </div>
 
       {/* Tab Content */}

@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import LandlordNavbar from '../components/LandlordNavbar';
+import LandlordNavbar from '../../components/LandlordNavbar';
 
 const LandlordRequests = () => {
   const [filters, setFilters] = useState({
