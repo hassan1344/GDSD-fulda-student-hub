@@ -27,8 +27,3 @@ export const refreshToken = async ({ userName, refreshToken }) => {
   return response.data;
 };
 
-export const checkLogin = () => {
-  return localStorage.getItem("token") !== null;
-};
-
-

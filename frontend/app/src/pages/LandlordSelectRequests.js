@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
-import LandlordNavbar from '../../components/LandlordNavbar';
-import { getAllApplicationsByLandlord, updateApplicationStatus } from '../../services/applicationServices';
-import ApplicationDetails from '../../components/ApplicationDetails';
+import LandlordNavbar from '../components/LandlordNavbar';
+import { getAllApplicationsByLandlord, updateApplicationStatus } from '../services/applicationServices';
+import ApplicationDetails from '../components/ApplicationDetails';
 import { ToastContainer, toast } from "react-toastify";
 import { useNavigate } from 'react-router-dom';
 import "react-toastify/dist/ReactToastify.css";

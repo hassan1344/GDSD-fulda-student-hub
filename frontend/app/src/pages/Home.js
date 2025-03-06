@@ -2,6 +2,7 @@ import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import Navbar from "../components/NavBar";
 import SearchBar from "../components/SearchBar";
+import Disclaimer from "../components/Disclaimer";
 import SearchCard from "../components/SearchCard";
 import PropertyDetails from "../components/PropertyDetails";
 import { getAllAmenities } from "../services/utilServices";
@@ -19,7 +20,7 @@ import { getProfileByUsername } from "../services/profileServices";
 const Home = () => {
   const [location, setLocation] = useState("");
   const [roomType, setRoomType] = useState("");
-  const [priceRange, setPriceRange] = useState([0, 2000]);
+  const [priceRange, setPriceRange] = useState([0, 1000]);
   const [showAdvanced, setShowAdvanced] = useState(false);
   const [selectedProperty, setSelectedProperty] = useState(null);
   const [advancedFilters, setAdvancedFilters] = useState({});
@@ -107,10 +108,7 @@ const Home = () => {
     };
 
     fetchInitialData();
-    if (localStorage.getItem("accessToken")) {
-      fetchProfile();
-
-    }
+    fetchProfile();
   }, []);
 
   useEffect(() => {
@@ -175,6 +173,8 @@ const Home = () => {
 
   return (
     <div className="background-container">
+      <Navbar />
+
       {selectedProperty ? (
         <PropertyDetails
           listing={selectedProperty}
@@ -183,7 +183,7 @@ const Home = () => {
       ) : (
         <div className="flex justify-center mt-12 relative">
           {}
-          <div className="w-1/5 bg-white p-4 shadow-lg overflow-y-auto absolute left-4 rounded-lg">
+          <div className="w-1/5 bg-white p-4 shadow-lg h-screen overflow-y-auto absolute left-4">
             <h3 className="text-lg font-semibold text-gray-800 mb-4">
               Upcoming Meetings
             </h3>
@@ -206,7 +206,6 @@ const Home = () => {
                   <br />
                 </div>
               ))}
-                No upcoming meetings.
             </div>
           </div>
           <div className="bg-white shadow-lg rounded-lg p-8 w-full max-w-4xl">
