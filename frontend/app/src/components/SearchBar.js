@@ -47,32 +47,35 @@ const SearchBar = ({
 
       {/* Room Type Select */}
       <select
-  value={roomType}
-  onChange={(e) => {
-    const selectedId = e.target.value;
-    setRoomType(selectedId);
-  }}
-  className="border border-gray-300 rounded-lg px-4 py-3 flex-1 focus:outline-none focus:ring-2 focus:ring-blue-500"
->
-  <option value="">Room Type</option>
-  {loadingRoomTypes
-    ? <option disabled>Loading...</option>
-    : roomtypes.map((room) => (
-        <option
-          key={room.room_type_id}
-          value={JSON.stringify({
-            id: room.room_type_id,
-            name: room.room_type_name,
-          })}
-        >
-          {room.room_type_name}
-        </option>
-      )
-  )}
-</select>
+        value={roomType}
+        onChange={(e) => {
+          const selectedId = e.target.value;
+          setRoomType(selectedId);
+        }}
+        className="border border-gray-300 rounded-lg px-4 py-3 flex-1 focus:outline-none focus:ring-2 focus:ring-blue-500"
+      >
+        <option value="">Room Type</option>
+        {loadingRoomTypes
+          ? <option disabled>Loading...</option>
+          : roomtypes.map((room) => (
+            <option
+              key={room.room_type_id}
+              value={JSON.stringify({
+                id: room.room_type_id,
+                name: room.room_type_name,
+              })}
+            >
+              {room.room_type_name}
+            </option>
+          )
+          )}
+      </select>
 
       {/* Price Range Slider */}
-      <div className="flex items-center flex-1">
+      <div className="flex flex-col items-center flex-1">
+        <div className="mb-2 text-gray-700 font-medium">
+          <span>€{priceRange[0]} - €{priceRange[1]}</span>
+        </div>
         <Range
           values={priceRange} // Current values for the price range
           step={1} // Step value for the slider
@@ -106,10 +109,6 @@ const SearchBar = ({
             />
           )}
         />
-        <span className="ml-3 text-gray-700 font-medium">
-          €{priceRange[0]} - €{priceRange[1]}{" "}
-          {/* Display selected price range */}
-        </span>
       </div>
     </div>
   );

@@ -39,9 +39,13 @@ const ViewProperties = () => {
         } else {
           setError(response.message || 'Failed to delete property');
         }
-      } catch (err) {
-        console.error('Error deleting property:', err);
-        setError('Error deleting property');
+      } catch (error) {
+        if (error.response?.data?.error && typeof error.response.data.error === "string" &&
+          error.response.data.error.includes("[ListingYES]")) {
+          alert("Property is associated with listing(s). Cannot delete");
+        } else {
+          setError('Error deleting listing');
+        }
       }
     }
   };

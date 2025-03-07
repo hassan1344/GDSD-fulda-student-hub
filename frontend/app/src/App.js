@@ -74,10 +74,10 @@ const App = () => {
         <Route path="/landlord/requests" element={<LandlordRequests />} />
         <Route path="/landlord/select-requests" element={<LandlordSelectRequests />}  />
 
-        <Route path="/landlord/tenants" element={<LandlordViewTenants />} />
+        {/* <Route path="/landlord/tenants" element={<LandlordViewTenants />} /> */}
         <Route path="/landlord/properties" element={<LandlordViewProperties />} />
        
-        <Route path="/landlord/properties"  element={<LandlordViewProperties />} />
+        {/* <Route path="/landlord/properties"  element={<LandlordViewProperties />} /> */}
         <Route path="/landlord/viewProfile" element = {<LandlordViewProfile/>}/>
         <Route path="/landlord/messages" element = {<Messages/>}/>
 

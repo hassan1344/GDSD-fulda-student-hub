@@ -1,5 +1,7 @@
 import { PrismaClient } from "@prisma/client";
-const prisma = new PrismaClient();
+const prisma = new PrismaClient({
+  // log: ['query']
+});
 
 async function getLandlordId(user_name) {
   const dbUser = await prisma.user.findUnique({
@@ -115,19 +117,26 @@ export const cancelMeeting = async (req, res) => {
 
 export const getScheduledMeetings = async (req, res) => {
   try {
-    const { landlord_id } = req.params;
-    const { student_id } = req.query; // Get student_id from query params
+    // const { landlord_id } = req.params;
+    const { landlord_id, student_id } = req.query; // Get student_id from query params
+    
+    console.log("Landlord ID:", landlord_id);
+    console.log("Student ID:", student_id);
 
     const meetings = await prisma.meeting.findMany({
       where: {
-        landlord_id,
+        landlord: {
+          user_id: landlord_id
+        },
         ...(student_id ? { student_id } : {}), // Filter by student_id if provided
       },
       include: {
         student: { select: { first_name: true, last_name: true } },
-        landlord: { select: { user_id: true } }, // Include Landlord and select user_id
+        landlord: true, // Include Landlord and select user_id
       }
     });
+
+    // console.log("Meetings:", meetings);
 
     // Custom sorting:
     const sortedMeetings = meetings.sort((a, b) => {

@@ -40,7 +40,7 @@ const LandlordHomepage = () => {
           console.log("Approved applications data:", applicationData.data);
           if (applicationData.success) {
             let filteredApplications = applicationData.data.filter(
-              item => 
+              item =>
                 item.application_status === 'APPROVED');
             setApprovedApplication(filteredApplications);
           } else {
@@ -48,7 +48,7 @@ const LandlordHomepage = () => {
           }
 
           // For Meeting Data
-          const meetingData = await fetchScheduledMeetingsForLandlord();
+          const meetingData = await fetchScheduledMeetingsForLandlord(userName);
           console.log(49, meetingData)
           setTableData(meetingData);
         } else {
@@ -167,42 +167,50 @@ const LandlordHomepage = () => {
                   </tr>
                 </thead>
                 <tbody>
-                  {tableData.map((row, index) => (
-                    <tr key={index} className="border-b hover:bg-gray-50">
-                      <td className="p-2">{row.student.first_name} {row.student.last_name}</td>
-                      <td className="p-2">{new Date(row.date).toUTCString()}</td>
-                      <td className={`p-2 font-semibold ${row.status === 'SCHEDULED' ? 'text-green-600' :
-                        row.status === 'CANCELED' ? 'text-red-600' :
-                          row.status === 'COMPLETED' ? 'text-blue-600' :
-                            'text-gray-600'
-                        }`}>
-                        {row.status}
-                      </td>
-                      { row.status === 'SCHEDULED' && <td className="p-2 flex gap-2">
-                        <button
-                          className="text-red-500 hover:text-red-700 px-2 py-1 border rounded"
-                          onClick={() => updateStatus(row, 'CANCELED')}
-                          title="Mark as Canceled"
-                        >
-                          ❌ Cancel
-                        </button>
-                        <button
-                          className="text-blue-500 hover:text-blue-700 px-2 py-1 border rounded"
-                          onClick={() => updateStatus(row, 'COMPLETED')}
-                          title="Mark as Completed"
-                        >
-                          ✅ Complete
-                        </button>
-                        <button
-                          className="text-red-500 hover:text-red-700 px-2 py-1 border rounded"
-                          onClick={() => handleDelete(row)}
-                          title="Delete"
-                        >
-                          🗑️ Delete
-                        </button>
-                      </td> }
+                  {tableData.length > 0 ? (
+                    tableData.map((row, index) => (
+                      <tr key={index} className="border-b hover:bg-gray-50">
+                        <td className="p-2">{row.student.first_name} {row.student.last_name}</td>
+                        <td className="p-2">{new Date(row.date).toUTCString()}</td>
+                        <td className={`p-2 font-semibold ${row.status === 'SCHEDULED' ? 'text-green-600' :
+                          row.status === 'CANCELED' ? 'text-red-600' :
+                            row.status === 'COMPLETED' ? 'text-blue-600' :
+                              'text-gray-600'
+                          }`}>
+                          {row.status}
+                        </td>
+                        {row.status === 'SCHEDULED' && (
+                          <td className="p-2 flex gap-2">
+                            <button
+                              className="text-red-500 hover:text-red-700 px-2 py-1 border rounded"
+                              onClick={() => updateStatus(row, 'CANCELED')}
+                              title="Mark as Canceled"
+                            >
+                              ❌ Cancel
+                            </button>
+                            <button
+                              className="text-blue-500 hover:text-blue-700 px-2 py-1 border rounded"
+                              onClick={() => updateStatus(row, 'COMPLETED')}
+                              title="Mark as Completed"
+                            >
+                              ✅ Complete
+                            </button>
+                            <button
+                              className="text-red-500 hover:text-red-700 px-2 py-1 border rounded"
+                              onClick={() => handleDelete(row)}
+                              title="Delete"
+                            >
+                              🗑️ Delete
+                            </button>
+                          </td>
+                        )}
+                      </tr>
+                    ))
+                  ) : (
+                    <tr>
+                      <td colSpan="4" className="p-4 text-center text-gray-500">No scheduled meetings</td>
                     </tr>
-                  ))}
+                  )}
                 </tbody>
               </table>
             </div>

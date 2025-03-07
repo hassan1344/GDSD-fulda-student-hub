@@ -101,13 +101,21 @@ export const getPropertyById = async (req, res) => {
   const { id } = req.params;
   try {
     const property = await prisma.property.findUnique({
-      where: {
-        property_id: id,
-      },
+      where: { property_id: id },
       include: {
-        landlord: true, // Include landlord details for the property
-        // Listing: true,  // Include associated listings for the property
-      },
+        landlord: true
+        ,
+        PropertyAmenity: {
+          include: {
+            Amenity: true
+          }
+        },
+        Listing: {
+          include: {
+            room_type: true
+          }
+        }
+      }
     });
 
     if (!property) {
@@ -121,15 +129,19 @@ export const getPropertyById = async (req, res) => {
       },
     });
 
-    const propertyWithMedia = {
-      ...property,
-      Media: media.map((media) => ({
-        mediaUrl: media.media_url,
-        mediaType: media.media_type,
-      })),
-    };
+    // const propertyWithMedia = {
+    //   ...property,
+    //   Media: media.map((media) => ({
+    //     mediaUrl: media.media_url,
+    //     mediaType: media.media_type,
+    //   })),
+    // };
 
-    res.status(200).json(propertyWithMedia);
+    res.status(200).json({
+      success: true,
+      message: "Property retrieved successfully",
+      data: { ...property, media },
+    });
   } catch (error) {
     console.error("Error fetching property:", error);
     res

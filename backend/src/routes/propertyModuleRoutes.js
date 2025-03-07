@@ -8,7 +8,8 @@ import {
   updateProperty,
   updatePropertyAdmin,
   deleteProperty,
-  deletePropertyAdmin
+  deletePropertyAdmin,
+  getPropertyByIdAdmin
 } from '../services/propertyModuleService.js';
 
 const router = Router();

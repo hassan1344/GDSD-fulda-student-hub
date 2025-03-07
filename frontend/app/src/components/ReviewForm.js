@@ -17,7 +17,7 @@ const ReviewForm = ({ onSubmit }) => {
 
   return (
     <div className="p-4 bg-gray-100 rounded-md">
-      <h3 className="text-lg font-medium mb-2">Leave a Review</h3>
+      <h3 className="text-lg font-medium text-gray-700">Leave a Review</h3>
 
       <div className="flex items-center mb-2">
         {[...Array(5)].map((_, index) => {

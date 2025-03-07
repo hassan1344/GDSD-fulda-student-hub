@@ -38,14 +38,20 @@ const getCurrentDate = () => {
 };
 
 const createPdf = async(outputHtml, outputPdfPath) => {
-  const browser = await puppeteer.launch({executablePath: '/usr/bin/google-chrome-stable', args: ["--no-sandbox"]});
+  const browser = await puppeteer.launch({
+        args: ["--no-sandbox", "--disable-setuid-sandbox"], // Can be useful in certain environments like Docker
+        headless: true, // Ensure Puppeteer runs in headless mode (no UI)
+      });
+
   const page = await browser.newPage();
   console.log(`file:///${outputHtml}`)
 
   await page.goto(`file:///${outputHtml}`, {waitUntil: 'networkidle0'});
+
   const pdf = await page.pdf({ format: 'A4', path: outputPdfPath });
 
   await browser.close();
+
   console.log(`PDF created at ${outputPdfPath}`);
   return pdf;
 }

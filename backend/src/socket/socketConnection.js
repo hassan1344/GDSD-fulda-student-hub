@@ -132,6 +132,7 @@ export const initiateSocket = (server) => {
           socket.join(roomId);
           console.log(`User ${userName} joined bidding for room: ${roomId}`);
           const bids = await getBidsForSession(roomId);
+          biddingRooms[roomId] = { listingId, bids: bids, isActive: true };
           socket.emit('joinedBidding', { roomId, listingId: session.listing_id, bids: bids, startingPrice: session.starting_price, endsAt:session.ends_at});
           callback({ roomId, listingId: session.listing_id, bids: bids });
         } else {
@@ -212,8 +213,10 @@ export const initiateSocket = (server) => {
           return;
         }
         const roomId = session.session_id;
+        console.log("biddingrooms", biddingRooms);
         if (biddingRooms[roomId]?.isActive) {
           const bids = biddingRooms[roomId].bids;
+          console.log("bids", bids);
           const winner = bids.length
             ? bids.reduce((max, bid) => (bid.amount > max.amount ? bid : max))
             : null;
@@ -227,7 +230,7 @@ export const initiateSocket = (server) => {
           biddingRooms[roomId].isActive = false;
           console.log(`Bidding ended for room: ${roomId}. Winner:`, winner);
 
-          io.to(roomId).emit('biddingEnded', { roomId, winner });
+          io.to(roomId).emit('biddingEnded', { bids, roomId, winner });
         } else {
           socket.emit('error', 'Bidding is not active or room does not exist.');
         }

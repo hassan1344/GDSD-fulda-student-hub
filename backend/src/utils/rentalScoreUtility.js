@@ -2,13 +2,19 @@ import { PrismaClient } from "@prisma/client";
 const prisma = new PrismaClient();
 
 export const initializeLandlordTrust = async (userName) => {
-  const existing = await prisma.landlordTrust.findUnique({
-    where: { user_name: userName },
+  const existing = await prisma.landlord.findFirst({
+    where: { 
+        user_id: userName,
+    },
+    include: {
+      LandlordTrust: true,
+    }
   });
-  if (!existing) {
+
+  if (!existing.landlordTrust || !existing.landlordTrust.length) {
     await prisma.landlordTrust.create({
       data: {
-        landlord_id: userName,
+        landlord_id: existing.landlord_id,
         alpha: 1.0,
         beta: 1.0,
       },

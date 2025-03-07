@@ -25,12 +25,13 @@ export const fetchListings = async (filters) => {
     }
   };
 
-export const fetchScheduledMeetingsForLandlord = async() =>{
+export const fetchScheduledMeetingsForLandlord = async(userName) =>{
   try {
+    console.log("landlord_id", userName)
     const response = await  apiClient.get("/calendar/scheduledMeetingsForlandlord", {
       requireToken: true,
-      // params: filters,
-    });;
+      params: { landlord_id: userName }, // Pass landlord_id as a filter
+    });
     return response.data; // Return the data from the API
   } catch (error) {
     console.error("Error fetching featured listings:", error);

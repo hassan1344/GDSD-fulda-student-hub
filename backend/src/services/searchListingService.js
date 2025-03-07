@@ -28,6 +28,9 @@ export const getAllListings = async (req, res) => {
         },
         room_type: true,
       },
+      orderBy: {
+        created_at: "desc", // Show the latest listings 
+      }
     };
 
     // Filter by address (via the related `property` model)

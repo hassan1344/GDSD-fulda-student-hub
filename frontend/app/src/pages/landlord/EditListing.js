@@ -84,14 +84,15 @@ const EditListing = () => {
       updateFormData.append('imagesToDelete[]', mediaId);
 
       // Make an API call to update the listing
-      const response = await userType === "ADMIN" ? 
-      updateListingAdmin(id, updateFormData, token) : 
-      updateListing(id, updateFormData, token);
+      const response = userType === "ADMIN" ? 
+      await updateListingAdmin(id, updateFormData, token) : 
+      await updateListing(id, updateFormData, token);
 
       if (response.success) {
         // Update frontend UI to reflect the deletion
         setVisibleMedia((prev) => prev.filter((media) => media.media_id !== mediaId));
       } else {
+        console.log('Failed to delete image:', response);
         throw new Error('Failed to delete image');
       }
     } catch (error) {
@@ -193,6 +194,7 @@ const EditListing = () => {
                 onChange={handleInputChange}
                 className="w-full p-3 border border-gray-300 rounded-lg focus:ring-green-500 focus:border-green-500"
                 required
+                disabled={isLoading}
               />
             </div>
 
@@ -205,6 +207,7 @@ const EditListing = () => {
                 rows="4"
                 className="w-full p-3 border border-gray-300 rounded-lg focus:ring-green-500 focus:border-green-500"
                 required
+                disabled={isLoading}
               />
             </div>
 
@@ -217,6 +220,7 @@ const EditListing = () => {
                 onChange={handleInputChange}
                 className="w-full p-3 border border-gray-300 rounded-lg focus:ring-green-500 focus:border-green-500"
                 required
+                disabled={isLoading}
               />
             </div>
 
@@ -249,6 +253,7 @@ const EditListing = () => {
                       type="button"
                       onClick={() => handleImageDelete(media.media_id)}
                       className="absolute top-2 right-2 bg-red-500 text-white p-1 rounded-full hover:bg-red-600"
+                      disabled={isLoading}
                     >
                       ×
                     </button>
@@ -265,6 +270,7 @@ const EditListing = () => {
                 accept="image/*"
                 onChange={handleFileChange}
                 className="w-full p-3 border border-gray-300 rounded-lg focus:ring-green-500 focus:border-green-500"
+                disabled={isLoading}
               />
             </div>
 
@@ -273,10 +279,12 @@ const EditListing = () => {
                 type="button"
                 onClick={() => navigate(userType === "ADMIN" ? '/admin/listings' : '/landlord/my-prop-listings')}
                 className="px-6 py-3 bg-gray-500 text-white rounded-lg hover:bg-gray-600 transition duration-200"
+                disabled={isLoading}
               >
                 Cancel
               </button>
               <button
+                disabled={isLoading}
                 type="submit"
                 className="px-6 py-3 bg-green-600 text-white rounded-lg hover:bg-green-700 transition duration-200"
               >

@@ -6,6 +6,7 @@ import apiClient from "../../services/apiClient";
 import { jwtDecode } from "jwt-decode";
 import LandlordNavbar from "../../components/LandlordNavbar";
 import { getProfileByUsername } from "../../services/profileServices";
+import { truncateText } from "../../services/utilServices";
 
 const getToken = () => {
   const accessToken = localStorage.getItem("accessToken");
@@ -31,13 +32,6 @@ const Messages = () => {
   const currentUserName = token ? jwtDecode(token).userName : null;
   const currentUserType = token ? jwtDecode(token).userType : null;
 
-
-  const truncateText = (text, maxLength) => {
-    if (!text) return '';
-    return text.length <= maxLength 
-      ? text 
-      : text.slice(0, maxLength) + '...';
-  };
 
   // Initialize Socket
   const initializeSocket = () => {
@@ -140,7 +134,7 @@ const Messages = () => {
           return;
         }
       
-        console.log("User names:", userNames);
+        // console.log("User names:", userNames);
 
         // Fetch all user profiles in parallel
         const profiles = await Promise.all(userNames.map(getProfileByUsername));
@@ -248,8 +242,12 @@ const Messages = () => {
       fetchChats(currentConversation.conversation_id);
     }
 
-    // Add overflow hidden to body when component mounts
-    document.body.style.overflow = 'hidden';
+    if (window.innerWidth > 640) {
+      // Apply overflow hidden only for larger screens
+      document.body.style.overflow = 'hidden';
+    } else {
+      document.body.style.overflow = 'visible';
+    }
 
     return () => {
       socketRef.current?.disconnect();
@@ -266,29 +264,30 @@ const Messages = () => {
 
   return (
     <div className="background-container overflow-hidden">
-      {currentUserType && currentUserType === "LANDLORD" ? (
-        <LandlordNavbar />
-      ) : (
-        <Navbar />
-      )}
-      <div className="min-h-screen flex justify-center bg-gradient-to-br from-green-100 via-green-50 to-white overflow-hidden">
-      <div className="w-[1200px] p-0 bg-white shadow-lg rounded-lg mt-8 flex h-[600px] overflow-hidden"> 
+  {currentUserType && currentUserType === "LANDLORD" ? (
+    <LandlordNavbar />
+  ) : (
+    <Navbar />
+  )}
+  <div className="min-h-screen flex justify-center bg-gradient-to-br from-green-100 via-green-50 to-white overflow-hidden">
+    <div className="w-full sm:w-[1200px] p-0 bg-white shadow-lg rounded-lg mt-8 flex sm:h-[600px] flex-col sm:flex-row overflow-hidden">
+      
       {/* Left Panel - Conversations */}
-      <div className="w-[350px] p-0 bg-gray-100 rounded-l-lg overflow-hidden">
+      <div className="w-full sm:w-[350px] p-0 bg-gray-100 rounded-t-lg sm:rounded-l-lg overflow-hidden">
         <div className="p-4">
           <h2 className="text-2xl font-semibold mb-4">Conversations</h2>
-          <div className="h-[540px] overflow-y-auto pr-2">
+          <div className="h-[300px] sm:h-[540px] overflow-y-auto pr-2">
             <ul>
               {conversations.map((conversation) => {
                 const otherParticipant =
-                conversation.sender_id === currentUserName
-                  ? receiverUsers.find(
-                      (user) =>
-                        user.user_id === conversation.receiver?.user_name
-                    )
-                  : receiverUsers.find(
-                      (user) => user.user_id === conversation.sender?.user_name
-                    );
+                  conversation.sender_id === currentUserName
+                    ? receiverUsers.find(
+                        (user) =>
+                          user.user_id === conversation.receiver?.user_name
+                      )
+                    : receiverUsers.find(
+                        (user) => user.user_id === conversation.sender?.user_name
+                      );
                 return (
                   <li
                     key={conversation.conversation_id}
@@ -308,7 +307,7 @@ const Messages = () => {
                         </strong>
                       </div>
                       <div className="text-gray-500">
-                       { truncateText(conversation.last_message || "No messages yet", 25) }
+                        {truncateText(conversation.last_message || "No messages yet", 25)}
                       </div>
                     </div>
                   </li>
@@ -320,7 +319,7 @@ const Messages = () => {
       </div>
 
       {/* Middle Panel - Chat Pane */}
-      <div className="w-[600px] p-0 bg-gray-50 overflow-hidden">
+      <div className="w-full sm:w-[600px] p-0 bg-gray-50 overflow-hidden">
         <div className="p-4">
           {currentConversation ? (
             <div>
@@ -328,7 +327,7 @@ const Messages = () => {
                 <span className="mr-2">💬</span>
                 {receiverUser?.first_name} {receiverUser?.last_name}
               </h3>
-              <div className="h-[400px] overflow-y-auto pr-2 mb-4">
+              <div className="h-[300px] sm:h-[400px] overflow-y-auto pr-2 mb-4">
                 <ul>
                   {messages.map((message) => (
                     <li
@@ -362,12 +361,12 @@ const Messages = () => {
                   value={messageInput}
                   onChange={(e) => setMessageInput(e.target.value)}
                   placeholder="Type a message"
-                  className="border p-2 rounded w-[480px]"
+                  className="border p-2 rounded w-[300px] sm:w-[480px]"
                   onKeyDown={handleKeyPress}
                 />
                 <button
                   onClick={sendMessage}
-                  className="bg-blue-500 text-white p-2 rounded ml-2 w-[100px]"
+                  className="bg-blue-500 text-white p-2 rounded ml-2 w-[80px] sm:w-[100px]"
                 >
                   Send
                 </button>
@@ -382,7 +381,7 @@ const Messages = () => {
       </div>
 
       {/* Right Panel - User Profile */}
-      <div className="w-[250px] p-0 bg-gray-200 rounded-r-lg overflow-hidden">
+      <div className="w-full sm:w-[250px] p-0 bg-gray-200 rounded-b-lg sm:rounded-r-lg overflow-hidden">
         <div className="p-4">
           <h3 className="text-xl font-semibold mb-4">User Profile</h3>
           {receiverUser ? (
@@ -406,8 +405,9 @@ const Messages = () => {
         </div>
       </div>
     </div>
-    </div>
-    </div>
+  </div>
+</div>
+
   );
 };
 

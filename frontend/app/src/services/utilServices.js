@@ -43,3 +43,10 @@ export const getRoomTypeById = async (id) => {
     return null;
   }
 };
+
+export const truncateText = (text, maxLength) => {
+  if (!text) return '';
+  return text.length <= maxLength 
+    ? text 
+    : text.slice(0, maxLength) + '...';
+};

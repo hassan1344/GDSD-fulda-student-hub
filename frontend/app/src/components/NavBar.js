@@ -49,16 +49,16 @@ const Navbar = () => {
   };
 
   return (
-    <nav className="bg-white shadow-md">
+    <nav className="bg-white shadow-md w-full z-50">
       <div className="flex justify-between items-center px-8 py-5">
         {/* Logo */}
         <div className="flex items-center">
           <img
             src={logoFHB}
             alt="Fulda Student Hub Logo"
-            className="w-12 h-12 object-contain"
+            className="w-35 h-20 object-contain"
           />
-          <h1 className="text-2xl md:text-3xl font-bold ml-3">Fulda Student Hub</h1>
+          {/* <h1 className="text-2xl md:text-3xl font-bold ml-3">Fulda Student Hub</h1> */}
         </div>
 
         {/* Hamburger Icon (for small screens) */}
@@ -93,7 +93,7 @@ const Navbar = () => {
 
         {/* Nav Links */}
         <div
-          className={`flex flex-col md:flex-row md:space-x-8 text-lg items-center absolute md:static bg-white w-full md:w-auto left-0 top-[70px] md:top-auto transition-all duration-300 ease-in-out ${
+          className={`flex flex-col md:flex-row md:space-x-8 text-lg items-center absolute md:static bg-white w-full md:w-auto left-0 top-[70px] md:top-auto transition-all duration-300 ease-in-out z-50 ${
             isMenuOpen ? "block" : "hidden md:flex"
           }`}
         >

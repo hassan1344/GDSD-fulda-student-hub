@@ -4,7 +4,8 @@ import multer from 'multer';
 
 const upload = multer().fields([{ name: 'media', maxCount: 5 }]); // Accepting up to 5 files under 'media'
 
-const prisma = new PrismaClient({ log: ['query', 'info', 'warn', 'error'],
+const prisma = new PrismaClient({ 
+  // log: ['query', 'info', 'warn', 'error'],
   transactionOptions: {
     maxWait: 60000,  // 60 seconds max wait
     timeout: 120000  // 2 minutes timeout
@@ -214,6 +215,62 @@ export const getAllProperties = async (req, res) => {
       success: false,
       error: "An unexpected error occurred while retrieving properties"
     });
+  }
+};
+
+export const getPropertyByIdAdmin = async (req, res) => {
+  try {
+    console.log("Request to get property by ID for user:", req.user);
+
+    if (!req.user || !req.user.userName) {
+      console.log("User not authenticated:", req.user);
+      return res.status(401).json({ success: false, error: "User not authenticated" });
+    }
+
+    const { id } = req.params;
+    // const landlord_id = await getLandlordId(req.user.userName);
+    // console.log("getPropertyById called with landlord_id:", landlord_id);
+
+    const property = await prisma.property.findUnique({
+      where: { property_id: id },
+      include: {
+        landlord: true
+        ,
+        PropertyAmenity: {
+          include: {
+            Amenity: true
+          }
+        },
+        Listing: {
+          include: {
+            room_type: true
+          }
+        }
+      }
+    });
+
+    if (!property) {
+      return res.status(404).json({ success: false, error: "Property not found or does not belong to you" });
+    }
+
+    const media = await prisma.media.findMany({
+      where: {
+        model_name: 'property',
+        model_id: id
+      }
+    });
+
+    res.status(200).json({
+      success: true,
+      message: "Property retrieved successfully",
+      data: { ...property, media },
+    });
+  } catch (error) {
+    console.error("Error retrieving property:", error.message, error.stack);
+    if (error.message === "Associated landlord profile not found") {
+      return res.status(404).json({ success: false, error: "Landlord profile not found" });
+    }
+    res.status(500).json({ success: false, error: "An unexpected error occurred while retrieving the property" });
   }
 };
 
@@ -564,6 +621,14 @@ export const deleteProperty = async (req, res) => {
     const landlord_id = await getLandlordId(req.user.userName);
 
     const result = await prisma.$transaction(async (prisma) => {
+      const count = await prisma.listing.count({
+        where: { property_id: id },
+      });
+
+      if (count && count > 0) {
+        throw new Error("Property has associated listings. Please delete the listings first [ListingYES]");
+      }
+
       // Get all property amenities before deletion
       const propertyAmenities = await prisma.PropertyAmenity.findMany({
         where: { property_id: id },
@@ -635,7 +700,7 @@ export const deleteProperty = async (req, res) => {
     if (error.message === "Associated landlord profile not found") {
       return res.status(404).json({ success: false, error: "Landlord profile not found" });
     }
-    res.status(500).json({ success: false, error: "An unexpected error occurred while deleting the property" });
+    res.status(500).json({ success: false, error: "An unexpected error occurred while deleting the property" + error });
   }
 };
 
@@ -648,6 +713,14 @@ export const deletePropertyAdmin = async (req, res) => {
     const { id } = req.params;
 
     const result = await prisma.$transaction(async (prisma) => {
+      const count = await prisma.listing.count({
+        where: { property_id: id },
+      });
+
+      if (count && count > 0) {
+        throw new Error("Property has associated listings. Please delete the listings first [ListingYES]");
+      }
+
       // Get all property amenities before deletion
       const propertyAmenities = await prisma.PropertyAmenity.findMany({
         where: { property_id: id },
@@ -719,6 +792,6 @@ export const deletePropertyAdmin = async (req, res) => {
     if (error.message === "Associated landlord profile not found") {
       return res.status(404).json({ success: false, error: "Landlord profile not found" });
     }
-    res.status(500).json({ success: false, error: "An unexpected error occurred while deleting the property" });
+    res.status(500).json({ success: false, error: "An unexpected error occurred while deleting the property" + error });
   }
 };

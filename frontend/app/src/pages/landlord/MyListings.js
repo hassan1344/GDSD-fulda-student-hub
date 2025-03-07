@@ -23,8 +23,13 @@ const ViewListings = () => {
           setError(response.message || 'Failed to delete listing');
         }
       } catch (error) {
-        console.error('Error deleting listing:', error);
-        setError('Error deleting listing');
+        console.log("error", error.response.data.error)
+        if (error.response?.data?.error && typeof error.response.data.error === "string" &&
+          error.response.data.error.includes("[AppYes]")) {
+          alert("Listing is associated with an application(s) or bidding(s). Cannot delete");
+        } else {
+          setError('Error deleting listing');
+        }
       }
     }
   };

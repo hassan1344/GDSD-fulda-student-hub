@@ -46,15 +46,16 @@ const AuthPage = () => {
           formData;
 
         const errors = {};
+        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
         if (!userName) errors.userName = "Username is required.";
         if (password !== confirmPassword)
           errors.confirmPassword = "Passwords do not match.";
         if (
           userType === "STUDENT" &&
-          !email.includes("@informatik.hs-fulda.de")
+          (!emailRegex.test(email) || !email.endsWith("hs-fulda.de"))
         )
-          errors.email = "Student email must include @informatik.hs-fulda.de.";
+          errors.email = "Student email must be a valid email and end with hs-fulda.de.";
 
         const passwordRegex =
           /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[!@#$%^&*]).{8,}$/;
@@ -94,15 +95,15 @@ const AuthPage = () => {
               showNotification("Login successful...");
               if (userType === "STUDENT") {
                 setTimeout(() => {
-                  navigate('/profile', { state: { userType: "STUDENT", userName: {userName} } });
+                  navigate('/profile', { state: { userType: "STUDENT", userName: { userName } } });
                 }, 2000);
               } else if (userType === "LANDLORD") {
                 setTimeout(() => {
-                  navigate('/profile', { state: { userType: "LANDLORD", userName: {userName} } });
+                  navigate('/profile', { state: { userType: "LANDLORD", userName: { userName } } });
                 }, 2000);
-              }  else if (userType === "ADMIN") {
+              } else if (userType === "ADMIN") {
                 setTimeout(() => {
-                  navigate('/profile', { state: { userType: "ADMIN", userName: {userName} } });
+                  navigate('/profile', { state: { userType: "ADMIN", userName: { userName } } });
                 }, 2000);
               } else {
                 showNotification("An error occurred. Please try again.");
@@ -203,7 +204,7 @@ const AuthPage = () => {
         <img
           src={logoFHB}
           alt="Fulda Student Hub"
-          className="w-24 mx-auto mb-4"
+          className="w-40 mx-auto mb-4"
         />
         <h1 className="text-3xl font-bold text-gray-800">
           {isRegister ? "Register" : "Login"}
@@ -242,11 +243,10 @@ const AuthPage = () => {
               value={formData.userName}
               onChange={handleInputChange}
               required
-              className={`w-full border rounded-lg px-4 py-2 focus:outline-none focus:ring-2 ${
-                fieldErrors.userName
+              className={`w-full border rounded-lg px-4 py-2 focus:outline-none focus:ring-2 ${fieldErrors.userName
                   ? "border-red-500 ring-red-400"
                   : "border-gray-300 focus:ring-green-400"
-              }`}
+                }`}
             />
             {fieldErrors.userName && (
               <p className="text-sm text-red-500 mt-1">
@@ -267,11 +267,10 @@ const AuthPage = () => {
                 value={formData.email}
                 onChange={handleInputChange}
                 required
-                className={`w-full border rounded-lg px-4 py-2 focus:outline-none focus:ring-2 ${
-                  fieldErrors.email
+                className={`w-full border rounded-lg px-4 py-2 focus:outline-none focus:ring-2 ${fieldErrors.email
                     ? "border-red-500 ring-red-400"
                     : "border-gray-300 focus:ring-green-400"
-                }`}
+                  }`}
               />
               {fieldErrors.email && (
                 <p className="text-sm text-red-500 mt-1">{fieldErrors.email}</p>
@@ -290,11 +289,10 @@ const AuthPage = () => {
               value={formData.password}
               onChange={handleInputChange}
               required
-              className={`w-full border rounded-lg px-4 py-2 focus:outline-none focus:ring-2 ${
-                fieldErrors.password
+              className={`w-full border rounded-lg px-4 py-2 focus:outline-none focus:ring-2 ${fieldErrors.password
                   ? "border-red-500 ring-red-400"
                   : "border-gray-300 focus:ring-green-400"
-              }`}
+                }`}
             />
             {fieldErrors.password && (
               <p className="text-sm text-red-500 mt-1">
@@ -315,11 +313,10 @@ const AuthPage = () => {
                 value={formData.confirmPassword}
                 onChange={handleInputChange}
                 required
-                className={`w-full border rounded-lg px-4 py-2 focus:outline-none focus:ring-2 ${
-                  fieldErrors.confirmPassword
+                className={`w-full border rounded-lg px-4 py-2 focus:outline-none focus:ring-2 ${fieldErrors.confirmPassword
                     ? "border-red-500 ring-red-400"
                     : "border-gray-300 focus:ring-green-400"
-                }`}
+                  }`}
               />
               {fieldErrors.confirmPassword && (
                 <p className="text-sm text-red-500 mt-1">

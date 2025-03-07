@@ -33,7 +33,9 @@ const EditProperty = () => {
     const token = localStorage.getItem('accessToken'); // Moved inside the function to avoid stale token
 
     try {
-      const data = await fetchPropertyById(id, token);
+      const data = userType === "ADMIN" ? 
+      await fetchPropertyByIdAdmin(id, token) 
+      : await fetchPropertyById(id, token);
       if (data.success) {
         setProperty(data.data);
         setAddress(data.data.address);
@@ -44,6 +46,7 @@ const EditProperty = () => {
         setDisplayedImages(data.data.media || []);
       }
     } catch (error) {
+      console.log('Error fetching property:', error);
       setError('Error fetching property details');
     }
   };
@@ -134,6 +137,26 @@ const handleAddAmenity = () => {
     <div className="min-h-screen bg-green-50">
       <LandlordNavbar />
       <div className="container mx-auto px-4 py-8">
+      <button
+          onClick={() => navigate(userType === "ADMIN" ? '/admin/properties' : '/landlord/my-listings')}
+          className="mb-6 flex items-center text-green-700 hover:text-green-800 font-semibold transition duration-200"
+        >
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            className="h-6 w-6 mr-2"
+            fill="none"
+            viewBox="0 0 24 24"
+            stroke="currentColor"
+          >
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth={2}
+              d="M10 19l-7-7m0 0l7-7m-7 7h18"
+            />
+          </svg>
+          Back to Properties
+        </button>
         <h1 className="text-4xl font-bold text-center text-green-700 mb-6">Edit Property</h1>
  {/*Fix 2*/}
         {error && (<div className="text-red-500 text-center mb-4 transition-opacity duration-300 ease-in-out">

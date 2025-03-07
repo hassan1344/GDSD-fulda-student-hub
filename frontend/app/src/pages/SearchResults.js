@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from "react";
+import React, { useState, useEffect, useCallback, useMemo } from "react";
 import { useLocation } from "react-router-dom";
 import Navbar from "../components/NavBar";
 import SearchCard from "../components/SearchCard";
@@ -46,6 +46,7 @@ const SearchResults = () => {
       try {
         const data = await fetchListings(payload);
         setListings(data);
+        setCurrentPage(1);
       } catch (error) {
         console.error("Error loading properties:", error);
         setError("Failed to load properties.");
@@ -57,13 +58,13 @@ const SearchResults = () => {
     fetchData();
   }, [createPayload]);
 
-  const paginatedListings = listings.slice(
-    (currentPage - 1) * itemsPerPage,
-    currentPage * itemsPerPage
-  );
+  // Ensure paginated listings are always recalculated
+  const paginatedListings = useMemo(() => {
+    return listings.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage);
+  }, [listings, currentPage]);
 
-  const handleSelectProperty = (property) => {
-    setSelectedProperty(property);
+  const handleSelectProperty = (property, isBidding = false) => {
+    setSelectedProperty({ ...property, isBidding });
   };
 
   const handleBackToResults = () => {
@@ -129,15 +130,17 @@ const SearchResults = () => {
             <p className="text-center text-red-500">{error}</p>
           ) : paginatedListings.length > 0 ? (
             <>
+            {console.log("HERERE", paginatedListings)}
+            {console.log("HERERE", listings)}
               <div className="grid grid-cols-1 gap-6">
                 {paginatedListings.map((listing) => (
                   <SearchCard
-                    key={listing.property_id}
+                    key={listing.listing_id}
                     image={
                       `https://fulda-student-hub.s3.eu-north-1.amazonaws.com/public/uploads/images/${listing.Media[0]?.mediaUrl}` ||
                       "/default.jpg"
                     }
-                    description={listing.description}
+                    description={listing.title}
                     price={`€${listing.rent}`}
                     poster={`${listing.property.landlord?.first_name} ${listing.property.landlord?.last_name}`}
                     onClick={() => {

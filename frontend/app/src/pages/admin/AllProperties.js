@@ -12,12 +12,12 @@ const AllProperties = () => {
   const [error, setError] = useState(null);
   const navigate = useNavigate();
 
-/* Function to handle deleting a property by ID  */
+  /* Function to handle deleting a property by ID  */
   const handleDelete = async (propertyId) => {
     if (window.confirm('Are you sure you want to delete this property?')) {
       try {
         const token = localStorage.getItem('accessToken');
-/* API call to delete the property from DB*/
+        /* API call to delete the property from DB*/
         const data = await deletePropertyAdmin(propertyId, token);
         if (data.success) {
           setProperties(properties.filter(prop => prop.property_id !== propertyId));
@@ -25,7 +25,13 @@ const AllProperties = () => {
           setError('Failed to delete property');
         }
       } catch (error) {
-        setError('Error deleting property');
+        console.log("error", error.response.data.error)
+        if (error.response?.data?.error && typeof error.response.data.error === "string" &&
+          error.response.data.error.includes("[ListingYES]")) {
+          alert("Property is associated with listing(s). Cannot delete");
+        } else {
+          setError('Error deleting listing');
+        }
       }
     }
   };
@@ -95,12 +101,12 @@ const AllProperties = () => {
                   <h2 className="text-xl font-semibold text-green-700 mb-3">
                     {property.address}
                   </h2>
-                  
+
                   {property.property_amenity && property.property_amenity.length > 0 && (
                     <div className="mb-4">
                       <div className="flex flex-wrap gap-2">
                         {property.property_amenity.map((pa) => (
-                          <span 
+                          <span
                             key={pa.property_amenity_id}
                             className="bg-green-100 text-green-800 text-sm px-3 py-1 rounded-full"
                           >
@@ -132,6 +138,7 @@ const AllProperties = () => {
         )}
       </div>
     </div>
-  );};
+  );
+};
 
 export default AllProperties;

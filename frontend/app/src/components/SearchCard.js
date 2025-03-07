@@ -1,9 +1,4 @@
-const truncateText = (text, maxLength) => {
-  if (!text) return '';
-  return text.length <= maxLength 
-    ? text 
-    : text.slice(0, maxLength) + '...';
-};
+import { truncateText } from "../services/utilServices";
 
 const SearchCard = ({ image, description, price, poster, onClick }) => {
   return (
@@ -20,11 +15,11 @@ const SearchCard = ({ image, description, price, poster, onClick }) => {
       </div>
 
       <div className="ml-4">
-        <p className="text-sm font-semibold text-gray-700">
-          {truncateText(description, 30)}
+        <p className="text-md font-semibold text-gray-700">
+          {truncateText(description, window.innerWidth >= 1024 ? 30 : 15)}
         </p>
         <p className="text-green-600 text-md font-bold">{price} €</p>
-        <p className="text-gray-500 text-sm">Posted by: {poster}</p>
+        {/* <p className="text-gray-500 text-sm">Posted by: {poster}</p> */}
       </div>
     </div>
   );

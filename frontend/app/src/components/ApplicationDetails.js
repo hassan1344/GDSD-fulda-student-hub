@@ -131,6 +131,7 @@ const ApplicationDetails = ({ applicationId, onBack }) => {
         autoClose: 2000,
         position: "top-right",
       });
+      // location.reload();
     } catch (error) {
       console.error("Error adding review:", error);
       toast.error(error.response.data.message, {
@@ -184,10 +185,10 @@ const ApplicationDetails = ({ applicationId, onBack }) => {
             Application Info
           </h3>
           <div className="grid grid-cols-2 gap-4 mt-2 text-sm text-gray-600">
-            <p>
+            {/* <p>
               <span className="font-semibold">Application ID:</span>{" "}
               {application.application_id || "N/A"}
-            </p>
+            </p> */}
             <p>
               <span className="font-semibold">Student Name:</span>{" "}
               {application.full_name || "N/A"}
@@ -230,6 +231,37 @@ const ApplicationDetails = ({ applicationId, onBack }) => {
             </p>
           </div>
         </div>
+
+        {/* 
+          ONLY SHOW THIS SECTION IF STATUS != "pending". 
+        */}
+        {reviewData === null ? (
+          // If no review exists, show the form
+          userType === "STUDENT" &&
+          application.application_status !== "PENDING" && (
+            <div className="mt-6">
+              <ReviewForm
+                onSubmit={(newReview) => {
+                  handleReviewSubmit(newReview); // Submit review and update state
+                }}
+              />
+            </div>
+          )
+        ) : (
+          // If the review exists, display the review
+          <div className="mb-6">
+            <div className="bg-white rounded-lg shadow-sm">
+              <h3 className="text-lg font-medium text-gray-700">Your Review:
+                <span className="text-yellow-500"> {reviewData.rating}⭐</span>
+              </h3>
+
+              <p className="text-sm text-gray-600">
+                <span className="font-semibold">You:</span>{" "}
+                {reviewData.comment || reviewData.reviewText}
+              </p>
+            </div>
+          </div>
+        )}
 
         <div className="mb-6">
           <h3 className="text-lg font-medium text-gray-700">Media File(s)</h3>
@@ -302,96 +334,68 @@ const ApplicationDetails = ({ applicationId, onBack }) => {
           <h3 className="text-lg font-medium text-gray-700">Lease File(s)</h3>
           <div className="mt-4 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
             {leaseData ? (
-                <div
-                  key={leaseData.media_id}
-                  className="relative border rounded-lg overflow-hidden shadow-lg hover:shadow-xl transition-shadow duration-300 bg-white"
-                >
-                  {leaseData.media_url.includes("pdf") ? (
-                    <div className="flex flex-col items-center justify-center p-6 bg-gray-100 h-48">
-                      <div className="w-16 h-16 bg-red-500 rounded-full flex items-center justify-center mb-4">
-                        <svg
-                          xmlns="http://www.w3.org/2000/svg"
-                          fill="none"
-                          viewBox="0 0 24 24"
-                          strokeWidth="2"
-                          stroke="white"
-                          className="w-8 h-8"
-                        >
-                          <path
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                            d="M14.25 2.25h-4.5a2.25 2.25 0 00-2.25 2.25v15a2.25 2.25 0 002.25 2.25h7.5a2.25 2.25 0 002.25-2.25v-11.25l-3.75-3.75z"
-                          />
-                          <path
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                            d="M14.25 2.25V6h3.75"
-                          />
-                        </svg>
-                      </div>
-                      <a
-                        href={`https://fulda-student-hub.s3.eu-north-1.amazonaws.com/public/uploads/images/${leaseData.media_url}`}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="text-blue-600 font-semibold underline text-sm"
+              <div
+                key={leaseData.media_id}
+                className="relative border rounded-lg overflow-hidden shadow-lg hover:shadow-xl transition-shadow duration-300 bg-white"
+              >
+                {leaseData.media_url.includes("pdf") ? (
+                  <div className="flex flex-col items-center justify-center p-6 bg-gray-100 h-48">
+                    <div className="w-16 h-16 bg-red-500 rounded-full flex items-center justify-center mb-4">
+                      <svg
+                        xmlns="http://www.w3.org/2000/svg"
+                        fill="none"
+                        viewBox="0 0 24 24"
+                        strokeWidth="2"
+                        stroke="white"
+                        className="w-8 h-8"
                       >
-                        View {leaseData.media_type} File
-                      </a>
-                    </div>
-                  ) : (
-                    <div className="relative h-48 bg-gray-50">
-                      <a
-                        href={`https://fulda-student-hub.s3.eu-north-1.amazonaws.com/public/uploads/images/${leaseData.media_url}`}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="text-blue-600 font-semibold underline text-sm"
-                      >
-                        <img
-                          src={`https://fulda-student-hub.s3.eu-north-1.amazonaws.com/public/uploads/images/${leaseData.media_url}`}
-                          alt={leaseData.media_type}
-                          className="w-full h-full object-cover transition-transform duration-300 hover:scale-105"
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          d="M14.25 2.25h-4.5a2.25 2.25 0 00-2.25 2.25v15a2.25 2.25 0 002.25 2.25h7.5a2.25 2.25 0 002.25-2.25v-11.25l-3.75-3.75z"
                         />
-                        <div className="absolute bottom-0 left-0 w-full bg-gray-900 bg-opacity-50 text-white text-sm py-2 px-4">
-                          {leaseData.media_type}
-                        </div>
-                      </a>
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          d="M14.25 2.25V6h3.75"
+                        />
+                      </svg>
                     </div>
-                  )}
-                </div>
-              )
-             : (
-              <p className="text-sm text-gray-500">No lease available</p>
-            )}
+                    <a
+                      href={`https://fulda-student-hub.s3.eu-north-1.amazonaws.com/public/uploads/images/${leaseData.media_url}`}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="text-blue-600 font-semibold underline text-sm"
+                    >
+                      View {leaseData.media_type} File
+                    </a>
+                  </div>
+                ) : (
+                  <div className="relative h-48 bg-gray-50">
+                    <a
+                      href={`https://fulda-student-hub.s3.eu-north-1.amazonaws.com/public/uploads/images/${leaseData.media_url}`}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="text-blue-600 font-semibold underline text-sm"
+                    >
+                      <img
+                        src={`https://fulda-student-hub.s3.eu-north-1.amazonaws.com/public/uploads/images/${leaseData.media_url}`}
+                        alt={leaseData.media_type}
+                        className="w-full h-full object-cover transition-transform duration-300 hover:scale-105"
+                      />
+                      <div className="absolute bottom-0 left-0 w-full bg-gray-900 bg-opacity-50 text-white text-sm py-2 px-4">
+                        {leaseData.media_type}
+                      </div>
+                    </a>
+                  </div>
+                )}
+              </div>
+            )
+              : (
+                <p className="text-sm text-gray-500">No lease available</p>
+              )}
           </div>
         </div>
-        {/* 
-          ONLY SHOW THIS SECTION IF STATUS != "pending". 
-        */}
-        {reviewData === null ? (
-          // If no review exists, show the form
-          userType === "STUDENT" &&
-          application.application_status !== "PENDING" && (
-            <div className="mt-6">
-              <ReviewForm
-                onSubmit={(newReview) => {
-                  handleReviewSubmit(newReview); // Submit review and update state
-                }}
-              />
-            </div>
-          )
-        ) : (
-          // If the review exists, display the review
-          <div className="mt-6">
-            <div className="p-4 bg-white rounded-lg shadow-sm">
-              <p className="font-medium text-gray-700">Your Review:</p>
-              <p className="text-yellow-500">{reviewData.rating} ⭐</p>
-              <p className="text-sm text-gray-600">
-                {reviewData.comment || reviewData.reviewText}
-              </p>
-            </div>
-          </div>
-        )}
-
       </div>
     </div>
   );

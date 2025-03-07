@@ -1,14 +1,20 @@
 import { PrismaClient} from "@prisma/client";
 import { uploadToS3, deleteS3Object } from "../utils/uploadToS3.js";
 
-const prisma = new PrismaClient({ log: ['query', 'info', 'warn', 'error'] });
+const prisma = new PrismaClient({ 
+  // log: ['query', 'info', 'warn', 'error'],
+  transactionOptions: {
+    maxWait: 60000,  // 60 seconds max wait
+    timeout: 120000  // 2 minutes timeout
+  }
+ });
 
 // Error handler utility
 const handleListingError = (res, error, context = "") => {
   console.error(`Error ${context}:`, error);
   res.status(500).json({ 
     success: false, 
-    error: `An unexpected error occurred while ${context}` 
+    error: `An unexpected error occurred while ${context}. ${error}` 
   });
 };
 
@@ -165,14 +171,16 @@ export const createListing = async (req, res) => {
     try {
       const listings = await prisma.listing.findMany({
         include: {
-          property: {
-            include: {
-              landlord: true, // Include landlord details
-            },
-          },
-          room_type: true, // Include room_type details
+          property: { include: { landlord: true } },
+          room_type: true,
         },
+        orderBy: [
+          { status: 'desc' }, // "Pending" will be first if other statuses are lexicographically greater
+          { created_at: 'desc' },
+        ],
       });
+      
+      
 
       const listingsWithMedia = await Promise.all(
         listings.map(async (listing) => {
@@ -486,10 +494,18 @@ export const createListing = async (req, res) => {
               landlord_id,
             },
           },
+          include: {
+            Application: true,
+            BiddingSession: true
+          },
         });
   
         if (!listing) {
           throw new Error("Listing not found or does not belong to you");
+        }
+
+        if ((listing.Application && listing.Application.length > 0) || (listing.BiddingSession && listing.BiddingSession.length > 0)) {
+          throw new Error("Listing has associated applications or bidding sessions. [AppYes]");
         }
   
         const media = await prisma.media.findMany({
@@ -518,11 +534,11 @@ export const createListing = async (req, res) => {
           },
         });
   
-        await prisma.application.deleteMany({
-          where: {
-            listing_id: id,
-          },
-        });
+        // await prisma.application.deleteMany({
+        //   where: {
+        //     listing_id: id,
+        //   },
+        // });
   
         const deletedListing = await prisma.listing.delete({
           where: { listing_id: id },
@@ -555,10 +571,18 @@ export const createListing = async (req, res) => {
           where: {
             listing_id: id
           },
+          include: {
+            Application: true,
+            BiddingSession: true
+          }
         });
   
         if (!listing) {
           throw new Error("Listing not found or does not belong to you");
+        }
+
+        if ((listing.Application && listing.Application.length > 0) || (listing.BiddingSession && listing.BiddingSession.length > 0)) {
+          throw new Error("Listing has associated applications or bidding sessions. [AppYes]");
         }
   
         const media = await prisma.media.findMany({
@@ -567,6 +591,8 @@ export const createListing = async (req, res) => {
             model_id: id,
           },
         });
+
+        console.log("Media", media);
   
         if (media.length > 0) {
           const deletePromises = media.map(async (mediaFile) => {
@@ -580,6 +606,7 @@ export const createListing = async (req, res) => {
           await Promise.all(deletePromises);
         }
   
+        console.log("Deleting media from database...");
         await prisma.media.deleteMany({
           where: {
             model_name: "listing",
@@ -587,12 +614,14 @@ export const createListing = async (req, res) => {
           },
         });
   
-        await prisma.application.deleteMany({
-          where: {
-            listing_id: id,
-          },
-        });
-  
+        // console.log("Deleting associated applications...");
+        // await prisma.application.deleteMany({
+        //   where: {
+        //     listing_id: id,
+        //   },
+        // });
+        
+        console.log("Deleting listing...");
         const deletedListing = await prisma.listing.delete({
           where: { listing_id: id },
         });

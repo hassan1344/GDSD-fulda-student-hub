@@ -9,13 +9,15 @@ const LandlordNavbar = () => {
   const navigate = useNavigate();
   const [isMenuOpen, setIsMenuOpen] = useState(false);
 
+  const refreshToken = localStorage.getItem("refreshToken");
+  const accessToken = localStorage.getItem("accessToken");
+
+  const decodedToken = jwtDecode(accessToken);
+  const { userName, userType } = decodedToken;
+
   const logoutHandler = async () => {
     try {
-      const refreshToken = localStorage.getItem("refreshToken");
-      const accessToken = localStorage.getItem("accessToken");
 
-      const decodedToken = jwtDecode(accessToken);
-      const { userName } = decodedToken;
 
       if (!refreshToken) {
         console.error("No refresh token found.");
@@ -38,11 +40,16 @@ const LandlordNavbar = () => {
     }
   };
 
-  const navLinks = [
-    { path: "/landlord", name: "Home" },
-    { path: "/messages", name: "Messages" },
-    { path: "/landlord/viewProfile", name: "Profile" },
+  const allNavLinks = [
+    { path: "/admin", name: "Home", roles: ["ADMIN"] },
+    { path: "/landlord", name: "Home", roles: ["LANDLORD"] },
+    { path: "/messages", name: "Messages", roles: ["LANDLORD"] },
+    { path: "/landlord/viewProfile", name: "Profile", roles: ["LANDLORD", "ADMIN"] },
   ];
+
+  const navLinks = allNavLinks.filter(link =>
+    link.roles.includes(userType)
+  );
 
   return (
     <nav className="bg-white shadow-md">
@@ -52,9 +59,9 @@ const LandlordNavbar = () => {
           <img
             src={logoFHB}
             alt="Fulda Student Hub Logo"
-            className="w-12 h-12 object-contain"
+            className="w-35 h-20 object-contain"
           />
-          <h1 className="text-2xl md:text-3xl font-bold">Fulda Student Hub</h1>
+          {/* <h1 className="text-2xl md:text-3xl font-bold">Fulda Student Hub</h1> */}
         </div>
 
         {/* Hamburger Menu (for small screens) */}
@@ -89,19 +96,17 @@ const LandlordNavbar = () => {
 
         {/* Navigation Links */}
         <div
-          className={`flex flex-col md:flex-row md:space-x-8 text-lg items-center absolute md:static bg-white w-full md:w-auto left-0 top-[70px] md:top-auto transition-all duration-300 ease-in-out ${
-            isMenuOpen ? "block" : "hidden md:flex"
-          }`}
+          className={`flex flex-col md:flex-row md:space-x-8 text-lg items-center absolute md:static bg-white w-full md:w-auto left-0 top-[70px] md:top-auto transition-all duration-300 ease-in-out ${isMenuOpen ? "block" : "hidden md:flex"
+            }`}
         >
           {navLinks.map((link) => (
             <NavLink
               key={link.path}
               to={link.path}
-              className={`transition duration-200 px-4 py-2 md:py-0 rounded ${
-                location.pathname === link.path
+              className={`transition duration-200 px-4 py-2 md:py-0 rounded ${location.pathname === link.path
                   ? "text-blue-600 font-semibold border-b-2 md:border-none border-blue-600"
                   : "text-gray-600 hover:text-blue-600 hover:border-b-2 md:hover:border-none hover:border-blue-600"
-              }`}
+                }`}
               onClick={() => setIsMenuOpen(false)} // Close menu on link click
             >
               {link.name}

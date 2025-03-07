@@ -5,7 +5,7 @@ import SearchBar from "../components/SearchBar";
 import Disclaimer from "../components/Disclaimer";
 import SearchCard from "../components/SearchCard";
 import PropertyDetails from "../components/PropertyDetails";
-import { getAllAmenities } from "../services/utilServices";
+import { getAllAmenities, truncateText } from "../services/utilServices";
 import {
   fetchListings,
   fetchScheduledMeetings,
@@ -20,7 +20,7 @@ import { getProfileByUsername } from "../services/profileServices";
 const Home = () => {
   const [location, setLocation] = useState("");
   const [roomType, setRoomType] = useState("");
-  const [priceRange, setPriceRange] = useState([0, 1000]);
+  const [priceRange, setPriceRange] = useState([0, 2000]);
   const [showAdvanced, setShowAdvanced] = useState(false);
   const [selectedProperty, setSelectedProperty] = useState(null);
   const [advancedFilters, setAdvancedFilters] = useState({});
@@ -181,31 +181,49 @@ const Home = () => {
           onBack={handleBackToResults}
         />
       ) : (
-        <div className="flex justify-center mt-12 relative">
-          {}
-          <div className="w-1/5 bg-white p-4 shadow-lg h-screen overflow-y-auto absolute left-4">
+        <div className="flex flex-col lg:flex-row justify-center mt-12 relative">
+          { }
+          <div className="bg-white w-full lg:w-1/4 p-4 rounded-lg shadow-lg relative lg:overflow-y-auto mb-6 lg:mb-0 lg:absolute lg:left-4">
             <h3 className="text-lg font-semibold text-gray-800 mb-4">
               Upcoming Meetings
             </h3>
             <div className="panel-body text-gray-700">
-              {tableData.map((row, index) => (
-                <div key={index} className="mb-6">
-                  <br />
-                  Your meeting with {row.landlord.user_id} on{" "}
-                  {new Date(row.date).toLocaleString("en-US", {
-                    weekday: "short", // "Mon"
-                    year: "numeric",
-                    month: "short", // "Jan"
-                    day: "2-digit",
-                    hour: "2-digit",
-                    minute: "2-digit",
-                    hour12: true, // Use 12-hour format
-                  })}
-                  . Status ({row.status})
-                  <br />
-                  <br />
-                </div>
-              ))}
+              {tableData && tableData.length > 0 ? (
+                tableData.map((row, index) => (
+                  <div
+                    key={index}
+                    className="bg-white shadow-md rounded-lg p-4 mb-4 border border-gray-200"
+                  >
+                    <h3 className="text-lg font-semibold text-gray-800">
+                      Meeting with <span className="text-blue-600">{row.landlord?.first_name + " " + row.landlord?.last_name}</span>
+                    </h3>
+                    <p className="text-gray-600 mt-1">
+                      📅 {new Date(row.date).toLocaleString("en-US", {
+                        year: "numeric",
+                        month: "short",
+                        day: "2-digit",
+                        hour: "2-digit",
+                        minute: "2-digit",
+                        hour12: true,
+                        timeZone: "UTC", // Ensures UTC time is used
+                      })}
+                    </p>
+                    <span
+                      className={`inline-block mt-2 px-3 py-1 text-sm font-medium rounded-full ${row.status === "SCHEDULED"
+                        ? "bg-yellow-100 text-yellow-700"
+                        : row.status === "CANCELED"
+                          ? "bg-red-100 text-red-700"
+                          : "bg-green-100 text-green-700"
+                        }`}
+                    >
+                      {row.status}
+                    </span>
+                  </div>
+                ))
+              ) : (
+                <p className="text-center text-gray-500">No Upcoming Meetings</p>
+              )}
+
             </div>
           </div>
           <div className="bg-white shadow-lg rounded-lg p-8 w-full max-w-4xl">
@@ -280,17 +298,13 @@ const Home = () => {
                 Featured Listings
               </h2>
 
-              {activeBiddings.length === 0 ? (
-                <p className="text-gray-600 text-center mb-4">
-                  No current active biddings.
-                </p>
+              {listings.length === 0 ? (
+                <p className="text-gray-600 text-center mb-4">No current active listings.</p>
               ) : (
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-8">
                   {/* Left Column - Featured Listings */}
                   <div>
-                    <h3 className="text-md font-semibold text-gray-700 mb-2">
-                      Featured Listings
-                    </h3>
+                    <h3 className="text-md font-semibold text-gray-700 mb-2">Featured Listings</h3>
                     <div className="grid grid-cols-1 lg:grid-cols-1 gap-4">
                       {listings.length > 0 ? (
                         listings.map((listing) => (
@@ -302,14 +316,12 @@ const Home = () => {
                             }
                             description={listing.title}
                             price={`Rent: ${listing.rent}`}
-                            poster={`${listing.property.landlord.first_name} ${listing.property.landlord.last_name}`}
+                            // poster={`${listing.property.landlord.first_name} ${listing.property.landlord.last_name}`}
                             onClick={() => handleSelectProperty(listing, false)}
                           />
                         ))
                       ) : (
-                        <p className="text-gray-600 text-center">
-                          Loading featured listings...
-                        </p>
+                        <p className="text-gray-600 text-center">Loading featured listings...</p>
                       )}
                     </div>
                     <div className="mt-4 text-center">
@@ -324,29 +336,32 @@ const Home = () => {
 
                   {/* Right Column - Active Biddings */}
                   <div>
-                    <h3 className="text-md font-semibold text-gray-700 mb-2">
-                      Active Biddings
-                    </h3>
-                    <div className="grid grid-cols-1 lg:grid-cols-1 gap-4">
-                      {activeBiddings.map((bidding) => (
-                        <SearchCard
-                          key={bidding.listing_id}
-                          image={
-                            `https://fulda-student-hub.s3.eu-north-1.amazonaws.com/public/uploads/images/${bidding.Media[0]?.mediaUrl}` ||
-                            "/default.jpg"
-                          }
-                          description={bidding.description}
-                          price={`Latest Bid: ${
-                            bidding.highest_bid !== 0 ? bidding.highest_bid : bidding.starting_price
-                          }`}
-                          poster={`${bidding.property.landlord.first_name} ${bidding.property.landlord.last_name}`}
-                          onClick={() => handleSelectProperty(bidding, true)}
-                        />
-                      ))}
-                    </div>
+                    <h3 className="text-md font-semibold text-gray-700 mb-2">Active Biddings</h3>
+                    {activeBiddings.length > 0 ? (
+                      <div className="grid grid-cols-1 lg:grid-cols-1 gap-4">
+                        {activeBiddings.map((bidding) => (
+                          <SearchCard
+                            key={bidding.listing_id}
+                            image={
+                              bidding.Media[0]?.mediaUrl
+                                ? `https://fulda-student-hub.s3.eu-north-1.amazonaws.com/public/uploads/images/${bidding.Media[0].mediaUrl}`
+                                : "/default.jpg"
+                            }
+                            description={bidding.description}
+                            price={`Latest Bid: ${bidding.highest_bid !== 0 ? bidding.highest_bid : bidding.starting_price}`}
+                            poster={`${bidding.property.landlord.first_name} ${bidding.property.landlord.last_name}`}
+                            onClick={() => handleSelectProperty(bidding, true)}
+                          />
+                        ))}
+                      </div>
+                    ) : (
+                      <p className="text-gray-500 text-center">No Active Biddings</p>
+                    )}
                   </div>
                 </div>
               )}
+
+
             </div>
           </div>
         </div>

@@ -153,6 +153,7 @@ const CreateListing = () => {
 
         <form
           onSubmit={handleSubmit}
+          disabled={isLoading}
           className="max-w-3xl mx-auto bg-white rounded-lg shadow-md p-8"
         >
           <div className="space-y-6">

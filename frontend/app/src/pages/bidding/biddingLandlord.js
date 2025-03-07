@@ -4,6 +4,9 @@ import io from "socket.io-client";
 import { getBiddingStatus } from "../../services/biddingServices";
 import LandlordNavbar from "../../components/LandlordNavbar";
 import { jwtDecode } from "jwt-decode";
+import { getProfileByUsername } from "../../services/profileServices";
+import { ToastContainer, toast } from "react-toastify";
+import "react-toastify/dist/ReactToastify.css";
 
 const BIDDING_SERVER_URL = process.env.REACT_APP_SOCKET_BASE_URL;
 
@@ -64,8 +67,8 @@ const BiddingLandlord = () => {
         console.log(data);
         const highestBid = data.bids.length
           ? data.bids.reduce((max, bid) =>
-              bid.amount > max.amount ? bid : max
-            )
+            bid.amount > max.amount ? bid : max
+          )
           : null;
 
         const bidder_dets = {
@@ -84,8 +87,8 @@ const BiddingLandlord = () => {
       if (data) {
         const highestBid = data.bids.length
           ? data.bids.reduce((max, bid) =>
-              bid.amount > max.amount ? bid : max
-            )
+            bid.amount > max.amount ? bid : max
+          )
           : null;
 
         const bidder_dets = {
@@ -100,8 +103,9 @@ const BiddingLandlord = () => {
       setBidders(data.bids);
     });
 
-    newSocket.on("biddingEnded", (data) => {
+    newSocket.on("biddingEnded", async (data) => {
       setBiddingStatus("ended");
+      console.log("BiddingEnded", data)
 
       if (data?.winner) {
         console.log("Winner received:", data.winner);
@@ -113,9 +117,13 @@ const BiddingLandlord = () => {
           return updatedWinner; // Return the new state to ensure React updates it properly
         });
 
-        alert(
-          `Bidding ended. Winner: ${data.winner.userName} Highest Bid: €${data.winner.amount}`
-        );
+        let profile = await getProfileByUsername(data.winner?.bidder_id || data.winner?.userName);
+        // console.log("profilelll", profile)
+
+        toast.success(`Bidding ended. Winner: ${profile?.first_name + " " + profile?.last_name} Highest Bid: €${data.winner.amount}`, {
+          autoClose: 4000,
+          position: "top-right",
+        });
       }
     });
 
@@ -123,8 +131,8 @@ const BiddingLandlord = () => {
       if (data) {
         const highestBid = data.bids.length
           ? data.bids.reduce((max, bid) =>
-              bid.amount > max.amount ? bid : max
-            )
+            bid.amount > max.amount ? bid : max
+          )
           : null;
 
         const bidder_dets = {
@@ -172,15 +180,17 @@ const BiddingLandlord = () => {
   }, [socket, listingId]);
 
   useEffect(() => {
-    if (winner?.userName && socket) {
+    console.log("winnerUseEffect triggered:", winner);
+    console.log("winnerUseEffect triggered:", socket);
+    if (winner?.bidder_id && socket) {
       console.log("winnerUseEffect triggered:", winner);
 
       // Emit the event to create or get a conversation
       socket.emit("createConversation", {
-        receiver_id: winner.userName, // Latest winner
+        receiver_id: winner.bidder_id, // Latest winner
       });
 
-      console.log("Emitting createConversation for:", winner.userName);
+      console.log("Emitting createConversation for:", winner.bidder_id);
     }
   }, [winner]); // Triggered when a new winner is set
 
@@ -197,9 +207,12 @@ const BiddingLandlord = () => {
         console.log(winner);
 
         if (
-          conversation.receiver_id === winner.userName ||
-          (conversation.sender_id === winner.userName &&
-            conversation.conversation_id)
+          (conversation.receiver_id === winner.userName ||
+            (conversation.sender_id === winner.userName &&
+              conversation.conversation_id)) ||
+          (conversation.receiver_id === winner.bidder_id ||
+            (conversation.sender_id === winner.bidder_id &&
+              conversation.conversation_id))
         ) {
           setConversation(conversation);
         }
@@ -210,7 +223,8 @@ const BiddingLandlord = () => {
   useEffect(() => {
     console.log("conversationUsereffect");
     console.log(conversation);
-    if (conversation?.conversation_id && winner?.userName) {
+    if (conversation?.conversation_id && (winner?.userName || winner?.bidder_id)) {
+      console.log("Sending message to winner:", winner);
       sendMessage();
     }
   }, [conversation]);
@@ -252,7 +266,7 @@ const BiddingLandlord = () => {
       return;
     }
 
-    const winMessage = `Congratulations! 🎉 You have won the bidding for a listing with a bid of $${winner.amount}. Please contact the landlord to proceed.`;
+    const winMessage = `Congratulations! 🎉 You have won the bidding for a listing with a bid of $${winner.amount}. Please reply here to further proceed.`;
 
     const payload = {
       sender_id: userName,
@@ -267,6 +281,7 @@ const BiddingLandlord = () => {
 
   return (
     <div className="background-container">
+      <ToastContainer />
       <LandlordNavbar />
       <div className="p-8 max-w-4xl mx-auto">
         <header className="mb-6 text-center">
@@ -300,14 +315,14 @@ const BiddingLandlord = () => {
         ) : (
           <div className="bg-gray-100 p-6 rounded-lg shadow-md">
             <h2 className="text-2xl font-semibold text-gray-900 text-center mb-4">Bidding Details</h2>
-            
+
             <div className="bg-white p-4 rounded-lg shadow mb-4">
-            <p className="text-xl font-medium text-gray-700"><strong>Starting Price:</strong> <span className="text-green-600 font-bold ml-2">€{startingPrice || "N/A"}</span></p>
-            <p className="text-xl font-medium text-gray-700"><strong>Current Highest Bid:</strong> <span className="text-green-600 font-bold ml-2">€{highestBid.highest_bid || "N/A"}</span></p>
+              <p className="text-xl font-medium text-gray-700"><strong>Starting Price:</strong> <span className="text-green-600 font-bold ml-2">€{startingPrice || "N/A"}</span></p>
+              <p className="text-xl font-medium text-gray-700"><strong>Current Highest Bid:</strong> <span className="text-green-600 font-bold ml-2">€{highestBid.highest_bid || "N/A"}</span></p>
               <p className="text-xl font-medium text-gray-700"><strong>Bidder:</strong> <span className="text-green-600 font-bold ml-2">{highestBid.highest_bidder || "N/A"}</span></p>
               <p className="text-lg text-gray-600 mt-2"><strong>Total Bids:</strong> {bidders.length || "No bids yet"}</p>
             </div>
-            
+
             <div className="mt-6">
               <h3 className="text-lg font-semibold text-gray-700">Bid History</h3>
               <div className="mt-3 bg-gray-50 p-4 rounded-lg shadow-inner max-h-40 overflow-y-auto">
@@ -327,7 +342,7 @@ const BiddingLandlord = () => {
             </div>
           </div>
         )}
-      
+
         <div className="mt-6 flex flex-wrap justify-center gap-4">
           {biddingStatus !== "active" && (
             <button
@@ -342,6 +357,12 @@ const BiddingLandlord = () => {
             className="px-6 py-3 bg-gray-500 text-white rounded-lg hover:bg-gray-600 transition duration-200"
           >
             Navigate to Listings
+          </button>
+          <button
+            onClick={() => navigate("/landlord/my-bids")}
+            className="px-6 py-3 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition duration-200"
+          >
+            Navigate to Biddings
           </button>
           {biddingStatus === "active" && (
             <button

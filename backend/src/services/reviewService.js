@@ -78,9 +78,9 @@ export const getAllReviewsForALandlord = async (req, res) => {
       where: {
         application: {
           listing_id: listingId,
-          student_id: {
-            not: userName, // Exclude current
-          },
+          // student_id: {
+          //   not: userName, // Exclude current
+          // },
         },
       },
       include: {

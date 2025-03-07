@@ -37,24 +37,34 @@ const MyBidding = () => {
 
   const handleButtonClick = (sessionD) => {
     if (sessionD.status === "active") {
-        console.log(sessionD.id);
+      console.log(sessionD.id);
       navigate(`/bidding/BiddingLandlord/${sessionD.id}`);
     } else if (sessionD.status === "ended") {
-        localStorage.setItem(
-            "receiverId",
-            sessionD.id
-          );
-          navigate("/messages")
+      localStorage.setItem(
+        "receiverId",
+        sessionD.id
+      );
+      navigate("/messages")
     }
   };
   return (
     <div className="background-container">
       <LandlordNavbar />
+
       <div className="p-8">
         <header className="mb-6 text-center">
           <h1 className="text-3xl font-bold text-gray-800">Your Bidding Sessions</h1>
           <p className="text-gray-500 mt-2 text-sm">Monitor bidding sessions for your properties</p>
         </header>
+
+        <div className="flex flex-col items-center mb-12">
+        <button
+          onClick={() => navigate('/landlord/my-prop-listings')}
+          className="bg-blue-600 hover:bg-blue-700 text-white text-xl font-semibold px-8 py-4 rounded-lg transition duration-200 shadow-md hover:shadow-lg transform hover:-translate-y-0.5"
+        >
+          Start New Bidding Session
+        </button>
+      </div>
 
         {isLoading ? (
           <div className="flex items-center justify-center mt-12">
