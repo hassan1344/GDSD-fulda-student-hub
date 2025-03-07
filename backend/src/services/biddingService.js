@@ -64,9 +64,12 @@ export const getUserBiddingSessions = async (req, res) => {
       include: {
         Bids: true, // Include all bids for verification
       },
-      orderBy: {
-        status: "asc", // Active sessions first
+      orderBy: [{
+        status: "asc",
       },
+      {
+        created_at: "desc",
+      }]
     });
 
     console.log("Fetched Sessions for", userName, biddingSessions); // Debug log
