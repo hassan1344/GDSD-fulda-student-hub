@@ -14,3 +14,4 @@ This table contains the list of the team-2 members of Global Distributed Softwar
 | 6      | Shafi Shaik         | shafi.shaik@informatik.hs-fulda.de      | @shafiisawesome       |
 
 
+[![System Architecture](./fulda-student-hub-architecture.jpg)](./fulda-student-hub-architecture.jpg)
